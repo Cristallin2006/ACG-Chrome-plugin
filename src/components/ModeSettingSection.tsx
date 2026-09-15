@@ -3,16 +3,18 @@ import SettingSection from './SettingSection'
 import { Modes } from '../lib/options'
 
 interface Props {
-  initialValue: Modes
-  update(mode: Modes)
+  initialValue: string
+  /** User-defined tag categories, offered alongside the built-in rankings. */
+  customTags: string[]
+  update(mode: string)
 }
 
 interface State {
-  value: Modes
+  value: string
 }
 
 export default class ModeSettingSection extends Component<Props, State> {
-  private selectableOptions: Array<Modes> = [
+  private selectableOptions: Array<string> = [
     Modes.Illust,
     Modes.Manga,
     Modes.Original,
@@ -30,7 +32,7 @@ export default class ModeSettingSection extends Component<Props, State> {
 
   handleModeChange = (ev: Event) => {
     const { update } = this.props
-    const value = (ev.target as HTMLSelectElement).value as Modes
+    const value = (ev.target as HTMLSelectElement).value
     this.setState({ value })
     update(value)
   }
@@ -48,6 +50,11 @@ export default class ModeSettingSection extends Component<Props, State> {
           {this.selectableOptions.map(selectable => (
             <option key={selectable} value={selectable}>
               {selectable}
+            </option>
+          ))}
+          {this.props.customTags.map(tag => (
+            <option key={tag} value={`tag:${tag}`}>
+              {tag} (tag)
             </option>
           ))}
         </select>

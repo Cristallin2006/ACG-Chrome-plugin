@@ -36,8 +36,17 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           sendResponse({ data: 'setAspectRatioSettings' })
           break
         case 'setExcludingTags':
-          await storageUtil.setJSON('excluding_tags', request.params.tags)
+          // The sender (options.ts) passes `excluding_tags`; reading
+          // `params.tags` here silently stored `undefined`.
+          await storageUtil.setJSON(
+            'excluding_tags',
+            request.params.excluding_tags,
+          )
           sendResponse({ data: 'setExcludingTags' })
+          break
+        case 'setCustomTags':
+          await storageUtil.setJSON('custom_tags', request.params.custom_tags)
+          sendResponse({ data: 'setCustomTags' })
           break
         case 'setSafe':
           await storageUtil.setBoolean('is_safe', request.params.is_safe)

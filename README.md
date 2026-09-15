@@ -58,8 +58,13 @@ why.
 
 - Opens on a full-viewport **puzzle wall** of random illustrations from the pixiv
   daily ranking: every tile is shaped to its image's exact aspect ratio, so
-  nothing is ever cropped or stretched; scrolling deals the next screen of the
-  puzzle and each piece fades in as it enters view
+  nothing is ever cropped or stretched; one wheel gesture turns exactly one
+  screen of the puzzle (like slides), and each piece ripples into place as it
+  enters view
+- The content source is yours: the popup picks among the built-in rankings
+  (illust / manga / original / ugoira / newer / popular), or any **custom tag
+  category** you define — each tag you add becomes a choice in the Ranking Mode
+  dropdown and turns the wall into that tag's latest search results
 - A frosted search capsule sits at the bottom centre and searches **the web** with
   your default search engine (what the address bar does); anything that looks like
   an address is opened directly

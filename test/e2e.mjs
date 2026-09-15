@@ -530,6 +530,30 @@ async function main() {
       JSON.stringify(pagedUp),
     )
 
+    // 7d. Custom tag category: storing a `tag:` mode turns the wall into that
+    // tag's search results after a reload.
+    await newTab.eval(
+      `chrome.storage.local.set({ content: 'tag:風景', custom_tags: '["風景"]' })`,
+    )
+    await newTab.send('Page.reload')
+    const tagWall = await waitFor(
+      async () => {
+        const n = await newTab.eval(
+          `document.querySelectorAll('.kunya-gallery img').length`,
+        )
+        return n > 0 ? { images: n } : null
+      },
+      30000,
+      'the wall to render a custom tag category',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'custom tag category renders illustrations',
+      !tagWall.error,
+      JSON.stringify(tagWall),
+    )
+    // Hand the ranking mode back to the default for whatever runs next.
+    await newTab.eval(`chrome.storage.local.set({ content: 'illust' })`)
+
     // 8. Keyboard entry, and the pure-watch idle step-back.
     await newTab.eval(`document.querySelector('.kunya-switch').click()`)
     await sleep(300)

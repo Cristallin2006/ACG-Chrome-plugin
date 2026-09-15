@@ -6,6 +6,7 @@ import {
   getOriginalRanking,
   getNewIllusts,
   getPopularIllusts,
+  getIllustsByTag,
   getRanking,
 } from '../lib/api'
 import { Options, Modes, ViewModes, setViewMode } from '../lib/options'
@@ -293,13 +294,16 @@ export default class App extends Component<Props, State> {
   loadContent(options: Options): Promise<IllustEntry[]> {
     const { mode } = options
 
+    // A user-defined tag category (see the popup's custom category section).
+    if (mode.indexOf('tag:') === 0) return getIllustsByTag(mode.slice(4))
+
     return mode === Modes.Original
       ? getOriginalRanking()
       : mode === Modes.Newer
       ? getNewIllusts()
       : mode === Modes.Popular
       ? getPopularIllusts()
-      : getRanking(mode)
+      : getRanking(mode as 'illust' | 'manga' | 'ugoira')
   }
 
   handleViewModeChange = (viewMode: ViewModes) => {

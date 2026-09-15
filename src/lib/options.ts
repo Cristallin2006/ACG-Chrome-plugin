@@ -55,6 +55,10 @@ export const getOptions = async (): Promise<Options> => {
 
   return {
     mode: await storageUtil.getValue('content', defaultOptions.mode),
+    customTags: await storageUtil.getJSON(
+      'custom_tags',
+      defaultOptions.customTags,
+    ),
     excludingTags: await storageUtil.getJSON(
       'excluding_tags',
       defaultOptions.excludingTags,
@@ -71,9 +75,21 @@ export const getOptions = async (): Promise<Options> => {
   }
 }
 
-export const setMode = (mode: Modes) => {
+export const setMode = (mode: string) => {
   chrome.runtime.sendMessage(
     { method: 'setMode', params: { mode: mode } },
+    () => {},
+  )
+}
+
+export const setCustomTags = (tags: string[]) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setCustomTags',
+      params: {
+        custom_tags: tags,
+      },
+    },
     () => {},
   )
 }
