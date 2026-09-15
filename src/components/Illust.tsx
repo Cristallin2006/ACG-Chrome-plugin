@@ -4,6 +4,8 @@ import { Tile } from '../lib/tiling'
 interface Props {
   tile: Tile
   isInteractive: boolean
+  /** This piece's stagger slot in its screen's reveal ripple (ms). */
+  revealDelay: number
 }
 
 interface State {
@@ -68,7 +70,7 @@ export default class Illust extends Component<Props, State> {
   }
 
   render() {
-    const { tile, isInteractive } = this.props
+    const { tile, isInteractive, revealDelay } = this.props
     const { illust } = tile
 
     const style = {
@@ -76,6 +78,10 @@ export default class Illust extends Component<Props, State> {
       top: `${tile.y}px`,
       width: `${tile.w}px`,
       height: `${tile.h}px`,
+      // Lives on the element only until is-inview clears the pre-reveal state;
+      // the hover rules pin transition-delay back to 0 so a leftover ripple
+      // slot never slows the pointer's spring.
+      transitionDelay: `${revealDelay}ms`,
     }
     const className = this.state.isInView
       ? 'kunya-tile is-inview'

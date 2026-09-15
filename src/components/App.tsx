@@ -12,6 +12,11 @@ import { Options, Modes, ViewModes, setViewMode } from '../lib/options'
 import { Tile, computeTiling, pickTileCount } from '../lib/tiling'
 import { shuffle } from '../lib/util'
 
+/** A laid-out tile plus its stagger slot in the screen's reveal ripple. */
+interface WallTile extends Tile {
+  revealDelay: number
+}
+
 import * as Sentry from '@sentry/browser'
 if (SENTRY_DSN) {
   Sentry.init({
@@ -25,7 +30,7 @@ interface Props {
 
 interface State {
   illusts: IllustEntry[]
-  tiles: Tile[]
+  tiles: WallTile[]
   /** Pixel height of the whole wall: the screens laid out so far. */
   wallHeight: number
   viewMode: ViewModes
@@ -126,7 +131,7 @@ export default class App extends Component<Props, State> {
     const perScreen = pickTileCount(w, h, illusts.length)
 
     let remaining = illusts.slice()
-    const tiles: Tile[] = []
+    const tiles: WallTile[] = []
     let screens = 0
     for (; screens < count && remaining.length > 0; screens++) {
       const batch = remaining.slice(0, perScreen)
@@ -136,9 +141,27 @@ export default class App extends Component<Props, State> {
         used[screenTiles[i].illust.id] = true
       }
       remaining = remaining.filter(i => !used[i.id])
-      for (let i = 0; i < screenTiles.length; i++) {
-        const t = screenTiles[i]
-        tiles.push({ illust: t.illust, x: t.x, y: t.y + screens * h, w: t.w, h: t.h })
+
+      // Reveal ripple: order the screen's pieces by distance from the
+      // top-left corner, then deal each one 26ms after the last. The wall
+      // washes in as a wave instead of landing as a slab.
+      const order = screenTiles
+        .map((t, i) => i)
+        .sort(
+          (a, b) =>
+            screenTiles[a].x + screenTiles[a].y -
+            (screenTiles[b].x + screenTiles[b].y),
+        )
+      for (let rank = 0; rank < order.length; rank++) {
+        const t = screenTiles[order[rank]]
+        tiles.push({
+          illust: t.illust,
+          x: t.x,
+          y: t.y + screens * h,
+          w: t.w,
+          h: t.h,
+          revealDelay: Math.min(rank * 26, 420),
+        })
       }
     }
 
@@ -217,6 +240,7 @@ export default class App extends Component<Props, State> {
               key={tile.illust.id}
               isInteractive={isInteractive}
               tile={tile}
+              revealDelay={tile.revealDelay}
             />
           ))}
         </div>
