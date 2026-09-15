@@ -1,0 +1,777 @@
+<style>
+  /* ============================================================
+     方向 A · 静纸 Paper Quiet — 顶部居中胶囊 / 纸面细线 / 唯一浮层
+     作用域：所有选择器以 .dir-a- 开头，尺寸全部使用 cqw
+     图墙：4 条 flex 列，按真实长宽比排布，刻意溢出舞台底边后裁切
+     ============================================================ */
+
+  .dir-a-stage {
+    container-type: inline-size;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    position: relative;
+    display: block;
+    isolation: isolate;
+    background-color: #fefefe;
+    color: #1b1b1a;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, "Microsoft YaHei", sans-serif;
+    font-size: 1.25cqw;
+    line-height: 1.5;
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ---------- 1. 纸面水印：静纸的“纸纹” ---------- */
+  .dir-a-papermark {
+    position: absolute;
+    left: 2.2cqw;
+    bottom: 1.4cqw;
+    z-index: 0;
+    margin: 0;
+    font-size: 3.4cqw;
+    font-weight: 600;
+    letter-spacing: 0.34em;
+    line-height: 1;
+    color: rgba(27, 27, 26, 0.045);
+    text-transform: uppercase;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  /* ---------- 2. 真实瀑布流：4 列满铺，底部刻意溢出被裁切，不留空白带 ---------- */
+  .dir-a-flow {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    box-sizing: border-box;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.1cqw;
+    padding: 13.6cqw 3.1cqw 0;
+    overflow: hidden;
+  }
+
+  .dir-a-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .dir-a-item {
+    position: relative;
+    display: block;
+    margin: 0 0 0.3cqw;
+    opacity: 0;
+    transform: translate3d(0, 1.6cqw, 0) scale(0.98);
+    transition: opacity 480ms cubic-bezier(0.23, 1, 0.32, 1), transform 620ms cubic-bezier(0.23, 1, 0.32, 1);
+    transition-delay: calc(var(--dir-a-i) * 42ms);
+  }
+
+  .dir-a-shot {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 0.28cqw;
+    opacity: 0.7;
+    cursor: pointer;
+    transition: opacity 220ms cubic-bezier(0.23, 1, 0.32, 1), transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* 真实长宽比：宽 100%、高 auto，不做任何裁切变形 */
+  .dir-a-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: inherit;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* 细线 + 白色标题：图片区不做卡片化，只在图内用一条 1px 细线抬起标题 */
+  .dir-a-cap {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1.6cqw 0.75cqw 0.6cqw;
+    font-size: 1.06cqw;
+    font-weight: 500;
+    line-height: 1.35;
+    letter-spacing: 0.005em;
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 0.1cqw 0.5cqw rgba(22, 22, 22, 0.5);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-image: linear-gradient(to top, rgba(20, 20, 19, 0.44), rgba(20, 20, 19, 0));
+    transform: translate3d(0, 0.5cqw, 0);
+    opacity: 0;
+    transition: opacity 200ms cubic-bezier(0.23, 1, 0.32, 1), transform 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-a-cap::before {
+    content: "";
+    position: absolute;
+    left: 0.75cqw;
+    right: 0.75cqw;
+    top: 0.5cqw;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* ---------- 3. 纸边压暗 + 底部白色渐隐 ---------- */
+  .dir-a-vignette {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    box-shadow: inset 0 0 7cqw -1.5cqw rgba(27, 27, 26, 0.09);
+  }
+
+  .dir-a-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 11cqw;
+    z-index: 2;
+    pointer-events: none;
+    background-image: linear-gradient(to top, #fefefe 24%, rgba(254, 254, 254, 0.72) 62%, rgba(254, 254, 254, 0));
+  }
+
+  /* ---------- 4. 顶部横条 = 安全带（整条挡住点击，不穿透到下面的作品链接） ---------- */
+  .dir-a-topbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 3cqw 2.6cqw 2.6cqw;
+    margin: 0;
+    pointer-events: auto;
+  }
+
+  /* ---------- 5. 唯一浮起的元素：顶部居中胶囊 ---------- */
+  .dir-a-capwrap {
+    position: relative;
+    width: min(52cqw, 100%);
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 1.1cqw;
+    padding: 1.05cqw 2.4cqw;
+    border-radius: 999px;
+    background-color: rgba(255, 255, 255, 0.82);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 0 0 0.35cqw rgba(27, 27, 26, 0.02),
+      0 0.35cqw 1.1cqw rgba(27, 27, 26, 0.06),
+      0 1.4cqw 3.6cqw -1.6cqw rgba(27, 27, 26, 0.12);
+    backdrop-filter: blur(1.2cqw) saturate(1.1);
+    -webkit-backdrop-filter: blur(1.2cqw) saturate(1.1);
+    transition: box-shadow 220ms cubic-bezier(0.23, 1, 0.32, 1), border-color 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* 记忆点：聚焦时胶囊下方 1px 墨线从左向右生长 */
+  .dir-a-capwrap::after {
+    content: "";
+    position: absolute;
+    left: 2.6cqw;
+    right: 2.6cqw;
+    bottom: -1.5cqw;
+    height: 1px;
+    background-color: rgba(27, 27, 26, 0.7);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 260ms cubic-bezier(0.23, 1, 0.32, 1);
+    pointer-events: none;
+  }
+
+  .dir-a-capwrap:focus-within::after,
+  .dir-a-stage[data-focused="true"] .dir-a-capwrap::after {
+    transform: scaleX(1);
+  }
+
+  .dir-a-capwrap:focus-within {
+    border-color: rgba(0, 0, 0, 0.1);
+    box-shadow:
+      0 0 0 0.35cqw rgba(27, 27, 26, 0.03),
+      0 0.45cqw 1.3cqw rgba(27, 27, 26, 0.07),
+      0 1.8cqw 4.2cqw -1.8cqw rgba(27, 27, 26, 0.16);
+  }
+
+  .dir-a-mag {
+    flex: 0 0 auto;
+    display: block;
+    width: 2.1cqw;
+    height: 2.1cqw;
+  }
+
+  .dir-a-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border: 0;
+    outline: 0;
+    background-color: transparent;
+    padding: 0.55cqw 0;
+    font-family: inherit;
+    font-size: 1.5cqw;
+    font-weight: 400;
+    line-height: 1.35;
+    color: #1b1b1a;
+    caret-color: #1b1b1a;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .dir-a-input::placeholder {
+    color: rgba(27, 27, 26, 0.32);
+    font-weight: 400;
+  }
+
+  .dir-a-input::-webkit-search-cancel-button,
+  .dir-a-input::-webkit-search-decoration {
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .dir-a-stage .dir-a-input:focus-visible,
+  .dir-a-stage .dir-a-input:focus {
+    outline: 0;
+  }
+
+  /* ---------- 6. 模式切换：两段文字 + 滑动的下划线指示器（无 switch） ---------- */
+  .dir-a-tabs {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding-right: 0.2cqw;
+  }
+
+  .dir-a-tab {
+    position: relative;
+    flex: 0 0 auto;
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+    padding: 0.5cqw 0.9cqw;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    font-family: inherit;
+    font-size: 1.24cqw;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.04em;
+    color: rgba(27, 27, 26, 0.52);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-a-tab[data-active="true"] {
+    color: #1b1b1a;
+    font-weight: 600;
+  }
+
+  .dir-a-tabrail {
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0.15cqw;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.07);
+  }
+
+  /* 下划线指示器：translate3d 滑动 + 260ms 强 ease-out */
+  .dir-a-tabink {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 1px;
+    background-color: #1b1b1a;
+    transform: translate3d(0, 0, 0);
+    transition: transform 260ms cubic-bezier(0.23, 1, 0.32, 1), width 260ms cubic-bezier(0.23, 1, 0.32, 1);
+    pointer-events: none;
+  }
+
+  .dir-a-tab:focus-visible {
+    outline: 1px solid rgba(27, 27, 26, 0.45);
+    outline-offset: 0.3cqw;
+    border-radius: 0.3cqw;
+  }
+
+  /* ---------- 7. 中性灰「重播动效」：验收辅助控件，刻意压低视觉重量 ---------- */
+  .dir-a-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.1cqw;
+    margin-top: 1.9cqw;
+    pointer-events: auto;
+  }
+
+  .dir-a-replay {
+    appearance: none;
+    -webkit-appearance: none;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55cqw;
+    padding: 0.62cqw 1.5cqw;
+    border: 1px solid #dfe3e8;
+    border-radius: 999px;
+    background-color: #f1f3f5;
+    font-family: inherit;
+    font-size: 1.14cqw;
+    font-weight: 500;
+    line-height: 1.3;
+    color: #5b636c;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 160ms cubic-bezier(0.23, 1, 0.32, 1), color 160ms cubic-bezier(0.23, 1, 0.32, 1), transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-a-replay:active {
+    transform: scale(0.97);
+  }
+
+  .dir-a-replay:focus-visible {
+    outline: 1px solid rgba(27, 27, 26, 0.45);
+    outline-offset: 0.25cqw;
+  }
+
+  /* ---------- 8. 入场时序 ---------- */
+  .dir-a-flow[data-run="true"] .dir-a-item {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  .dir-a-flow[data-run="true"] .dir-a-capwrap,
+  .dir-a-flow[data-run="true"] .dir-a-tabs {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .dir-a-capwrap,
+  .dir-a-tabs {
+    opacity: 0;
+    transform: translate3d(0, -1cqw, 0);
+    transition: opacity 380ms cubic-bezier(0.23, 1, 0.32, 1), transform 420ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* ---------- 9. 纯看模式：彻底关掉 hover 提亮 / 指针 / 点击提示 ---------- */
+  .dir-a-stage[data-mode="watch"] .dir-a-shot,
+  .dir-a-stage[data-mode="watch"] .dir-a-shot * {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .dir-a-stage[data-mode="watch"] .dir-a-item {
+    opacity: 0.7;
+    transition: none;
+  }
+
+  .dir-a-stage[data-mode="watch"] .dir-a-cap {
+    opacity: 0;
+    transition: none;
+  }
+
+  /* 随模式变化的短状态标签 */
+  .dir-a-hint {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5cqw;
+    padding: 0.62cqw 1.2cqw;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    border-radius: 999px;
+    font-size: 1.18cqw;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: rgba(27, 27, 26, 0.56);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .dir-a-hint[data-for="watch"] {
+    display: none;
+  }
+
+  .dir-a-stage[data-mode="watch"] .dir-a-hint[data-for="watch"] {
+    display: inline-flex;
+  }
+
+  .dir-a-stage[data-mode="watch"] .dir-a-hint[data-for="interactive"] {
+    display: none;
+  }
+
+  /* ---------- 10. hover 效果只在真有指针的设备上生效 ---------- */
+  @media (hover: hover) and (pointer: fine) {
+    .dir-a-stage[data-mode="interactive"] .dir-a-shot:hover,
+    .dir-a-stage[data-mode="interactive"] .dir-a-shot:focus-visible {
+      opacity: 1;
+      transform: translate3d(0, -0.35cqw, 0);
+    }
+
+    .dir-a-stage[data-mode="interactive"] .dir-a-shot:hover .dir-a-cap,
+    .dir-a-stage[data-mode="interactive"] .dir-a-shot:focus-visible .dir-a-cap {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+
+    .dir-a-tab:hover {
+      color: rgba(27, 27, 26, 0.72);
+    }
+
+    .dir-a-tab[data-active="true"]:hover {
+      color: #1b1b1a;
+    }
+
+    .dir-a-replay:hover {
+      background-color: #e9ecef;
+      color: #3f464e;
+    }
+  }
+
+  /* ---------- 11. 窄容器兜底：文字靠 cqw 等比缩小，浮层不重叠 ----------
+     注：唯一的 px 值是 @container 查询条件本身（查询条件不允许用 cqw，
+     否则自引用成环）。除它之外所有尺寸都是 cqw。 */
+  @container (max-width: 420px) {
+    .dir-a-capwrap {
+      width: 100%;
+    }
+
+    .dir-a-flow {
+      gap: 1.5cqw;
+      padding: 14cqw 8.8cqw 0;
+    }
+
+    .dir-a-input {
+      font-size: 1.7cqw;
+    }
+
+    .dir-a-tab {
+      font-size: 1.42cqw;
+      padding: 0.5cqw 1.1cqw;
+    }
+
+    .dir-a-hint,
+    .dir-a-replay {
+      font-size: 1.3cqw;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dir-a-item,
+    .dir-a-capwrap,
+    .dir-a-tabs {
+      transition: opacity 1ms linear, transform 1ms linear;
+      transition-delay: 0ms;
+      transform: none;
+    }
+
+    .dir-a-shot,
+    .dir-a-cap {
+      transition: opacity 1ms linear;
+      transform: none;
+    }
+
+    .dir-a-shot:hover,
+    .dir-a-shot:focus-visible {
+      transform: none;
+    }
+
+    .dir-a-capwrap::after,
+    .dir-a-tabink {
+      transition: transform 1ms linear, width 1ms linear;
+    }
+  }
+</style>
+
+<div class="dir-a-stage" data-mode="interactive" data-focused="false">
+  <p class="dir-a-papermark">Ku-nya</p>
+
+  <div class="dir-a-flow" data-run="true">
+    <div class="dir-a-col">
+      <figure class="dir-a-item" style="--dir-a-i: 0">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000001" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-01.jpg" width="480" height="673" alt="🌹ガールズ×ヴァンパイア🌹" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">🌹ガールズ×ヴァンパイア🌹</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 1">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000010" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-10.jpg" width="480" height="720" alt="Waves" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">Waves</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 2">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000003" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-03.jpg" width="480" height="270" alt="タイムカプセル" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">タイムカプセル</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 3">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000006" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-06.jpg" width="480" height="379" alt="どこまでも" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">どこまでも</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 4">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000004" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-04.jpg" width="480" height="683" alt="制服rkgk少女" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">制服rkgk少女</figcaption>
+        </a>
+      </figure>
+    </div>
+
+    <div class="dir-a-col">
+      <figure class="dir-a-item" style="--dir-a-i: 5">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000002" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-02.jpg" width="480" height="272" alt="ロード・ログレス" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">ロード・ログレス</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 6">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000005" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-05.jpg" width="480" height="360" alt="もみじ饅頭" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">もみじ饅頭</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 7">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000008" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-08.jpg" width="480" height="676" alt="超かぐや姫!まとめ③" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">超かぐや姫!まとめ③</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 8">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000002" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-02.jpg" width="480" height="272" alt="ロード・ログレス" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">ロード・ログレス</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 9">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000006" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-06.jpg" width="480" height="379" alt="どこまでも" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">どこまでも</figcaption>
+        </a>
+      </figure>
+    </div>
+
+    <div class="dir-a-col">
+      <figure class="dir-a-item" style="--dir-a-i: 10">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000007" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-07.jpg" width="480" height="619" alt="正解" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">正解</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 11">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000002" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-02.jpg" width="480" height="272" alt="ロード・ログレス" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">ロード・ログレス</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 12">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000004" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-04.jpg" width="480" height="683" alt="制服rkgk少女" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">制服rkgk少女</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 13">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000009" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-09.jpg" width="480" height="661" alt="メスお兄さん" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">メスお兄さん</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 14">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000010" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-10.jpg" width="480" height="720" alt="Waves" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">Waves</figcaption>
+        </a>
+      </figure>
+    </div>
+
+    <div class="dir-a-col">
+      <figure class="dir-a-item" style="--dir-a-i: 15">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000010" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-10.jpg" width="480" height="720" alt="Waves" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">Waves</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 16">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000003" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-03.jpg" width="480" height="270" alt="タイムカプセル" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">タイムカプセル</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 17">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000006" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-06.jpg" width="480" height="379" alt="どこまでも" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">どこまでも</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 18">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000001" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-01.jpg" width="480" height="673" alt="🌹ガールズ×ヴァンパイア🌹" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">🌹ガールズ×ヴァンパイア🌹</figcaption>
+        </a>
+      </figure>
+      <figure class="dir-a-item" style="--dir-a-i: 19">
+        <a class="dir-a-shot" href="https://www.pixiv.net/artworks/100000005" target="_blank" rel="noopener noreferrer" tabindex="0">
+          <img class="dir-a-img" src="assets/art-05.jpg" width="480" height="360" alt="もみじ饅頭" decoding="async" draggable="false">
+          <figcaption class="dir-a-cap">もみじ饅頭</figcaption>
+        </a>
+      </figure>
+    </div>
+  </div>
+
+  <div class="dir-a-vignette" aria-hidden="true"></div>
+  <div class="dir-a-fade" aria-hidden="true"></div>
+
+  <form class="dir-a-topbar" role="search" action="https://www.pixiv.net/search/artworks" method="get" novalidate>
+    <div class="dir-a-capwrap">
+      <svg class="dir-a-mag" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="6.5" stroke="rgba(27,27,26,.42)" stroke-width="1.6"></circle>
+        <path d="M15.4 15.4 20 20" stroke="rgba(27,27,26,.42)" stroke-width="1.6" stroke-linecap="round"></path>
+      </svg>
+      <input class="dir-a-input" type="search" name="word" autocomplete="off" spellcheck="false" aria-label="搜索 pixiv 插画" placeholder="搜索插画 / 标签 / 画师">
+      <div class="dir-a-tabs" role="tablist" aria-label="浏览模式">
+        <button class="dir-a-tab" type="button" data-mode="watch" role="tab" aria-selected="false">纯看</button>
+        <button class="dir-a-tab" type="button" data-mode="interactive" role="tab" aria-selected="true" data-active="true">交互</button>
+        <span class="dir-a-tabrail" aria-hidden="true"></span>
+        <span class="dir-a-tabink" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <div class="dir-a-actions">
+      <button class="dir-a-replay" type="button">▶ 重播动效</button>
+      <span class="dir-a-hint" data-for="interactive">可点击</span>
+      <span class="dir-a-hint" data-for="watch">已锁定 · 防误触</span>
+    </div>
+  </form>
+</div>
+
+<script>
+  (function () {
+    var roots = document.querySelectorAll('.dir-a-stage');
+
+    Array.prototype.forEach.call(roots, function (stage) {
+      var flow = stage.querySelector('.dir-a-flow');
+      var input = stage.querySelector('.dir-a-input');
+      var form = stage.querySelector('.dir-a-topbar');
+      var tabs = stage.querySelectorAll('.dir-a-tab');
+      var ink = stage.querySelector('.dir-a-tabink');
+      var replay = stage.querySelector('.dir-a-replay');
+      var items = stage.querySelectorAll('.dir-a-item');
+
+      /* --- 模式切换：真的改 data-mode --- */
+      function markActive(mode) {
+        Array.prototype.forEach.call(tabs, function (tab) {
+          var on = tab.getAttribute('data-mode') === mode;
+          tab.setAttribute('data-active', on ? 'true' : 'false');
+          tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        });
+      }
+
+      function moveInk() {
+        if (!ink || !tabs.length) return;
+        var active = null;
+        Array.prototype.forEach.call(tabs, function (tab) {
+          if (tab.getAttribute('data-mode') === stage.getAttribute('data-mode')) active = tab;
+        });
+        if (!active) return;
+        var base = tabs[0].parentNode.getBoundingClientRect();
+        var rect = active.getBoundingClientRect();
+        ink.style.width = rect.width + 'px';
+        ink.style.transform = 'translate3d(' + (rect.left - base.left) + 'px, 0, 0)';
+      }
+
+      function setMode(mode) {
+        stage.setAttribute('data-mode', mode);
+        markActive(mode);
+        moveInk();
+        if (mode === 'watch' && input) input.blur();
+      }
+
+      Array.prototype.forEach.call(tabs, function (tab) {
+        tab.addEventListener('click', function () {
+          setMode(tab.getAttribute('data-mode'));
+        });
+      });
+
+      stage.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && input) input.blur();
+      });
+
+      /* --- 搜索栏：回车跳 pixiv 站内搜索结果页 --- */
+      if (form) {
+        form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          var word = input ? input.value.trim() : '';
+          var url = 'https://www.pixiv.net/search/artworks/' + encodeURIComponent(word);
+          if (word) window.open(url, '_blank', 'noopener');
+        });
+      }
+
+      if (input) {
+        input.addEventListener('focus', function () {
+          stage.setAttribute('data-focused', 'true');
+        });
+        input.addEventListener('blur', function () {
+          stage.setAttribute('data-focused', 'false');
+        });
+      }
+
+      /* --- 重播入场 + 聚焦动效（保留用户当前选择的模式） --- */
+      if (replay) {
+        replay.addEventListener('click', function () {
+          Array.prototype.forEach.call(items, function (item) {
+            item.style.transition = 'none';
+            item.style.opacity = '0';
+            item.style.transform = 'translate3d(0, 1.6cqw, 0) scale(0.98)';
+          });
+          if (input) input.blur();
+          stage.setAttribute('data-focused', 'false');
+          flow.setAttribute('data-run', 'false');
+          void flow.offsetWidth;
+          Array.prototype.forEach.call(items, function (item) {
+            item.style.transition = '';
+            item.style.opacity = '';
+            item.style.transform = '';
+          });
+          flow.setAttribute('data-run', 'true');
+          window.setTimeout(function () {
+            if (input) input.focus();
+          }, 90);
+        });
+      }
+
+      setMode(stage.getAttribute('data-mode') === 'watch' ? 'watch' : 'interactive');
+      moveInk();
+
+      /* 外层卡片缩放（2×2 网格 → 手机单列）时重新对齐下划线指示器 */
+      if (typeof ResizeObserver === 'function') {
+        new ResizeObserver(moveInk).observe(stage);
+      } else {
+        window.addEventListener('resize', moveInk);
+      }
+    });
+  })();
+</script>

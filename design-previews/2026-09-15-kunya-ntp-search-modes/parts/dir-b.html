@@ -1,0 +1,668 @@
+<!-- 方向 B「暗房 Darkroom」迷你样机 · Ku-nya 新标签页搜索栏 + 双浏览模式
+     规则：所有选择器以 .dir-b- 开头；尺寸全部 cqw；只动 transform / opacity / filter；
+     hover 仅在 (hover:hover) and (pointer:fine)；缓动统一强 ease-out；无外链、无斜体、无纯黑。
+     构图：4 列 × 3 行图墙从舞台顶部铺到被底边裁切，不留空黑；
+           底部磨砂胶囊是唯一浮层，同时挡住点击（安全带）。
+     入场：静态即 opacity:1，动画只做 scale(0.98)+opacity 的锦上添花，单张 240ms、错峰 35ms、总计 625ms。 -->
+<style>
+  /* ---------- 舞台：暗房画布（暖黑，非纯黑），所有尺寸以舞台宽度为基准 ---------- */
+  .dir-b-stage {
+    container-type: inline-size;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    position: relative;
+    display: block;
+    background-color: #141110;
+    background-image:
+      radial-gradient(118% 86% at 50% 0%, rgba(255, 246, 236, 0.06) 0%, rgba(255, 246, 236, 0) 60%),
+      linear-gradient(180deg, #171412 0%, #141110 58%, #100d0c 100%);
+    color: #e9e5e1;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- 图墙：4 列 × 3 行，从顶部铺满并溢出舞台底边（由 overflow 裁切） ---------- */
+  .dir-b-flow {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 1.6cqw;
+    padding: 0 3.6cqw;
+    overflow: hidden;
+  }
+
+  .dir-b-col {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.6cqw;
+  }
+
+  .dir-b-tile {
+    flex: 0 0 auto;
+    margin: 0;
+    display: block;
+    /* 光标锚点：纯看模式整块图区都是 default，交互模式才是指针 */
+    cursor: default;
+  }
+
+  .dir-b-stage[data-mode="interactive"] .dir-b-tile { cursor: pointer; }
+
+  /* 图片外框：定住长宽比、裁掉溢出，让 stage 的 cqw 继续作为唯一尺寸基准
+     （查询单位若挂在每张图上会缩到图片尺寸，所以这里不做 container） */
+  .dir-b-shot {
+    display: block;
+    position: relative;
+    aspect-ratio: var(--dir-b-ar, 1);
+    border-radius: 0.8cqw;
+    overflow: hidden;
+  }
+
+  .dir-b-frame {
+    position: absolute;
+    inset: 0;
+    display: block;
+    border-radius: inherit;
+    background-color: #1d1816;
+    /* 纯看模式下由这张覆盖层提供 default 光标（img 自身的光标无法被覆盖） */
+    cursor: pointer;
+    transition:
+      transform 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-b-stage[data-mode="watch"] .dir-b-frame { cursor: default; }
+
+  .dir-b-frame::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow:
+      inset 0 0 0 0.1cqw rgba(255, 242, 228, 0.05),
+      inset 0 0 2cqw rgba(10, 7, 6, 0.34);
+  }
+
+  .dir-b-frame img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* 静态即完整可见：动画缺席时画面依然是一整面图墙 */
+    opacity: 1;
+    filter: brightness(0.92) saturate(1.02);
+    /* 入场只做 scale(0.98) + opacity，绝不 scale(0) */
+    animation: dir-b-enter 240ms cubic-bezier(0.23, 1, 0.32, 1) both;
+    animation-delay: calc(var(--i, 0) * 35ms);
+  }
+
+  /* ---------- 悬停时才浮出的一行极小标题：贴在图片下缘（图片不够高就不显示，避免压到下一张） ---------- */
+  .dir-b-cap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 0.7cqw;
+    min-width: 0;
+    padding: 2.6cqw 0.9cqw 0.7cqw;
+    background: linear-gradient(0deg, rgba(9, 7, 6, 0.78) 0%, rgba(9, 7, 6, 0) 100%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 2;
+    transform: translateY(0.6cqw);
+    transition:
+      opacity 220ms cubic-bezier(0.23, 1, 0.32, 1),
+      transform 220ms cubic-bezier(0.23, 1, 0.32, 1),
+      visibility 0s linear 220ms;
+  }
+
+  /* 只有纵向空间够的图（横图）才挂标题，竖图缩略图不显示，避免压到下一张 */
+  .dir-b-shot[data-cap="off"] .dir-b-cap { display: none; }
+
+  .dir-b-cap em {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-style: normal;
+    font-size: 1.35cqw;
+    line-height: 1.3;
+    color: #ece6e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 英文微标签：小号 + 大写字距 */
+  .dir-b-cap span {
+    flex: 0 0 auto;
+    font-family: "Segoe UI Variable Display", "Trebuchet MS", sans-serif;
+    font-size: 0.88cqw;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #bdb5ad;
+  }
+
+  /* 纯看模式：图片完全不可交互 —— 无 pointer 光标、无 hover 提亮、点击不跳转 */
+  .dir-b-stage[data-mode="watch"] .dir-b-frame img {
+    filter: brightness(0.95) saturate(0.99);
+  }
+  .dir-b-stage[data-mode="watch"] .dir-b-frame,
+  .dir-b-stage[data-mode="watch"] .dir-b-frame img,
+  .dir-b-stage[data-mode="watch"] .dir-b-frame::after {
+    cursor: default;
+  }
+  .dir-b-stage[data-mode="watch"] .dir-b-link {
+    pointer-events: none;
+  }
+
+  /* ---------- 底部磨砂胶囊：全页唯一浮层，同时是"安全带"，遮住点击 ---------- */
+  .dir-b-bar {
+    position: absolute;
+    left: 50%;
+    bottom: 3.2cqw;
+    z-index: 4;
+    width: 58cqw;
+    min-height: 5.6cqw;
+    display: flex;
+    align-items: center;
+    gap: 1.5cqw;
+    padding: 0 1.7cqw 0 2.4cqw;
+    border-radius: 9.9cqw;
+    background: rgba(32, 27, 24, 0.62);
+    border: 0.12cqw solid rgba(255, 238, 220, 0.14);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    backdrop-filter: blur(14px) saturate(140%);
+    box-shadow:
+      0 2.2cqw 4.6cqw rgba(0, 0, 0, 0.68),
+      inset 0 0.1cqw 0 rgba(255, 240, 226, 0.08);
+    transform: translateX(-50%);
+    transition: opacity 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-b-glass {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 1.1cqw;
+  }
+
+  .dir-b-mag {
+    flex: 0 0 auto;
+    width: 1.8cqw;
+    height: 1.8cqw;
+    color: #a49c94;
+    transition: color 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-b-input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: #f6f2ee;
+    caret-color: #d9a184;
+    font-family: inherit;
+    font-size: 1.6cqw;
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: color 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* 原生占位文案：不换行，窄容器自动省略，胶囊高度恒定 */
+  .dir-b-input::placeholder {
+    color: #a29a92;
+    opacity: 1;
+    text-overflow: ellipsis;
+  }
+
+  .dir-b-glass:focus-within .dir-b-mag { color: #e6c1a8; }
+
+  .dir-b-right {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 1.2cqw;
+  }
+
+  /* 模式名：随开关切换的英文微标签（大写字距） */
+  .dir-b-mlabel {
+    font-family: "Segoe UI Variable Display", "Trebuchet MS", sans-serif;
+    font-size: 1cqw;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #a09890;
+    white-space: nowrap;
+    transition: color 220ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-b-stage[data-mode="watch"] .dir-b-mlabel { color: #c8c1ba; }
+
+  /* ---------- 胶囊右端的小 switch：6cqw × 3.4cqw，滑块位移动画 ---------- */
+  .dir-b-switch {
+    position: relative;
+    flex: 0 0 auto;
+    width: 6cqw;
+    height: 3.4cqw;
+    padding: 0;
+    border: 0.12cqw solid rgba(255, 238, 220, 0.17);
+    border-radius: 3.4cqw;
+    background: rgba(255, 244, 232, 0.06);
+    box-shadow: inset 0 0.22cqw 0.5cqw rgba(0, 0, 0, 0.34);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    transition:
+      background-color 260ms cubic-bezier(0.23, 1, 0.32, 1),
+      border-color 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-b-knob {
+    position: absolute;
+    top: 0.42cqw;
+    left: 0.42cqw;
+    width: 2.32cqw;
+    height: 2.32cqw;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #f6f3f0 0%, #cfc8c1 100%);
+    box-shadow: 0 0.35cqw 0.9cqw rgba(0, 0, 0, 0.48);
+    transform: translate3d(0, 0, 0);
+    transition: transform 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* 交互模式：滑块滑到右端并转为暖琥珀；纯看模式：滑块回左端、中性灰 */
+  .dir-b-stage[data-mode="interactive"] .dir-b-switch {
+    background: rgba(217, 154, 118, 0.2);
+    border-color: rgba(226, 167, 132, 0.44);
+  }
+  .dir-b-stage[data-mode="interactive"] .dir-b-knob {
+    transform: translate3d(2.68cqw, 0, 0);
+    background: linear-gradient(180deg, #f3d8c5 0%, #d9a184 100%);
+    box-shadow:
+      0 0.35cqw 0.9cqw rgba(0, 0, 0, 0.48),
+      0 0 0 0.5cqw rgba(217, 161, 132, 0.13);
+  }
+
+  /* ---------- 中性灰"重播动效"按钮（刻意不使用本方向配色） ---------- */
+  .dir-b-replay {
+    position: absolute;
+    top: 2.6cqw;
+    right: 3.6cqw;
+    z-index: 4;
+    padding: 0.85cqw 1.7cqw;
+    border: 0.14cqw solid #565656;
+    border-radius: 9.9cqw;
+    background: #262626;
+    box-shadow: 0 0.7cqw 1.8cqw rgba(0, 0, 0, 0.55);
+    color: #e0e0e0;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    font-size: 1.1cqw;
+    line-height: 1.3;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    transition:
+      background-color 220ms cubic-bezier(0.23, 1, 0.32, 1),
+      color 220ms cubic-bezier(0.23, 1, 0.32, 1),
+      opacity 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* ---------- 暗房压暗：轻量四角暗角 + 胶囊脚下的窄压暗带（图片保持 100% 不透明度） ---------- */
+  .dir-b-vig {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+      radial-gradient(148% 132% at 50% 42%, rgba(12, 9, 8, 0) 54%, rgba(12, 9, 8, 0.4) 84%, rgba(9, 7, 6, 0.62) 100%),
+      linear-gradient(180deg, rgba(15, 12, 11, 0.55) 0%, rgba(15, 12, 11, 0) 15%),
+      linear-gradient(0deg, rgba(12, 10, 9, 0.7) 0%, rgba(12, 10, 9, 0.24) 10%, rgba(12, 10, 9, 0) 22%);
+  }
+
+  .dir-b-rim {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    box-shadow: inset 0 0 5cqw rgba(6, 4, 4, 0.6);
+  }
+
+  /* ---------- 记忆点：纯看模式 + 鼠标静止 2s → 除图片外全部 UI 淡出 ---------- */
+  .dir-b-ramp {
+    transition: opacity 260ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-b-stage[data-mode="watch"].dir-b-idle .dir-b-ramp {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ---------- 入场 / 聚焦动效（重播按钮重跑这两个 keyframes） ---------- */
+  @keyframes dir-b-enter {
+    from { opacity: 0; transform: scale(0.98); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes dir-b-focus {
+    from { opacity: 0; transform: translateY(1.8cqw) scale(0.99); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .dir-b-burst .dir-b-bar {
+    animation: dir-b-focus 300ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .dir-b-burst .dir-b-replay {
+    animation: dir-b-focus 250ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+  .dir-b-burst .dir-b-frame img {
+    animation: dir-b-enter 240ms cubic-bezier(0.23, 1, 0.32, 1) both;
+    animation-delay: calc(var(--i, 0) * 35ms);
+  }
+
+  /* ---------- 交互模式：hover 轻微提亮 + 上浮，并浮出极小标题（仅精确指针） ---------- */
+  @media (hover: hover) and (pointer: fine) {
+    .dir-b-stage[data-mode="interactive"] .dir-b-link:hover .dir-b-frame {
+      transform: translateY(-0.55cqw) scale(1.014);
+    }
+    .dir-b-stage[data-mode="interactive"] .dir-b-link:hover .dir-b-frame img {
+      filter: brightness(1.07) saturate(1.03);
+    }
+    .dir-b-stage[data-mode="interactive"] .dir-b-link:active .dir-b-frame {
+      transform: translateY(-0.2cqw) scale(0.996);
+      transition-duration: 140ms;
+    }
+    .dir-b-stage[data-mode="interactive"] .dir-b-link:hover .dir-b-cap,
+    .dir-b-stage[data-mode="interactive"] .dir-b-link:focus-visible .dir-b-cap {
+      opacity: 1;
+      visibility: visible;
+      transition-delay: 60ms, 0s;
+    }
+    .dir-b-stage[data-mode="interactive"] .dir-b-switch:hover { border-color: rgba(255, 238, 220, 0.36); }
+    .dir-b-replay:hover { background: #3a3a3a; color: #f0f0f0; }
+    .dir-b-stage[data-mode="watch"] .dir-b-bar:hover { background: rgba(36, 30, 27, 0.7); }
+  }
+
+  .dir-b-switch:focus-visible,
+  .dir-b-replay:focus-visible {
+    outline: 0.16cqw solid #cfc7bf;
+    outline-offset: 0.5cqw;
+  }
+
+  /* ---------- 降低动效偏好：关掉入场/聚焦/静止淡出，且画面全部可见 ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .dir-b-ramp,
+    .dir-b-bar,
+    .dir-b-frame,
+    .dir-b-frame img,
+    .dir-b-cap,
+    .dir-b-knob,
+    .dir-b-switch,
+    .dir-b-input,
+    .dir-b-replay,
+    .dir-b-mlabel,
+    .dir-b-mag {
+      transition: none;
+    }
+    .dir-b-burst .dir-b-bar,
+    .dir-b-burst .dir-b-replay,
+    .dir-b-burst .dir-b-frame img,
+    .dir-b-frame img {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+    .dir-b-stage.dir-b-idle .dir-b-ramp {
+      opacity: 1;
+      pointer-events: auto;
+    }
+  }
+</style>
+
+<div class="dir-b-stage" data-mode="interactive">
+  <div class="dir-b-flow">
+    <div class="dir-b-col">
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/1" target="_blank" rel="noopener" aria-label="打开作品：🌹ガールズ×ヴァンパイア🌹">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 673">
+            <span class="dir-b-frame" style="--i: 0"><img src="assets/art-01.jpg" width="480" height="673" alt="🌹ガールズ×ヴァンパイア🌹" decoding="async">
+              <figcaption class="dir-b-cap"><em>🌹ガールズ×ヴァンパイア🌹</em><span>Rank 01</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/8" target="_blank" rel="noopener" aria-label="打开作品：超かぐや姫!まとめ③">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 676">
+            <span class="dir-b-frame" style="--i: 4"><img src="assets/art-08.jpg" width="480" height="676" alt="超かぐや姫!まとめ③" decoding="async">
+              <figcaption class="dir-b-cap"><em>超かぐや姫!まとめ③</em><span>Rank 08</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/3" target="_blank" rel="noopener" aria-label="打开作品：タイムカプセル">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 270">
+            <span class="dir-b-frame" style="--i: 8"><img src="assets/art-03.jpg" width="480" height="270" alt="タイムカプセル" decoding="async">
+              <figcaption class="dir-b-cap"><em>タイムカプセル</em><span>Rank 03</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+    </div>
+
+    <div class="dir-b-col">
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/4" target="_blank" rel="noopener" aria-label="打开作品：制服rkgk少女">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 683">
+            <span class="dir-b-frame" style="--i: 1"><img src="assets/art-04.jpg" width="480" height="683" alt="制服rkgk少女" decoding="async">
+              <figcaption class="dir-b-cap"><em>制服rkgk少女</em><span>Rank 04</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/9" target="_blank" rel="noopener" aria-label="打开作品：メスお兄さん">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 661">
+            <span class="dir-b-frame" style="--i: 5"><img src="assets/art-09.jpg" width="480" height="661" alt="メスお兄さん" decoding="async">
+              <figcaption class="dir-b-cap"><em>メスお兄さん</em><span>Rank 09</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/6" target="_blank" rel="noopener" aria-label="打开作品：どこまでも">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 379">
+            <span class="dir-b-frame" style="--i: 9"><img src="assets/art-06.jpg" width="480" height="379" alt="どこまでも" decoding="async">
+              <figcaption class="dir-b-cap"><em>どこまでも</em><span>Rank 06</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+    </div>
+
+    <div class="dir-b-col">
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/7" target="_blank" rel="noopener" aria-label="打开作品：正解">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 619">
+            <span class="dir-b-frame" style="--i: 2"><img src="assets/art-07.jpg" width="480" height="619" alt="正解" decoding="async">
+              <figcaption class="dir-b-cap"><em>正解</em><span>Rank 07</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/10" target="_blank" rel="noopener" aria-label="打开作品：Waves">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 720">
+            <span class="dir-b-frame" style="--i: 6"><img src="assets/art-10.jpg" width="480" height="720" alt="Waves" decoding="async">
+              <figcaption class="dir-b-cap"><em>Waves</em><span>Rank 10</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/5" target="_blank" rel="noopener" aria-label="打开作品：もみじ饅頭">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 360">
+            <span class="dir-b-frame" style="--i: 10"><img src="assets/art-05.jpg" width="480" height="360" alt="もみじ饅頭" decoding="async">
+              <figcaption class="dir-b-cap"><em>もみじ饅頭</em><span>Rank 05</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+    </div>
+
+    <div class="dir-b-col">
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/5" target="_blank" rel="noopener" aria-label="打开作品：もみじ饅頭">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 360">
+            <span class="dir-b-frame" style="--i: 3"><img src="assets/art-05.jpg" width="480" height="360" alt="もみじ饅頭" decoding="async">
+              <figcaption class="dir-b-cap"><em>もみじ饅頭</em><span>Rank 05</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/6" target="_blank" rel="noopener" aria-label="打开作品：どこまでも">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 379">
+            <span class="dir-b-frame" style="--i: 7"><img src="assets/art-06.jpg" width="480" height="379" alt="どこまでも" decoding="async">
+              <figcaption class="dir-b-cap"><em>どこまでも</em><span>Rank 06</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+      <figure class="dir-b-tile">
+        <a class="dir-b-link" href="https://www.pixiv.net/i/2" target="_blank" rel="noopener" aria-label="打开作品：ロード・ログレス">
+          <span class="dir-b-shot" style="--dir-b-ar: 480 / 272">
+            <span class="dir-b-frame" style="--i: 11"><img src="assets/art-02.jpg" width="480" height="272" alt="ロード・ログレス" decoding="async">
+              <figcaption class="dir-b-cap"><em>ロード・ログレス</em><span>Rank 02</span></figcaption></span>
+          </span>
+        </a>
+      </figure>
+    </div>
+  </div>
+
+  <div class="dir-b-vig" aria-hidden="true"></div>
+  <div class="dir-b-rim" aria-hidden="true"></div>
+
+  <button class="dir-b-replay dir-b-ramp" type="button">▶ 重播动效</button>
+
+  <div class="dir-b-bar dir-b-ramp">
+    <div class="dir-b-glass">
+      <svg class="dir-b-mag" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+        <circle cx="8" cy="8" r="5.4"></circle>
+        <path d="M12.2 12.2 16 16"></path>
+      </svg>
+      <input class="dir-b-input" type="text" placeholder="搜索网页或输入网址" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="搜索网页或输入网址">
+    </div>
+    <div class="dir-b-right">
+      <span class="dir-b-mlabel" aria-hidden="true">纯看</span>
+      <button class="dir-b-switch" type="button" role="switch" aria-checked="true" aria-label="浏览模式：纯看 / 交互">
+        <span class="dir-b-knob" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    var stage = document.querySelector('.dir-b-stage');
+    if (!stage) return;
+
+    var input = stage.querySelector('.dir-b-input');
+    var switchBtn = stage.querySelector('.dir-b-switch');
+    var mlabel = stage.querySelector('.dir-b-mlabel');
+    var replay = stage.querySelector('.dir-b-replay');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var IDLE_DELAY = 2000;
+    var idleTimer = null;
+    var burstTimer = null;
+    var linkClickable = true;
+
+    /* 每张图是否挂那行极小标题：图宽高比 < 1.05 的竖图缩略图没有纵向余地，直接关掉。 */
+    var shots = stage.querySelectorAll('.dir-b-shot');
+    for (var s = 0; s < shots.length; s++) {
+      var parts = (shots[s].style.getPropertyValue('--dir-b-ar') || '').split('/');
+      var w = parseFloat(parts[0]);
+      var h = parseFloat(parts[1]);
+      if (!(w / h >= 1.05)) shots[s].setAttribute('data-cap', 'off');
+    }
+
+    /* 搜索：等同传统 Chrome 搜索——搜的是网页（默认搜索引擎），插画只是背景主题。
+       真实实现走 chrome.search.query，样机用等价的 window.open 表达同一语义。 */
+    input.addEventListener('keydown', function (e) {
+      if (e.key !== 'Enter') return;
+      var q = input.value.trim();
+      if (q.length === 0) return;
+      window.open('https://www.google.com/search?q=' + encodeURIComponent(q), '_blank', 'noopener');
+    });
+
+    /* 纯看模式下拦截图片跳转（捕获阶段，先于链接默认行为） */
+    stage.addEventListener(
+      'click',
+      function (e) {
+        if (linkClickable) return;
+        if (!e.target.closest('.dir-b-link')) return;
+        e.preventDefault();
+        e.stopPropagation();
+      },
+      true
+    );
+
+    /* 两种浏览模式：真的能切，状态写进 data-mode */
+    function setMode(mode) {
+      stage.setAttribute('data-mode', mode);
+      switchBtn.setAttribute('aria-checked', mode === 'interactive' ? 'true' : 'false');
+      mlabel.textContent = mode === 'interactive' ? '交互' : '纯看';
+      linkClickable = mode === 'interactive';
+      if (mode === 'watch') armIdle();
+      else wake();
+    }
+
+    switchBtn.addEventListener('click', function () {
+      setMode(stage.getAttribute('data-mode') === 'interactive' ? 'watch' : 'interactive');
+    });
+
+    /* 记忆点：纯看模式 + 鼠标静止 2s → 除图片外全部 UI 淡出；一动就淡回 */
+    function armIdle() {
+      clearTimeout(idleTimer);
+      if (reduceMotion.matches) { stage.classList.remove('dir-b-idle'); return; }
+      if (stage.getAttribute('data-mode') !== 'watch') return;
+      idleTimer = setTimeout(function () {
+        if (stage.getAttribute('data-mode') === 'watch' && document.activeElement !== input) {
+          stage.classList.add('dir-b-idle');
+        }
+      }, IDLE_DELAY);
+    }
+
+    function wake() {
+      clearTimeout(idleTimer);
+      stage.classList.remove('dir-b-idle');
+    }
+
+    stage.addEventListener('mousemove', function () {
+      if (stage.classList.contains('dir-b-idle')) wake();
+      armIdle();
+    });
+    stage.addEventListener('mouseleave', function () { wake(); });
+    input.addEventListener('focus', wake);
+    input.addEventListener('blur', function () { if (stage.getAttribute('data-mode') === 'watch') armIdle(); });
+    if (reduceMotion.addEventListener) {
+      reduceMotion.addEventListener('change', function () { if (reduceMotion.matches) wake(); });
+    }
+
+    /* 重播：重跑入场（单张 240ms + 35ms 错峰）与搜索栏聚焦动效 */
+    replay.addEventListener('click', function () {
+      wake();
+      clearTimeout(burstTimer);
+      stage.classList.remove('dir-b-burst');
+      void stage.offsetWidth;
+      stage.classList.add('dir-b-burst');
+      input.focus();
+      burstTimer = setTimeout(function () {
+        stage.classList.remove('dir-b-burst');
+      }, 800);
+    });
+
+    setMode('interactive');
+  })();
+</script>

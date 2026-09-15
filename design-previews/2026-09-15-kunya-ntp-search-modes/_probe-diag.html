@@ -1,0 +1,31 @@
+﻿<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<iframe id="f" width="1280" height="800" style="border:0"></iframe>
+<pre id="o"></pre>
+<script type="module">
+import { MARKUP, CODE } from './_probe-d.data.mjs';
+const f = document.getElementById('f'), d = f.contentDocument;
+d.open(); d.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0}</style></head><body>'+MARKUP+'</body></html>'); d.close();
+const s = d.createElement('script'); s.textContent = CODE; d.body.appendChild(s);
+const grid = d.querySelector('.dir-d-grid');
+const stage = d.querySelector('.dir-d-stage');
+const tiles = [...d.querySelectorAll('.dir-d-tile')];
+const gs = getComputedStyle(grid);
+const L = [];
+L.push('stage ' + stage.getBoundingClientRect().width + 'x' + stage.getBoundingClientRect().height);
+L.push('grid client ' + grid.clientWidth + 'x' + grid.clientHeight + ' paddingTop=' + gs.paddingTop + ' colCount=' + gs.columnCount + ' colWidth=' + gs.columnWidth + ' colGap=' + gs.columnGap);
+L.push('grid rect h=' + grid.getBoundingClientRect().height + ' scrollW=' + grid.scrollWidth + ' scrollH=' + grid.scrollHeight);
+const cols = new Map();
+tiles.forEach((t, i) => {
+  const r = t.getBoundingClientRect();
+  const key = Math.round(r.left);
+  if (!cols.has(key)) cols.set(key, []);
+  cols.get(key).push({ rank: i + 1, top: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height), bot: Math.round(r.bottom) });
+});
+L.push('distinct lefts = ' + cols.size);
+[...cols.entries()].sort((a,b)=>a[0]-b[0]).forEach(([left, arr]) => {
+  L.push('colL=' + left + ' n=' + arr.length + ' items=' + arr.map(a => a.rank + '@' + a.top + '(h' + a.h + ',b' + a.bot + ')').join(' '));
+});
+L.push('tile w set = ' + [...new Set(tiles.map(t => Math.round(t.getBoundingClientRect().width)))].join(','));
+document.getElementById('o').textContent = L.join('\n');
+document.title = 'DIAG-DONE';
+</script></body></html>

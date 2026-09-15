@@ -1,0 +1,21 @@
+﻿<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<iframe id="f" width="1280" src="about:blank" style="border:0;overflow:hidden"></iframe>
+<pre id="o"></pre>
+<script type="module">
+import { MARKUP, CODE } from './_probe-d.data.mjs';
+const f = document.getElementById('f'), d = f.contentDocument;
+d.open(); d.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0}</style></head><body>'+MARKUP+'</body></html>'); d.close();
+const s = d.createElement('script'); s.textContent = CODE; d.body.appendChild(s);
+const L = [];
+const grid = d.querySelector('.dir-d-grid');
+L.push('grid children = ' + grid.children.length + '  grid display=' + getComputedStyle(grid).display + ' cols=' + getComputedStyle(grid).gridTemplateColumns);
+[...grid.children].slice(0, 12).forEach((t, i) => {
+  const r = t.getBoundingClientRect();
+  L.push('dom#' + (i+1) + ' -> left=' + Math.round(r.left) + ' top=' + Math.round(r.top) + ' rank=' + t.querySelector('.dir-d-rank').textContent + ' src=' + t.querySelector('img').getAttribute('src'));
+});
+// does code contain only one appendChild to grid?
+L.push('appendChild(frag) count in code = ' + (CODE.match(/appendChild\(frag\)/g) || []).length);
+L.push('makeTile( count = ' + (CODE.match(/makeTile\(/g) || []).length);
+document.getElementById('o').textContent = L.join('\n');
+document.title = 'DIAG5-DONE';
+</script></body></html>

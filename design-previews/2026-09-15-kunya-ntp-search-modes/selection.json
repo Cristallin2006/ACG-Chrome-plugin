@@ -1,0 +1,14 @@
+{
+  "id": "B",
+  "label": "B: 暗房",
+  "name": "暗房",
+  "notes": "用户在对话中选择方向（附调整建议）",
+  "dials": {
+    "variance": 7,
+    "motion": 6,
+    "density": 5
+  },
+  "adjustments": "搜索栏是用来搜网页的，等同传统 Chrome 搜索（默认搜索引擎），不是搜 pixiv；插画只作为美化主题（画廊）使用。",
+  "source": "chat",
+  "receivedAt": "2026-09-15T10:05:00.000Z"
+}

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>probe dir-d</title>
+<style>
+  html,body{margin:0;background:#8a8f96;font-family:monospace}
+  iframe{border:0;display:block;margin:0 0 8px;overflow:hidden}
+  #res{background:#111;color:#eee;padding:12px;font:12px/1.5 monospace;white-space:pre-wrap}
+</style>
+</head><body>
+<iframe id="f1" width="1280" src="about:blank"></iframe>
+<iframe id="f2" width="700" src="about:blank"></iframe>
+<iframe id="f3" width="360" src="about:blank"></iframe>
+<pre id="res">loading…</pre>
+
+<script type="module">
+import { MARKUP, CODE, SRC } from './_probe-d.data.mjs';
+
+const out = [];
+const ok = (name, cond, extra) => out.push((cond ? 'PASS ' : 'FAIL ') + name + (extra !== undefined ? ' :: ' + extra : ''));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const waitFor = async (fn, ms = 3000) => {
+  const t0 = Date.now();
+  while (Date.now() - t0 < ms) {
+    if (fn()) return true;
+    await sleep(25);
+  }
+  return false;
+};
+
+const specs = [['W1280', 'f1'], ['W700', 'f2'], ['W360', 'f3']];
+
+for (const [tag, fid] of specs) {
+  const d = document.getElementById(fid).contentDocument;
+  d.open();
+  d.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0}</style></head><body>' + MARKUP + '</body></html>');
+  d.close();
+  const s = d.createElement('script');
+  s.textContent = CODE;
+  d.body.appendChild(s);
+}
+
+async function run(tag, fid) {
+  const d = document.getElementById(fid).contentDocument;
+  const stage = d.querySelector('.dir-d-stage');
+  if (!stage) return out.push('FAIL ' + tag + ' stage missing');
+
+  const tiles = d.querySelectorAll('.dir-d-tile');
+  const imgs = d.querySelectorAll('.dir-d-tile img');
+  const ranks = d.querySelectorAll('.dir-d-rank');
+  const sw = stage.getBoundingClientRect().width, sh = stage.getBoundingClientRect().height;
+  const stR = stage.getBoundingClientRect();
+
+  ok(tag + ' tiles >= 18 (packed to fill)', tiles.length >= 18, tiles.length);
+  ok(tag + ' tiles == imgs == ranks', tiles.length === imgs.length && tiles.length === ranks.length, tiles.length + '/' + imgs.length + '/' + ranks.length);
+  ok(tag + ' rank runs 1..N', ranks[0]?.textContent === '1' && ranks[ranks.length - 1]?.textContent === String(ranks.length), ranks[0]?.textContent + '..' + ranks[ranks.length - 1]?.textContent);
+  ok(tag + ' stage aspect 16/10', Math.abs(sw / sh - 1.6) < 0.03, (sw / sh).toFixed(3));
+  ok(tag + ' container-type inline-size', getComputedStyle(stage).containerType === 'inline-size', getComputedStyle(stage).containerType);
+
+  const srcs = new Set([...imgs].map(i => i.getAttribute('src')));
+  ok(tag + ' 10 distinct relative jpgs', srcs.size === 10 && [...srcs].every(s => /^assets\/art-\d\d\.jpg$/.test(s)), srcs.size + ' -> ' + [...srcs].sort().join(','));
+
+  const bar = d.querySelector('.dir-d-bar'), ctl = d.querySelector('.dir-d-controls'), belt = d.querySelector('.dir-d-belt');
+  const stat = d.querySelector('.dir-d-stat');
+  const br = bar.getBoundingClientRect(), cr = ctl.getBoundingClientRect(), ber = belt.getBoundingClientRect(), sr = stat.getBoundingClientRect();
+
+  ok(tag + ' bar/controls no overlap', br.right <= cr.left + 0.5, Math.round(br.right) + ' < ' + Math.round(cr.left));
+  ok(tag + ' stat clear of controls', sr.right <= cr.left + 0.5 || getComputedStyle(stat).display === 'none', Math.round(sr.right) + ' < ' + Math.round(cr.left));
+  ok(tag + ' stat inline on tool row', getComputedStyle(stat).display === 'none' || (sr.left >= br.right - 0.5 && sr.top >= stR.top && sr.bottom <= ber.bottom + 1), 'stat top ' + Math.round(sr.top - stR.top) + '..' + Math.round(sr.bottom - stR.top) + ', beltBottom ' + Math.round(ber.height));
+  ok(tag + ' bar inside stage', br.left >= -0.5 && br.right <= sw + 0.5, Math.round(br.left) + '..' + Math.round(br.right) + ' of ' + Math.round(sw));
+  ok(tag + ' belt height ~8.6cqw', Math.abs(ber.height / sw - 0.086) < 0.012, ber.height.toFixed(1) + ' = ' + (ber.height / sw).toFixed(3) + 'cqw');
+  ok(tag + ' bar width 46cqw (58cqw under 430px)', Math.abs(br.width / sw - (sw <= 430 ? 0.58 : 0.46)) < 0.02, (br.width / sw).toFixed(3) + ' w=' + Math.round(br.width));
+
+  // column geometry
+  const colEls = d.querySelectorAll('.dir-d-col');
+  ok(tag + ' exactly 6 columns', colEls.length === 6, colEls.length);
+  const colRects = [...colEls].map(c => c.getBoundingClientRect());
+  const gaps = [];
+  for (let i = 1; i < colRects.length; i++) gaps.push(colRects[i].left - colRects[i - 1].right);
+  const gapOk = gaps.every(g => Math.abs(g - gaps[0]) < 1.5) && gaps[0] > 0;
+  ok(tag + ' 6 equal columns with even gaps', gapOk, 'gap=' + gaps.map(g => g.toFixed(1)).join('/') + ' colW=' + colRects[0].width.toFixed(1) + ' (' + (100 * colRects[0].width / sw).toFixed(2) + 'cqw)');
+  ok(tag + ' column right edge inside stage', colRects[5].right <= sw + 0.5, Math.round(colRects[5].right) + ' <= ' + Math.round(sw));
+  ok(tag + ' last column flush with right margin', Math.abs((sw - colRects[5].right) - colRects[0].left) < 1.5, 'left=' + colRects[0].left.toFixed(1) + ' rightGap=' + (sw - colRects[5].right).toFixed(1));
+
+  const t0 = tiles[0].getBoundingClientRect();
+  ok(tag + ' tile0 ratio 480/673', Math.abs(t0.width / t0.height - 480 / 673) < 0.06, (t0.width / t0.height).toFixed(3));
+
+  // wall hugs command line, every column reaches the bottom
+  const gapBelowBar = t0.top - br.bottom;
+  ok(tag + ' wall starts under command line', gapBelowBar >= -1 && gapBelowBar <= sw * 0.045, Math.round(gapBelowBar) + 'px');
+  const shortCols = [];
+  colEls.forEach((c, i) => {
+    const ts = c.querySelectorAll('.dir-d-tile');
+    const last = ts[ts.length - 1].getBoundingClientRect();
+    if (last.bottom < stR.bottom - 1) shortCols.push(i + ':' + Math.round(last.bottom - stR.top) + '/' + Math.round(sh));
+  });
+  ok(tag + ' every column reaches stage bottom', shortCols.length === 0, shortCols.join(' ') || 'all 6 ok');
+  const perCol = [...colEls].map(c => c.querySelectorAll('.dir-d-tile').length);
+  ok(tag + ' every column >= 4 tiles', Math.min(...perCol) >= 4, perCol.join('/'));
+
+  // blank-area census
+  const step = 2;
+  const visible = [];
+  for (const t of tiles) {
+    const r = t.getBoundingClientRect();
+    if (r.top < stR.bottom && r.bottom > stR.top) visible.push(r);
+  }
+  const inRect = (x, y, r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  let blank = 0, total = 0, worstRatio = 0, worstY = -1;
+  for (let y = stR.top + step / 2; y < stR.bottom - 8; y += step) {
+    const inToolRow = (y - stR.top) <= ber.height + 0.5;
+    let bandBlank = 0, bandTotal = 0;
+    for (let x = stR.left + step / 2; x < stR.right; x += step) {
+      total++; bandTotal++;
+      if (inToolRow) continue;
+      let hit = false;
+      for (const r of visible) { if (inRect(x, y, r)) { hit = true; break; } }
+      if (!hit) { blank++; bandBlank++; }
+    }
+    if (bandTotal) {
+      const ratio = bandBlank / bandTotal;
+      if (ratio > worstRatio) { worstRatio = ratio; worstY = y - stR.top; }
+    }
+  }
+  const blankPct = 100 * blank / total;
+  ok(tag + ' content blank < 15%', blankPct < 15, blankPct.toFixed(2) + '%');
+  ok(tag + ' no blank band > 15% in content', worstRatio < 0.15, (100 * worstRatio).toFixed(1) + '% @ y=' + Math.round(worstY));
+
+  // command line internals
+  const inp = d.querySelector('.dir-d-input'), pre = d.querySelector('.dir-d-prompt'), ent = d.querySelector('.dir-d-enter');
+  const ir = inp.getBoundingClientRect(), pr = pre.getBoundingClientRect(), er = ent.getBoundingClientRect();
+  ok(tag + ' prompt/input no collide', pr.right <= ir.left + 0.5, Math.round(pr.right) + ' < ' + Math.round(ir.left));
+  ok(tag + ' input/enter no collide', ir.right <= er.left + 0.5, Math.round(ir.right) + ' < ' + Math.round(er.left));
+  ok(tag + ' input usable width >50px', ir.width > 50, Math.round(ir.width));
+  ok(tag + ' input font >=11px', parseFloat(getComputedStyle(inp).fontSize) >= 11, getComputedStyle(inp).fontSize);
+  ok(tag + ' mode btn font >=9px', parseFloat(getComputedStyle(d.querySelector('.dir-d-mode')).fontSize) >= 9, getComputedStyle(d.querySelector('.dir-d-mode')).fontSize);
+  ok(tag + ' rank font >=8px', parseFloat(getComputedStyle(ranks[0]).fontSize) >= 8, getComputedStyle(ranks[0]).fontSize);
+  ok(tag + ' placeholder chinese exact', inp.getAttribute('placeholder') === '搜索插画 / 标签 / 画师', JSON.stringify(inp.getAttribute('placeholder')));
+  ok(tag + ' mono on bar', /mono|Consolas|Cascadia/i.test(getComputedStyle(bar).fontFamily));
+  ok(tag + ' tabular-nums on stage', getComputedStyle(stage).fontVariantNumeric.includes('tabular-nums'), getComputedStyle(stage).fontVariantNumeric);
+
+  // WATCH MODE
+  const watchBtn = d.querySelector('.dir-d-watchbtn'), lookBtn = d.querySelector('.dir-d-lookbtn');
+  const seg = d.querySelector('.dir-d-seg');
+  const sliderTx = () => {
+    const t = getComputedStyle(seg, '::before').transform;
+    const m = t.match(/matrix\(([^)]+)\)/);
+    return m ? parseFloat(m[1].split(',')[4]) : 0;
+  };
+  watchBtn.click();
+  const settledWatch = await waitFor(() => Math.abs(sliderTx()) > 5 && parseFloat(getComputedStyle(imgs[0]).opacity) < 0.69);
+  ok(tag + ' watch transition settled', settledWatch, 'sliderTx=' + sliderTx().toFixed(1));
+  ok(tag + ' 纯看 -> data-mode=watch', stage.getAttribute('data-mode') === 'watch', stage.getAttribute('data-mode'));
+  ok(tag + ' watch aria-pressed true/false', watchBtn.getAttribute('aria-pressed') === 'true' && lookBtn.getAttribute('aria-pressed') === 'false');
+  ok(tag + ' watch cursor:default', getComputedStyle(tiles[0]).cursor === 'default', getComputedStyle(tiles[0]).cursor);
+  ok(tag + ' watch pointer-events:none', getComputedStyle(tiles[0]).pointerEvents === 'none', getComputedStyle(tiles[0]).pointerEvents);
+  ok(tag + ' watch img dimmed below 0.7', parseFloat(getComputedStyle(imgs[0]).opacity) < 0.7, getComputedStyle(imgs[0]).opacity);
+  ok(tag + ' watch tabindex=-1', tiles[0].getAttribute('tabindex') === '-1', tiles[0].getAttribute('tabindex'));
+  ok(tag + ' watch slider translated ~segW/2', Math.abs(Math.abs(sliderTx()) - seg.getBoundingClientRect().width / 2) < 8, sliderTx().toFixed(1) + ' vs ' + (seg.getBoundingClientRect().width / 2).toFixed(1));
+  ok(tag + ' ghost btn neutral gray', getComputedStyle(d.querySelector('.dir-d-ghost')).backgroundColor === 'rgb(233, 235, 239)', getComputedStyle(d.querySelector('.dir-d-ghost')).backgroundColor);
+  ok(tag + ' watch: click prevented', tiles[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })) === false);
+
+  // BACK TO INTERACTIVE
+  lookBtn.click();
+  const settledLook = await waitFor(() => Math.abs(sliderTx()) < 1 && Math.abs(parseFloat(getComputedStyle(imgs[0]).opacity) - 0.7) < 0.02);
+  ok(tag + ' interactive transition settled', settledLook, 'sliderTx=' + sliderTx().toFixed(1));
+  ok(tag + ' 交互 -> data-mode=interactive', stage.getAttribute('data-mode') === 'interactive', stage.getAttribute('data-mode'));
+  ok(tag + ' interactive pointer-events:auto', getComputedStyle(tiles[0]).pointerEvents === 'auto', getComputedStyle(tiles[0]).pointerEvents);
+  ok(tag + ' interactive cursor:pointer', getComputedStyle(tiles[0]).cursor === 'pointer', getComputedStyle(tiles[0]).cursor);
+  ok(tag + ' interactive img opacity 0.7', Math.abs(parseFloat(getComputedStyle(imgs[0]).opacity) - 0.7) < 0.02, getComputedStyle(imgs[0]).opacity);
+  ok(tag + ' interactive tabindex=0', tiles[0].getAttribute('tabindex') === '0', tiles[0].getAttribute('tabindex'));
+  ok(tag + ' interactive click NOT prevented', tiles[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true })) === true);
+  ok(tag + ' href pixiv artwork', /^https:\/\/www\.pixiv\.net\/artworks\/\d+$/.test(tiles[0].getAttribute('href')), tiles[0].getAttribute('href'));
+
+  // FOCUS MEMORY POINT
+  const b = d.querySelector('.dir-d-bar');
+  const p0 = getComputedStyle(pre, '::before').opacity, a0 = getComputedStyle(pre, '::after').opacity, r0 = getComputedStyle(b, '::before').opacity;
+  inp.focus();
+  ok(tag + ' input receives focus', d.activeElement === inp, d.activeElement && d.activeElement.className);
+  const settledFocus = await waitFor(() => parseFloat(getComputedStyle(pre, '::after').opacity) > 0.5);
+  const p1 = getComputedStyle(pre, '::before').opacity, a1 = getComputedStyle(pre, '::after').opacity, r1 = getComputedStyle(b, '::before').opacity;
+  ok(tag + ' focus transition settled', settledFocus, 'block=' + a1 + ' rail=' + r1);
+  ok(tag + ' focus: ":" hidden', parseFloat(p0) > 0.5 && parseFloat(p1) < 0.5, p0 + ' -> ' + p1);
+  ok(tag + ' focus: block shown', parseFloat(a0) < 0.5 && parseFloat(a1) > 0.5, a0 + ' -> ' + a1);
+  ok(tag + ' focus: accent rail shown (input context only)', parseFloat(r0) < 0.5 && parseFloat(r1) > 0.5, r0 + ' -> ' + r1);
+  ok(tag + ' rail width ~2cqw', Math.abs(parseFloat(getComputedStyle(b, '::before').width) / sw - 0.02) < 0.008, getComputedStyle(b, '::before').width);
+  ok(tag + ' focus border -> accent', getComputedStyle(b).borderTopColor === 'rgb(15, 99, 196)', getComputedStyle(b).borderTopColor);
+  ok(tag + ' prompt transition <=120ms', parseFloat(getComputedStyle(pre, '::before').transitionDuration) <= 0.12, getComputedStyle(pre, '::before').transitionDuration);
+  inp.blur();
+  await waitFor(() => parseFloat(getComputedStyle(pre, '::after').opacity) < 0.5);
+
+  // REPLAY
+  d.querySelector('#dir-d-replay').click();
+  const pulsed = d.querySelectorAll('.dir-d-pulse').length;
+  ok(tag + ' replay pulses all tiles', pulsed === tiles.length, pulsed + '/' + tiles.length);
+  ok(tag + ' pulse <=140ms', parseFloat(getComputedStyle(tiles[0]).animationDuration) <= 0.14, getComputedStyle(tiles[0]).animationDuration);
+  ok(tag + ' column stagger', getComputedStyle(tiles[5]).animationDelay !== '0s', getComputedStyle(tiles[5]).animationDelay);
+  await sleep(400);
+
+  out.push('INFO ' + tag + ' stage ' + Math.round(sw) + 'x' + Math.round(sh) + ' tiles=' + tiles.length + ' perCol=' + perCol.join('/') + ' beltH=' + ber.height.toFixed(1) + ' barW=' + Math.round(br.width) + ' colW=' + colRects[0].width.toFixed(1) + ' blank=' + blankPct.toFixed(2) + '% stat=' + getComputedStyle(stat).display);
+}
+
+for (const [tag, fid] of specs) { try { await run(tag, fid); } catch (e) { out.push('THROW ' + tag + ' ' + e.message + ' @ ' + (e.stack || '').split('\n')[1]); } }
+
+// static source hygiene
+ok('src no #000', SRC.indexOf('#000') === -1);
+ok('src no italic/font-style', !/italic|font-style/i.test(SRC));
+ok('src no transition:all', !/transition:\s*all/i.test(SRC));
+ok('src no ease-in', !/ease-in(?!-out)/.test(SRC));
+ok('src no .qmdp-', SRC.indexOf('.qmdp-') === -1);
+ok('src no <html/<body/<head', !/<(html|body|head)[\s>]/i.test(SRC));
+ok('src no external assets', !/https?:\/\/(?!www\.pixiv\.net)/.test(SRC.replace(/https:\/\/www\.pixiv\.net\/artworks/g, '')));
+ok('src no @import/url(http', !/@import|url\(\s*['"]?https?:/i.test(SRC));
+ok('src exactly 1 style + 1 script', (SRC.match(/<style>/g) || []).length === 1 && (SRC.match(/<script>/g) || []).length === 1);
+ok('src order style -> stage -> script', SRC.indexOf('<style>') < SRC.indexOf('dir-d-stage') && SRC.indexOf('dir-d-stage') < SRC.indexOf('<script>'));
+ok('src IIFE with scoped queries', /\(function\s*\(\s*\)\s*\{/.test(SRC) && !/document\.querySelector(All)?\(\s*['"](?!\.dir-d-stage)/.test(SRC));
+ok('src mono axis exact', SRC.includes('"Cascadia Mono", Consolas, "SFMono-Regular", "DejaVu Sans Mono", monospace'));
+ok('src cold gray base + hairline', SRC.includes('#F4F5F7') && SRC.includes('#E3E6EA'));
+ok('src ease-out exact', SRC.includes('cubic-bezier(0.23, 1, 0.32, 1)'));
+ok('src hover gated fine pointer', /@media \(hover: hover\) and \(pointer: fine\)/.test(SRC));
+ok('src reduced-motion fallback', /@media \(prefers-reduced-motion: reduce\)/.test(SRC));
+ok('src cqw sizing, no vw/vh', SRC.includes('cqw') && !/\d(vw|vh)\b/.test(SRC));
+
+const styleTxt = SRC.match(/<style>([\s\S]*?)<\/style>/)[1];
+const timing = [...styleTxt.matchAll(/(?:transition|animation)(?:-duration|-delay)?\s*:\s*([^;]+);/g)].map(m => m[1]);
+const msVals = timing.join(' ').match(/(\d+(?:\.\d+)?)ms/g) || [];
+const tooLong = msVals.filter(v => parseFloat(v) > 140);
+ok('all timing <=140ms', tooLong.length === 0, msVals.join(' ') + (tooLong.length ? ' | OVER ' + tooLong.join(' ') : ''));
+
+const clean = styleTxt.replace(/\/\*[\s\S]*?\*\//g, '');
+const offenders = [];
+for (const m of clean.matchAll(/(^|\})\s*([^{}@][^{}]*?)\{/g)) {
+  for (const part of m[2].split(',')) {
+    const p = part.trim();
+    if (!p) continue;
+    if (!p.startsWith('.dir-d-')) offenders.push(p);
+  }
+}
+ok('every rule selector starts .dir-d-', offenders.length === 0, offenders.slice(0, 8).join(' | ') || 'clean');
+
+const problems = out.filter(l => !l.startsWith('PASS') && !l.startsWith('INFO'));
+document.getElementById('res').textContent =
+  'PASS=' + out.filter(l => l.startsWith('PASS')).length + '  PROBLEMS=' + problems.length + '\n\n' + out.filter(l => !l.startsWith('PASS')).join('\n');
+document.title = 'PROBE-DONE';
+</script>
+</body></html>

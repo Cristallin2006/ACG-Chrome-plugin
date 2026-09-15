@@ -1,34 +1,15 @@
-const refererValue = 'https://www.pixiv.net/'
-const refererTarget = 'https://i.pximg.net/*'
-
-let extraInfoSpec = ['requestHeaders', 'blocking']
-if (chrome.webRequest['OnBeforeSendHeadersOptions'].hasOwnProperty('EXTRA_HEADERS')) {
-  extraInfoSpec.push('extraHeaders')
-}
-
-/** Modifies request Referer HTTP header */
-chrome.webRequest.onBeforeSendHeaders.addListener(
-  details => {
-    let refererFound = false
-
-    for (const n in details.requestHeaders) {
-      refererFound = details.requestHeaders[n].name.toLowerCase() == 'referer'
-
-      if (refererFound) {
-        // Rewrite Referer header
-        details.requestHeaders[n].value = refererValue
-        break
-      }
-    }
-
-    if (!refererFound) {
-      // If no referer header is set, set one
-      details.requestHeaders.push({ name: 'Referer', value: refererValue })
-    }
-    return { requestHeaders: details.requestHeaders }
-  },
-  {
-    urls: [refererTarget],
-  },
-  extraInfoSpec
-)
+/**
+ * pixiv image requests need a Referer of https://www.pixiv.net/, otherwise
+ * i.pximg.net rejects them (HTTP 403 for a correctly formed URL).
+ *
+ * The Manifest V2 build rewrote that header at runtime with
+ * `chrome.webRequest.onBeforeSendHeaders` and the blocking `webRequestBlocking`
+ * permission. Manifest V3 removed blocking webRequest, so the header is now set
+ * declaratively, by the static rule in `release/rules/pximg-referer.json`
+ * declared through `declarative_net_request` in the manifest.
+ *
+ * Nothing to do at runtime and no listener to register. This module stays as
+ * the single place documenting why the rule exists; the rule is the
+ * implementation.
+ */
+export {}

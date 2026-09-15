@@ -11,7 +11,21 @@ export interface IllustEntry {
   sl: number | null
 }
 
-const imageResolution = '480x960'
+const imageResolution = '600x1200_90'
+
+/**
+ * Ranking APIs hand back whatever thumbnail the listing used: `_square` and
+ * `_custom` thumbs are centre-cropped squares whose pixels do NOT match
+ * illust_width/illust_height. The puzzle wall sizes every tile from those
+ * dimensions, so a square thumb would be stretched by up to ~50%. Normalise
+ * every URL to the proportional master image.
+ */
+const toMasterUrl = (url: string): string =>
+  url
+    .replace(/c\/\d+x\d+(_\d+_\w+)?\//, `c/${imageResolution}/`)
+    .replace('/custom-thumb/', '/img-master/')
+    .replace('_square', '_master')
+    .replace('_custom', '_master')
 
 export const getNewIllusts = async (): Promise<IllustEntry[]> => {
   const URL =
@@ -32,9 +46,7 @@ export const getNewIllusts = async (): Promise<IllustEntry[]> => {
       res.map(
         (content): IllustEntry => ({
           id: content.illust_id,
-          imageUrl: content.url
-            .replace(/c\/\d+x\d+_\d+_\w+\//, `c/${imageResolution}/`)
-            .replace('_square', '_master'),
+          imageUrl: toMasterUrl(content.url),
           title: content.title,
           tags: content.tags,
           width: content.illust_width,
@@ -66,9 +78,7 @@ export const getPopularIllusts = async (): Promise<IllustEntry[]> => {
       res.map(
         (content): IllustEntry => ({
           id: content.illust_id,
-          imageUrl: content.url
-            .replace(/c\/\d+x\d+_\d+_\w+\//, `c/${imageResolution}/`)
-            .replace('_square', '_master'),
+          imageUrl: toMasterUrl(content.url),
           title: content.title,
           tags: content.tags,
           width: content.illust_width,
@@ -95,10 +105,7 @@ export const getOriginalRanking = async (): Promise<IllustEntry[]> => {
       res.data.contents.map(
         (content): IllustEntry => ({
           id: content.illust_id,
-          imageUrl: content.url.replace(
-            /c\/\d+x\d+\//,
-            `c/${imageResolution}/`,
-          ),
+          imageUrl: toMasterUrl(content.url),
           title: content.title,
           tags: content.tags,
           width: content.width,
@@ -145,10 +152,7 @@ const getIllustsDetail = async (ids: Array<number>): Promise<IllustEntry[]> => {
         const content = res.data.body[id]
         entities.push({
           id: content.id,
-          imageUrl: content.url
-            .replace(/c\/\d+x\d+\//, `c/${imageResolution}/`)
-            .replace('_square', '_master')
-            .replace('250x250_80_a2', '480x960'),
+          imageUrl: toMasterUrl(content.url),
           title: content.title,
           tags: content.tags,
           width: content.width,

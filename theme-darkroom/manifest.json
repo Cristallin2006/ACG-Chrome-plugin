@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Ku-nya Darkroom",
+  "version": "1.0",
+  "description": "Keeps Chrome's own new tab surfaces (including the new tab footer that credits the extension) in the same near-black as the Ku-nya darkroom page.",
+  "theme": {
+    "colors": {
+      "ntp_background": [19, 17, 16],
+      "ntp_text": [235, 232, 230],
+      "ntp_header": [235, 232, 230],
+      "ntp_link": [224, 164, 94]
+    }
+  }
+}

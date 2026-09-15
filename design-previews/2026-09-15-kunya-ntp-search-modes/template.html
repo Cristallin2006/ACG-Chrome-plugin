@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ku-nya 新标签页 · 主搜索入口 + 双浏览模式 · 方向样机</title>
+    <style>
+      /* Neutral shell only: it must not compete with the four mockups.
+         Selection chrome (buttons, dials, confirm dialog, toast) is injected
+         by the local preview server. */
+      :root {
+        --kny-bg: #eef0f2;
+        --kny-card: #ffffff;
+        --kny-line: #dfe3e8;
+        --kny-line-soft: #e9edf1;
+        --kny-ink: #1c2024;
+        --kny-ink-soft: #5b636c;
+        --kny-ink-faint: #8b939c;
+        --kny-rec: #14624a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 28px 24px 64px;
+        background: var(--kny-bg);
+        color: var(--kny-ink);
+        font: 400 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text",
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .kny-wrap {
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+
+      .kny-head {
+        max-width: 70ch;
+        margin: 0 0 22px;
+      }
+
+      .kny-head h1 {
+        margin: 0 0 6px;
+        font-size: 21px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+      }
+
+      .kny-head p {
+        margin: 0;
+        color: var(--kny-ink-soft);
+        font-size: 13.5px;
+      }
+
+      .kny-contract {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        border: 1px solid var(--kny-line);
+        border-radius: 8px;
+        background: #f7f8f9;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+      }
+
+      .kny-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .kny-card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--kny-line);
+        border-radius: 12px;
+        background: var(--kny-card);
+      }
+
+      .kny-card-head {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        min-width: 0;
+      }
+
+      .kny-key-cap {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--kny-line);
+        border-radius: 6px;
+        background: #f6f7f9;
+        color: var(--kny-ink-soft);
+        font-size: 12px;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .kny-card h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+
+      .kny-latin {
+        color: var(--kny-ink-faint);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+      }
+
+      .kny-rec {
+        margin-left: auto;
+        flex: none;
+        padding: 2px 8px;
+        border: 1px solid #bfe0d3;
+        border-radius: 999px;
+        background: #eef8f3;
+        color: var(--kny-rec);
+        font-size: 11.5px;
+        font-weight: 650;
+      }
+
+      .kny-tagline {
+        margin: 0;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .kny-stage {
+        border: 1px solid var(--kny-line-soft);
+        border-radius: 9px;
+        overflow: hidden;
+        background: #fff;
+      }
+
+      .kny-notes {
+        margin: 30px 0 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .kny-note {
+        padding: 14px 16px;
+        border: 1px solid var(--kny-line);
+        border-radius: 10px;
+        background: var(--kny-card);
+      }
+
+      .kny-note h3 {
+        margin: 0 0 8px;
+        font-size: 14.5px;
+        font-weight: 650;
+      }
+
+      .kny-note dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 5.2em minmax(0, 1fr);
+        gap: 4px 10px;
+        font-size: 13px;
+      }
+
+      .kny-note dt {
+        color: var(--kny-ink-faint);
+      }
+
+      .kny-note dd {
+        margin: 0;
+        color: var(--kny-ink-soft);
+      }
+
+      .kny-mix {
+        margin: 18px 0 0;
+        padding: 12px 16px;
+        border: 1px dashed var(--kny-line);
+        border-radius: 10px;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+      }
+
+      .kny-fallback {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        border: 1px solid #f0d9a8;
+        border-radius: 8px;
+        background: #fdf6e7;
+        color: #6b4e12;
+        font-size: 13px;
+      }
+
+      .kny-fallback button {
+        margin-left: 8px;
+        padding: 4px 10px;
+        border: 1px solid #d9bf85;
+        border-radius: 6px;
+        background: #fff;
+        color: inherit;
+        font: inherit;
+      }
+
+      @media (max-width: 900px) {
+        body {
+          padding: 20px 14px 48px;
+        }
+        .kny-grid,
+        .kny-notes {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="kny-wrap">
+      <header class="kny-head">
+        <h1>Ku-nya 新标签页：主搜索入口 + 纯看 / 交互双模式</h1>
+        <p>
+          四个方向都是<strong>设计方向样机</strong>，只看视觉与交互气质，不是最终页面。点选或按 1–4
+          后确认，才进入正式实现。
+        </p>
+        <p class="kny-contract">
+          功能契约：打开就能看图 · 一眼找到搜索入口 · 一次切换进入防误触的纯看模式 ·
+          搜索回车直达 pixiv 站内结果页。搜索栏所在横条同时是「安全带」，挡住误触图片链接。
+        </p>
+      </header>
+
+      <main class="kny-grid">
+        <article
+          class="kny-card"
+          data-design-option
+          data-dir="A"
+          data-name="静纸"
+        >
+          <div class="kny-card-head">
+            <span class="kny-key-cap">A</span>
+            <h2>静纸</h2>
+            <span class="kny-latin">PAPER QUIET</span>
+            <span class="kny-rec">推荐</span>
+          </div>
+          <div class="kny-stage"><!--DIR_A--></div>
+          <p class="kny-tagline">
+            沿用现在的近白纸面与 0.7 透明度语言，搜索栏是页面上唯一浮起的元素，模式切换用一个滑动指示器。
+          </p>
+        </article>
+
+        <article
+          class="kny-card"
+          data-design-option
+          data-dir="B"
+          data-name="暗房"
+        >
+          <div class="kny-card-head">
+            <span class="kny-key-cap">B</span>
+            <h2>暗房</h2>
+            <span class="kny-latin">DARKROOM</span>
+          </div>
+          <div class="kny-stage"><!--DIR_B--></div>
+          <p class="kny-tagline">
+            暗色画布，插画是唯一光源；搜索栏是底部磨砂胶囊，鼠标静止后全部 UI 淡出，留给画面。
+          </p>
+        </article>
+
+        <article
+          class="kny-card"
+          data-design-option
+          data-dir="C"
+          data-name="刊头"
+        >
+          <div class="kny-card-head">
+            <span class="kny-key-cap">C</span>
+            <h2>刊头</h2>
+            <span class="kny-latin">MASTHEAD</span>
+          </div>
+          <div class="kny-stage"><!--DIR_C--></div>
+          <p class="kny-tagline">
+            暖白纸色 + 衬线刊头，搜索是一整行下划线输入行，图片带作者署名，像一份每日画报。
+          </p>
+        </article>
+
+        <article
+          class="kny-card"
+          data-design-option
+          data-dir="D"
+          data-name="台面"
+        >
+          <div class="kny-card-head">
+            <span class="kny-key-cap">D</span>
+            <h2>台面</h2>
+            <span class="kny-latin">INSTRUMENT</span>
+          </div>
+          <div class="kny-stage"><!--DIR_D--></div>
+          <p class="kny-tagline">
+            冷灰 + 等宽，搜索是左上角终端式命令行，模式是右上角分段控件，6 列密排带排名序号。
+          </p>
+        </article>
+      </main>
+
+      <section class="kny-notes">
+        <div class="kny-note">
+          <h3>A · 静纸（推荐）</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>把新的搜索入口接进现有纸面语言里，改动最小、最像"本来就应该长这样"。</dd>
+            <dt>字体</dt>
+            <dd>中性 grotesque 系统栈（Segoe UI Variable Text），零下载。</dd>
+            <dt>色彩</dt>
+            <dd>沿用 #FEFEFE 近白底，只有搜索栏是半透明白浮层，其余靠 1px 细线与留白。</dd>
+            <dt>记忆点</dt>
+            <dd>聚焦时胶囊下方一条 1px 墨线自左向右生长，像画了一条基线。</dd>
+            <dt>适用</dt>
+            <dd>想要"无感升级"，不希望新标签页气质改变。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>B · 暗房</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>把新标签页变成一间暗房：只有画亮着，控件退到不打扰的位置。</dd>
+            <dt>字体</dt>
+            <dd>展示体无衬线 + 小号大写字距微标签，中文走系统栈。</dd>
+            <dt>色彩</dt>
+            <dd>暖黑底（非纯黑），插画 100% 不透明度，只有搜索栏一处磨砂浮层。</dd>
+            <dt>记忆点</dt>
+            <dd>纯看模式下鼠标静止 2 秒，全部 UI 淡出，只剩画面。</dd>
+            <dt>适用</dt>
+            <dd>把新标签页当"看画的地方"，愿意接受从亮到暗的气质变化。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>C · 刊头</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>把新标签页当一份每日画报来排版，有刊名、有署名、有编辑感。</dd>
+            <dt>字体</dt>
+            <dd>衬线（Georgia / 宋体栈），四个方向里唯一的衬线方向。</dd>
+            <dt>色彩</dt>
+            <dd>暖白纸色 #FBF9F5，不用纯白，靠粗细分隔线建立层级。</dd>
+            <dt>记忆点</dt>
+            <dd>聚焦时输入行右端浮出「⏎ 搜索 pixiv ↗」的极小字提示。</dd>
+            <dt>适用</dt>
+            <dd>喜欢阅读感与秩序感，不介意图片下方多一行署名文字。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>D · 台面</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>像一件专业工具：所有信息等宽对齐，搜索是一条命令，动效几乎瞬时。</dd>
+            <dt>字体</dt>
+            <dd>等宽（Cascadia Mono / Consolas），数字全部 tabular。</dd>
+            <dt>色彩</dt>
+            <dd>冷灰 #F4F5F7 + 冷灰细线，克制到近乎朴素。</dd>
+            <dt>记忆点</dt>
+            <dd>聚焦时提示符 `:` 变成实心方块，输入即命令。</dd>
+            <dt>适用</dt>
+            <dd>想要高信息密度与键盘感，把新标签页当工作台的人。</dd>
+          </dl>
+        </div>
+      </section>
+
+      <p class="kny-mix">
+        也可以只取某个细节混搭：比如「A 的配色 + B 的滚动隐去 + D 的键盘提示」，在确认弹层的建议框里写一句即可。
+      </p>
+    </div>
+
+    <script>
+      // Static-preview fallback only. When the local preview server serves this
+      // page it owns selection entirely (buttons, dials, confirm dialog, POST),
+      // so this must stay dormant there to avoid duplicate controls.
+      if (location.protocol === 'file:') {
+        var bar = document.createElement('p')
+        bar.className = 'kny-fallback'
+        bar.textContent = '静态打开：当前不会自动回传，请点下面按钮复制选择后回到对话发送。'
+        document.querySelector('.kny-mix').after(bar)
+
+        document.querySelectorAll('[data-design-option]').forEach(function (card) {
+          var button = document.createElement('button')
+          button.type = 'button'
+          button.textContent = '复制「选 ' + card.dataset.dir + '：' + card.dataset.name + '」'
+          button.addEventListener('click', function () {
+            var text = '选 ' + card.dataset.dir + '：' + card.dataset.name + '；拨盘：视觉冒险度 / 动效强度 / 信息密度 = '
+            text += Array.prototype.map
+              .call(document.querySelectorAll('[data-qmdp-dial]'), function (input) {
+                return input.value
+              })
+              .join(' / ')
+            navigator.clipboard.writeText(text).then(
+              function () {
+                button.textContent = '已复制，请回到对话发送'
+              },
+              function () {
+                button.textContent = text
+              },
+            )
+          })
+          card.appendChild(button)
+        })
+      }
+    </script>
+  </body>
+</html>

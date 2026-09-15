@@ -1,0 +1,589 @@
+<style>
+  /* ============================================================
+     Ku-nya NTP — Direction C 「刊头 / Masthead」
+     暖白纸色 · 衬线展示字体 · 顶部通栏刊头 · 下划线搜索行
+     所有选择器均以 .dir-c- 开头；所有尺寸使用 cqw
+     ============================================================ */
+
+  .dir-c-stage {
+    container-type: inline-size;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    position: relative;
+
+    background-color: #FBF9F5;
+    color: #221E19;
+    font-family: Georgia, "Times New Roman", "Songti SC", "SimSun", "Noto Serif SC", serif;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    -webkit-font-smoothing: antialiased;
+    border: 1px solid #E7E1D4;
+    border-radius: 0.2cqw;
+    /* 只在舞台最底部约 12% 做裁切淡出；上部保持不透，避免留下整片空白观感 */
+    -webkit-mask-image: linear-gradient(180deg, #000 0, #000 88%, rgba(0, 0, 0, 0.06) 100%);
+    mask-image: linear-gradient(180deg, #000 0, #000 88%, rgba(0, 0, 0, 0.06) 100%);
+  }
+
+  /* ---------- 刊头 通栏 masthead（跨屏结构件，禁止位移/缩放动画） ---------- */
+
+  .dir-c-masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2cqw;
+    padding: 2.1cqw 4.5cqw 0;
+  }
+
+  /* 刊头 0.5cqw 粗线 */
+  .dir-c-masthead::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 3.2cqw;
+    right: 3.2cqw;
+    height: 0.5cqw;
+    background-color: #221E19;
+    pointer-events: none;
+    transform-origin: 0 50%;
+    animation: dir-c-rule 320ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+
+  @keyframes dir-c-rule {
+    from { transform: scaleX(0); }
+    to   { transform: scaleX(1); }
+  }
+
+  .dir-c-brand {
+    font-family: Georgia, "Times New Roman", "Songti SC", "SimSun", "Noto Serif SC", serif;
+    font-size: 3.9cqw;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    font-weight: 400;
+    color: #221E19;
+    white-space: nowrap;
+  }
+
+  .dir-c-modes {
+    display: flex;
+    align-items: baseline;
+    gap: 1.6cqw;
+  }
+
+  .dir-c-mode {
+    appearance: none;
+    -webkit-appearance: none;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0.5cqw 0.2cqw;
+    font-family: inherit;
+    font-size: 1.42cqw;
+    line-height: 1;
+    letter-spacing: 0.22em;
+    text-indent: 0.22em;
+    color: #9C948A;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    transition: color 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* 选中态：短下划线，与搜索行的下划线语言呼应 */
+  .dir-c-mode::after {
+    content: "";
+    position: absolute;
+    left: 0.2cqw;
+    right: 0.2cqw;
+    bottom: 0;
+    height: 0.1cqw;
+    background-color: #221E19;
+    transform: scaleX(0);
+    transform-origin: 50% 50%;
+    transition: transform 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-c-mode[aria-pressed="true"] {
+    color: #221E19;
+  }
+
+  .dir-c-mode[aria-pressed="true"]::after {
+    transform: scaleX(1);
+  }
+
+  /* 中性灰 重播按钮 —— 刻意不使用本方向配色 */
+  .dir-c-replay {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: #ECEAE6;
+    border: 1px solid #CFCCC5;
+    border-radius: 0.1cqw;
+    color: #6E6B66;
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    font-size: 1.15cqw;
+    line-height: 1;
+    letter-spacing: 0.06em;
+    padding: 0.8cqw 1.25cqw;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 180ms cubic-bezier(0.23, 1, 0.32, 1),
+                color 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* ---------- 搜索行：通栏、1px 下划线式、非胶囊 ---------- */
+
+  .dir-c-search {
+    display: block;
+    margin: 1.6cqw 4.5cqw 0;
+    padding-bottom: 1.3cqw;
+    border-bottom: 1px solid #DAD3C4;
+    transition: border-bottom-color 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-c-search:hover {
+    border-bottom-color: #C4BCA9;
+  }
+
+  .dir-c-search:focus-within {
+    border-bottom-color: #A8481F;
+  }
+
+  .dir-c-search-line {
+    display: flex;
+    align-items: baseline;
+    justify-content: flex-start;
+    /* 记忆点小字绝对定位于行右侧，不随输入内容移动 */
+    position: relative;
+  }
+
+  .dir-c-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0 15cqw 0 0;
+    font-family: Georgia, "Times New Roman", "Songti SC", "SimSun", "Noto Serif SC", serif;
+    font-style: normal;
+    font-size: 2.95cqw;
+    line-height: 1.2;
+    letter-spacing: 0.005em;
+    color: #221E19;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: text;
+  }
+
+  .dir-c-search-input::placeholder {
+    color: #A79E90;
+    opacity: 1;
+    font-style: normal;
+  }
+
+  /* 记忆点：聚焦时右端浮出「⏎ 搜索 pixiv ↗」 */
+  .dir-c-hint {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    /* 与衬线输入行共用基线，避免压紧刊头后错位 */
+    align-self: baseline;
+    font-size: 1.2cqw;
+    line-height: 1;
+    letter-spacing: 0.09em;
+    color: #8C8478;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(-1cqw);
+    pointer-events: none;
+    transition: opacity 180ms cubic-bezier(0.23, 1, 0.32, 1),
+                transform 180ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-c-search:focus-within .dir-c-hint {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  /* 重播时的一次性提示：只动下划线颜色 */
+  .dir-c-search-line.dir-c-flash .dir-c-hint {
+    animation: dir-c-hint-flash 620ms cubic-bezier(0.23, 1, 0.32, 1) both;
+  }
+
+  @keyframes dir-c-hint-flash {
+    0%   { opacity: 0; transform: translateX(-1cqw); }
+    30%  { opacity: 1; transform: translateX(0); }
+    72%  { opacity: 1; transform: translateX(0); }
+    100% { opacity: 0; transform: translateX(0); }
+  }
+
+  /* ---------- 图片区：4 列 + 每张图下方一行署名 ---------- */
+
+  .dir-c-grid {
+    position: absolute;
+    left: 4.5cqw;
+    right: 4.5cqw;
+    /* 从刊头下方一直铺到舞台底边，最后一行被舞台裁切 */
+    top: 24.2cqw;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: auto;
+    gap: 1.8cqw;
+    align-content: start;
+    align-items: start;
+  }
+
+  .dir-c-card {
+    display: block;
+    margin: 0;
+    padding: 0;
+    text-decoration: none;
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    -webkit-tap-highlight-color: transparent;
+    /* 静态即最终可见状态：动画只做位移/清晰度加分，不承担可见性 */
+    opacity: 1;
+    transform: none;
+    filter: none;
+    /* 入场 ≤ 220ms + 每张 ≤35ms 错峰，总时长 ≤ 400ms */
+    animation: dir-c-enter 220ms cubic-bezier(0.23, 1, 0.32, 1);
+    animation-delay: calc(var(--i) * 35ms);
+  }
+
+  /* 关键：入场不使用 opacity 0 起步 —— 任何时刻被打断都不会留下空白 */
+  @keyframes dir-c-enter {
+    from { transform: scale(0.98); filter: blur(0.25cqw); }
+    to   { transform: none;         filter: none; }
+  }
+
+  .dir-c-art {
+    display: block;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background-color: #F1ECE3;
+  }
+
+  .dir-c-art > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+    transition: opacity 240ms cubic-bezier(0.23, 1, 0.32, 1),
+                transform 300ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  /* 各作品按真实长宽比排布：只锁比例，照片原件与真实文件一致 */
+  .dir-c-card[data-art="01"] .dir-c-art { aspect-ratio: 480 / 673; }
+  .dir-c-card[data-art="02"] .dir-c-art { aspect-ratio: 480 / 272; }
+  .dir-c-card[data-art="03"] .dir-c-art { aspect-ratio: 480 / 270; }
+  .dir-c-card[data-art="04"] .dir-c-art { aspect-ratio: 480 / 683; }
+  .dir-c-card[data-art="05"] .dir-c-art { aspect-ratio: 480 / 360; }
+  .dir-c-card[data-art="06"] .dir-c-art { aspect-ratio: 480 / 379; }
+  .dir-c-card[data-art="07"] .dir-c-art { aspect-ratio: 480 / 619; }
+  .dir-c-card[data-art="08"] .dir-c-art { aspect-ratio: 480 / 676; }
+  .dir-c-card[data-art="09"] .dir-c-art { aspect-ratio: 480 / 661; }
+  .dir-c-card[data-art="10"] .dir-c-art { aspect-ratio: 480 / 720; }
+
+  /* 首屏两张竖图收窄，保证图 + 署名都完整落在刊头下方 */
+  .dir-c-card[data-art="01"],
+  .dir-c-card[data-art="04"] {
+    max-width: 19.1cqw;
+  }
+
+  /* 署名行：作者 / 标题，极小号衬线，紧凑一行 */
+  .dir-c-meta {
+    margin: 0.7cqw 0 0;
+    font-size: 1.1cqw;
+    line-height: 1.25;
+    font-style: normal;
+    color: #9C948A;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color 200ms cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  .dir-c-author {
+    color: #A69D90;
+  }
+
+  .dir-c-author::after {
+    content: "  /  ";
+    color: #CEC7BB;
+  }
+
+  .dir-c-title {
+    color: #4A443C;
+  }
+
+  /* ---------- 交互模式：hover 提亮 + 可点击 ---------- */
+
+  .dir-c-stage[data-mode="interactive"] .dir-c-card {
+    cursor: pointer;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dir-c-stage[data-mode="interactive"] .dir-c-card:hover .dir-c-art > img {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+
+    .dir-c-stage[data-mode="interactive"] .dir-c-card:hover .dir-c-meta {
+      color: #6B655C;
+    }
+
+    .dir-c-stage[data-mode="interactive"] .dir-c-card:hover .dir-c-title {
+      color: #221E19;
+    }
+  }
+
+  .dir-c-stage[data-mode="interactive"] .dir-c-card:focus-visible {
+    outline: 1px solid #A8481F;
+    outline-offset: 0.3cqw;
+  }
+
+  /* ---------- 纯看模式：cursor / hover 提亮 / 点击跳转 全部关闭 ---------- */
+
+  .dir-c-stage[data-mode="watch"] .dir-c-card {
+    pointer-events: none;
+    cursor: default;
+  }
+
+  .dir-c-stage[data-mode="watch"] .dir-c-art > img {
+    opacity: 0.7;
+    transform: none;
+  }
+
+  .dir-c-stage[data-mode="watch"] .dir-c-meta {
+    color: #9C948A;
+  }
+
+  /* ---------- reduced motion 兜底 ---------- */
+
+  @media (prefers-reduced-motion: reduce) {
+    .dir-c-masthead::before,
+    .dir-c-card,
+    .dir-c-hint,
+    .dir-c-search-line.dir-c-flash .dir-c-hint {
+      animation: none;
+    }
+
+    /* 双保险：任何模式下卡片都不能停在不可见状态 */
+    .dir-c-stage .dir-c-card {
+      opacity: 1 !important;
+      transform: none !important;
+      filter: none !important;
+    }
+
+    .dir-c-masthead::before {
+      transform: scaleX(1) !important;
+    }
+
+    .dir-c-card,
+    .dir-c-art > img,
+    .dir-c-meta,
+    .dir-c-mode,
+    .dir-c-mode::after,
+    .dir-c-search,
+    .dir-c-hint,
+    .dir-c-replay {
+      transition-duration: 1ms;
+    }
+
+    .dir-c-stage[data-mode="interactive"] .dir-c-card:hover .dir-c-art > img {
+      transform: none;
+    }
+  }
+</style>
+
+<div class="dir-c-stage" data-mode="interactive">
+
+  <!-- 刊头：通栏，跨屏结构件，不做任何位移动画 -->
+  <header class="dir-c-masthead">
+    <div class="dir-c-brand">Ku-nya</div>
+
+    <nav class="dir-c-modes" aria-label="浏览模式">
+      <button type="button" class="dir-c-mode" data-mode-btn="watch" aria-pressed="false">纯看</button>
+      <button type="button" class="dir-c-mode" data-mode-btn="interactive" aria-pressed="true">交互</button>
+    </nav>
+
+    <button type="button" class="dir-c-replay" data-replay>▶ 重播动效</button>
+  </header>
+
+  <!-- 搜索行：横贯通栏，1px 下划线式，页面唯一焦点，同时挡住下方图片点击 -->
+  <div class="dir-c-search" data-search-band>
+    <div class="dir-c-search-line" data-search-line>
+      <input
+        type="text"
+        class="dir-c-search-input"
+        data-search
+        placeholder="搜索插画 / 标签 / 画师"
+        autocomplete="off"
+        spellcheck="false"
+        aria-label="搜索 pixiv 插画、标签或画师"
+      >
+      <span class="dir-c-hint">⏎ 搜索 pixiv ↗</span>
+    </div>
+  </div>
+
+  <!-- 图片区：4 列 + 每张图下方署名 -->
+  <div class="dir-c-grid" data-grid>
+
+    <a class="dir-c-card" data-art="01" style="--i:0" href="https://www.pixiv.net/artworks/119208241" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-01.jpg" alt="🌹ガールズ×ヴァンパイア🌹"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">猫柳あお</span><span class="dir-c-title">🌹ガールズ×ヴァンパイア🌹</span></span>
+    </a>
+
+    <a class="dir-c-card" data-art="02" style="--i:1" href="https://www.pixiv.net/artworks/119208242" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-02.jpg" alt="ロード・ログレス"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">白瀬ひなた</span><span class="dir-c-title">ロード・ログレス</span></span>
+    </a>
+
+    <a class="dir-c-card" data-art="03" style="--i:2" href="https://www.pixiv.net/artworks/119208243" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-03.jpg" alt="タイムカプセル"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">雨宫 澪</span><span class="dir-c-title">タイムカプセル</span></span>
+    </a>
+
+    <a class="dir-c-card" data-art="04" style="--i:3" href="https://www.pixiv.net/artworks/119208244" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-04.jpg" alt="制服rkgk少女"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">篠原ゆき</span><span class="dir-c-title">制服rkgk少女</span></span>
+    </a>
+
+    <a class="dir-c-card" data-art="05" style="--i:4" href="https://www.pixiv.net/artworks/119208245" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-05.jpg" alt="もみじ饅頭"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">小野寺 枫</span><span class="dir-c-title">もみじ饅頭</span></span>
+    </a>
+
+    <a class="dir-c-card" data-art="06" style="--i:5" href="https://www.pixiv.net/artworks/119208246" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-06.jpg" alt="どこまでも"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">南云そら</span><span class="dir-c-title">どこまでも</span></span>
+    </a>
+
+    <a class="dir-c-card" data-art="07" style="--i:6" href="https://www.pixiv.net/artworks/119208247" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-07.jpg" alt="正解"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">藤枝あんず</span><span class="dir-c-title">正解</span></span>
+    </a>
+
+    <a class="dir-c-card" data-art="08" style="--i:7" href="https://www.pixiv.net/artworks/119208248" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-08.jpg" alt="超かぐや姫!まとめ③"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">柚木みなも</span><span class="dir-c-title">超かぐや姫!まとめ③</span></span>
+    </a>
+
+    <a class="dir-c-card" data-art="09" style="--i:8" href="https://www.pixiv.net/artworks/119208249" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-09.jpg" alt="メスお兄さん"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">东云 廉</span><span class="dir-c-title">メスお兄さん</span></span>
+    </a>
+
+    <a class="dir-c-card" data-art="10" style="--i:9" href="https://www.pixiv.net/artworks/119208250" target="_blank" rel="noopener noreferrer">
+      <span class="dir-c-art"><img src="assets/art-10.jpg" alt="Waves"></span>
+      <span class="dir-c-meta"><span class="dir-c-author">汐见なぎさ</span><span class="dir-c-title">Waves</span></span>
+    </a>
+
+  </div>
+</div>
+
+<script>
+  (function () {
+      var stage = document.querySelectorAll('.dir-c-stage')[0];
+      if (!stage) return;
+
+      var cards     = stage.querySelectorAll('.dir-c-card');
+      var modeBtns  = stage.querySelectorAll('.dir-c-mode');
+      var search    = stage.querySelectorAll('.dir-c-search-input')[0];
+      var line      = stage.querySelectorAll('.dir-c-search-line')[0];
+      var replay    = stage.querySelectorAll('.dir-c-replay')[0];
+      var searchBand = stage.querySelectorAll('.dir-c-search')[0];
+
+      /* ---------- 模式切换：真的写回 data-mode ---------- */
+      function setMode(mode) {
+        stage.setAttribute('data-mode', mode);
+        for (var i = 0; i < modeBtns.length; i++) {
+          var btn = modeBtns[i];
+          btn.setAttribute('aria-pressed', btn.getAttribute('data-mode-btn') === mode ? 'true' : 'false');
+        }
+      }
+
+      /* 纯看模式下，图片链接彻底不可聚焦、不可点击 */
+      function syncCards() {
+        var watching = stage.getAttribute('data-mode') === 'watch';
+        for (var i = 0; i < cards.length; i++) {
+          if (watching) {
+            cards[i].setAttribute('tabindex', '-1');
+          } else {
+            cards[i].removeAttribute('tabindex');
+          }
+        }
+      }
+
+      /* 模式按钮都在舞台内，事件委托即可 */
+      stage.addEventListener('click', function (ev) {
+        var t = ev.target;
+        var btn = t && t.closest ? t.closest('.dir-c-mode') : null;
+        if (!btn) return;
+        setMode(btn.getAttribute('data-mode-btn'));
+      });
+
+      var modeObserver = new MutationObserver(syncCards);
+      modeObserver.observe(stage, { attributes: true, attributeFilter: ['data-mode'] });
+      syncCards();
+
+      /* ---------- 搜索：回车跳 pixiv 站内搜索结果页 ---------- */
+      if (search) {
+        search.addEventListener('keydown', function (ev) {
+          if (ev.key !== 'Enter') return;
+          var q = search.value.trim();
+          if (!q) return;
+          window.location.href = 'https://www.pixiv.net/tags/' + encodeURIComponent(q) + '/artworks';
+        });
+      }
+
+      /* 安全带横条：铺满整个横向条带拦住下方图片点击；点击空白处聚焦搜索 */
+      if (searchBand && search) {
+        searchBand.addEventListener('click', function (ev) {
+          var t = ev.target;
+          if (!t || t === search) return;
+          if (t.closest && (t.closest('.dir-c-mode') || t.closest('.dir-c-replay'))) return;
+          search.focus({ preventScroll: true });
+        });
+      }
+
+      /* ---------- 重播：入场 + 聚焦动效 ---------- */
+      function replayFx() {
+        /* 摘掉内联 animation 让 CSS 关键帧重新接管，强制回流后再交还 —— 可重复触发，
+           且全程不写内联 opacity，卡片基础态始终可见，动画被打断也不会留空白 */
+        for (var i = 0; i < cards.length; i++) {
+          cards[i].style.animation = 'none';
+        }
+        void stage.offsetWidth;
+        for (var j = 0; j < cards.length; j++) {
+          cards[j].style.animation = '';
+        }
+
+        /* 记忆点小字闪一次，作为重播的视觉回声（刊头本身不做位移动画） */
+        if (line) {
+          line.classList.remove('dir-c-flash');
+          void line.offsetWidth;
+          line.classList.add('dir-c-flash');
+          window.setTimeout(function () {
+            line.classList.remove('dir-c-flash');
+          }, 700);
+        }
+
+        if (search) {
+          search.focus({ preventScroll: true });
+        }
+      }
+
+      if (replay) {
+        replay.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          replayFx();
+        });
+      }
+  })();
+</script>

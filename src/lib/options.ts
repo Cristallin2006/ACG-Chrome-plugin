@@ -9,27 +9,63 @@ export enum Modes {
   Popular = 'popular',
 }
 
+/**
+ * How the gallery behaves. `Watch` leaves the illustrations non-interactive so
+ * the page can be scrolled and enjoyed without opening anything by accident;
+ * `Interactive` turns them back into links to the artwork page.
+ */
+export enum ViewModes {
+  Watch = 'watch',
+  Interactive = 'interactive',
+}
+
 export interface Options {
   mode: Modes
   excludingTags: string[]
   isExcludingHighAspectRatio: boolean
   smallestIncludableAspectRatio: number
   isSafe: boolean
+  viewMode: ViewModes
 }
 
-export const getOptions = (): Options => ({
-  mode: storageUtil.getValue('content', Modes.Illust),
-  excludingTags: storageUtil.getJSON('excluding_tags', []),
-  isExcludingHighAspectRatio: storageUtil.getBoolean(
-    'is_excluding_high_aspect_ratio',
-    false,
-  ),
-  smallestIncludableAspectRatio: storageUtil.getValue(
-    'smallest_includable_aspect_ratio',
-    3,
-  ),
-  isSafe: storageUtil.getBoolean('is_safe', true),
-})
+/** What a fresh install runs with, and what a page falls back to. */
+export const defaultOptions: Options = {
+  mode: Modes.Illust,
+  excludingTags: [],
+  isExcludingHighAspectRatio: false,
+  smallestIncludableAspectRatio: 3,
+  isSafe: true,
+  // The gallery is the point of the page, so it starts out un-clickable.
+  viewMode: ViewModes.Watch,
+}
+
+export const getOptions = async (): Promise<Options> => {
+  // Everything in the store is a string ('3'), but this one is bound to an
+  // <input type="number"> and compared against a ratio, so hand back a number.
+  const aspectRatio = Number(
+    await storageUtil.getValue(
+      'smallest_includable_aspect_ratio',
+      defaultOptions.smallestIncludableAspectRatio,
+    ),
+  )
+
+  return {
+    mode: await storageUtil.getValue('content', defaultOptions.mode),
+    excludingTags: await storageUtil.getJSON(
+      'excluding_tags',
+      defaultOptions.excludingTags,
+    ),
+    isExcludingHighAspectRatio: await storageUtil.getBoolean(
+      'is_excluding_high_aspect_ratio',
+      defaultOptions.isExcludingHighAspectRatio,
+    ),
+    smallestIncludableAspectRatio: Number.isFinite(aspectRatio)
+      ? aspectRatio
+      : defaultOptions.smallestIncludableAspectRatio,
+    isSafe: await storageUtil.getBoolean('is_safe', defaultOptions.isSafe),
+    viewMode: await storageUtil.getValue('view_mode', defaultOptions.viewMode),
+  }
+}
 
 export const setMode = (mode: Modes) => {
   chrome.runtime.sendMessage(
@@ -69,6 +105,18 @@ export const setSafe = (isSafe: boolean) => {
       method: 'setSafe',
       params: {
         is_safe: isSafe,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setViewMode = (viewMode: ViewModes) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setViewMode',
+      params: {
+        view_mode: viewMode,
       },
     },
     () => {},

@@ -1,4 +1,9 @@
 node_modules/
 release/dist/
+release/background.js
+release/_metadata/
+test/.profile/
+test/artifacts/
 .DS_Store
 yarn-error.log
+**/.qa-profile/

@@ -5,11 +5,13 @@ import {
   setAspectRatioSettings,
   setExcludingTags,
   setSafe,
+  setViewMode,
 } from '../lib/options'
 import ModeSettingsSection from './ModeSettingSection'
 import AspectRatioSettingSection from './AspectRatioSettingSection'
 import TagSettingSection from './TagSettingSection'
 import SafeSection from './SafeSection'
+import ViewModeSection from './ViewModeSection'
 
 interface Props {
   initialOptions: Options
@@ -23,10 +25,12 @@ export default class SettingPanel extends Component<Props> {
       smallestIncludableAspectRatio,
       excludingTags,
       isSafe,
+      viewMode,
     } = this.props.initialOptions
 
     return (
       <div>
+        <ViewModeSection initialValue={viewMode} update={setViewMode} />
         <SafeSection initial_is_safe={isSafe} update={setSafe} />
         <ModeSettingsSection initialValue={mode} update={setMode} />
         <AspectRatioSettingSection

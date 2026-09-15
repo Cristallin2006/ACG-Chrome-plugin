@@ -1,0 +1,21 @@
+﻿<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<iframe id="f" width="1280" height="800" style="border:0"></iframe>
+<pre id="o"></pre>
+<script type="module">
+import { MARKUP } from './_probe-d.data.mjs';
+const f = document.getElementById('f'), d = f.contentDocument;
+d.open(); d.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0}</style></head><body>'+MARKUP+'</body></html>'); d.close();
+const L = [];
+const grid = d.querySelector('.dir-d-grid');
+L.push('BEFORE script: grid clientW=' + grid.clientWidth + ' clientH=' + grid.clientHeight + ' rectH=' + grid.getBoundingClientRect().height + ' padTop=' + getComputedStyle(grid).paddingTop + ' display=' + getComputedStyle(grid).display);
+const CQ = window.CQ || null;
+const stage = d.querySelector('.dir-d-stage');
+L.push('BEFORE script: stage clientH=' + stage.clientHeight + ' rectH=' + stage.getBoundingClientRect().height + ' --dir-d-belt=' + getComputedStyle(stage).getPropertyValue('--dir-d-belt'));
+// now compute what the fragment code would compute
+const padTop = parseFloat(getComputedStyle(grid).paddingTop) || 0;
+const stageH = grid.clientHeight || grid.getBoundingClientRect().height;
+const colW = (grid.clientWidth - 2 * padTop) / 6;
+L.push('runtime: padTop=' + padTop + ' stageH=' + stageH + ' colW=' + colW.toFixed(2) + ' target=' + Math.max(stageH - padTop, colW*2).toFixed(2));
+document.getElementById('o').textContent = L.join('\n');
+document.title = 'DIAG2-DONE';
+</script></body></html>

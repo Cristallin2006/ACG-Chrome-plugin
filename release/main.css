@@ -1,48 +1,386 @@
-#gallery div {
-  background-color: #fefefe;
-  column-count: 5;
-  column-gap: 1em;
-  z-index: 1;
+/*
+ * Direction B — 暗房 / Darkroom. See DESIGN.md for the system this implements:
+ * a warm near-black canvas where the illustrations are the only light, one
+ * frosted capsule at the bottom, and a single accent colour reserved for
+ * interactive states.
+ */
+
+:root {
+  --void: #131110;
+  /* Opaque enough to stay dark over white artwork: the capsule is smoked glass,
+     not clear glass, because white text on a bright blur fails contrast. */
+  --surface: rgba(19, 17, 16, 0.86);
+  --line: rgba(255, 255, 255, 0.1);
+  --ink: rgba(255, 255, 255, 0.92);
+  --ink-soft: rgba(255, 255, 255, 0.68);
+  --accent: #e0a45e;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  color-scheme: dark;
 }
 
-#gallery::before {
-  pointer-events: none;
+html,
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--void);
+}
+
+body {
+  color: var(--ink);
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,
+    "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  font-size: 14.5px;
+  /* Positive tracking on dark surfaces reads airier than neutral. */
+  letter-spacing: 0.3px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--accent);
+  color: #1a1512;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+  background-clip: content-box;
+}
+
+/* Legibility scrim: keeps the capsule readable over bright artwork. */
+body::before {
+  content: "";
   position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 10%;
-  content: '';
-  background-image: linear-gradient(
-    to top,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  inset: 0;
   z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    120% 90% at 50% 0%,
+    rgba(0, 0, 0, 0) 45%,
+    rgba(0, 0, 0, 0.34) 100%
+  );
 }
 
-#gallery a {
+/* Atmosphere: darkroom dust, deliberately under 6% opacity. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)'/></svg>");
+}
+
+/* ---------- gallery: the puzzle wall ---------- */
+
+/* The wall is a stack of one-viewport screens, each an exact-fit puzzle (see
+   lib/tiling.ts); App deals the next screen as the user scrolls towards the
+   end. Each tile's 5px padding is half a grout line: two neighbouring
+   paddings meet into a perfectly uniform 10px seam of void. */
+.kunya-gallery {
+  position: relative;
+}
+
+.kunya-sentinel {
+  height: 1px;
+}
+
+.kunya-tile {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+  padding: 5px;
+  border-radius: 15px;
+  /* Pre-reveal: slightly sunk; rises into place as it scrolls into view. */
+  transform: translateY(14px);
+  transition: transform 240ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+
+.kunya-tile.is-inview {
+  transform: none;
+}
+
+.kunya-tile img {
   display: block;
   width: 100%;
-}
-
-#gallery a img {
-  object-fit: fill;
-  width: 100%;
+  height: 100%;
+  border-radius: 10px;
   opacity: 0;
-  transition-property: all;
-  transition-duration: 300ms;
-  transition-delay: 0s;
-  transition-timing-function: ease;
+  /* Held a touch under full brightness so the near-black room reads around the
+     artwork instead of the artwork filling the page edge to edge. */
+  filter: brightness(0.94);
+  transition: opacity 240ms var(--ease-out), filter 180ms var(--ease-out);
 }
 
-#gallery a img.loaded {
-  opacity: 0.7;
-  background-color: #eee;
-  display: inline-block;
-  margin: 0 0 1em;
-}
-
-#gallery a img.loaded:hover {
+.kunya-tile.is-inview img.loaded {
   opacity: 1;
+}
+
+/* macOS window-edge language: a hairline rim and a top inner highlight drawn
+   over the artwork, so each piece reads as cut glass instead of a bare img. */
+.kunya-tile::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+/* Stated explicitly: in 纯看 there is no link to hover, so the arrow cursor is
+   the only correct affordance. */
+.kunya.is-watch .kunya-tile {
+  cursor: default;
+}
+
+/* Only 交互 mode offers hover affordances at all. */
+@media (hover: hover) and (pointer: fine) {
+  .kunya.is-interactive .kunya-tile {
+    cursor: pointer;
+  }
+  .kunya.is-interactive .kunya-tile:hover {
+    transform: translateY(-2px);
+    z-index: 1;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  }
+  .kunya.is-interactive .kunya-tile:hover img {
+    filter: brightness(1.04);
+  }
+  .kunya.is-interactive .kunya-tile:active {
+    transform: translateY(0) scale(0.995);
+  }
+}
+
+/* A sliver of smoked glass sliding up on hover: who made it and what it is
+   called. Never rendered in 纯看. */
+.kunya-caption {
+  position: absolute;
+  left: 13px;
+  right: 13px;
+  bottom: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  background: rgba(19, 17, 16, 0.55);
+  backdrop-filter: blur(12px) saturate(140%);
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+  transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out);
+}
+
+.kunya.is-interactive .kunya-tile:hover .kunya-caption,
+.kunya.is-interactive .kunya-tile:focus-visible .kunya-caption {
+  opacity: 1;
+  transform: none;
+}
+
+.kunya-caption__author {
+  color: var(--ink);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+}
+
+.kunya-caption__title {
+  color: var(--ink-soft);
+  font-size: 10.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kunya-empty {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  margin: 0;
+  text-align: center;
+  color: var(--ink-soft);
+  font-size: 13.5px;
+}
+
+.kunya-empty a {
+  color: var(--ink);
+  text-underline-offset: 3px;
+}
+
+/* ---------- search capsule ---------- */
+
+.kunya-search {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 4;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* border-box: the 62vw budget is the capsule you see, padding and border
+     included, not just its content area. */
+  box-sizing: border-box;
+  width: min(560px, 62vw);
+  height: 48px;
+  padding: 0 8px 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  backdrop-filter: blur(18px) saturate(120%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out),
+    border-color 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
+}
+
+/* 纯看 mode, pointer still: step back, but never disappear. */
+.kunya-search.is-ghost {
+  opacity: 0.16;
+  transform: translateX(-50%) translateY(6px);
+}
+
+.kunya-search:focus-within {
+  border-color: rgba(224, 164, 94, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45),
+    0 0 0 2px rgba(224, 164, 94, 0.55);
+}
+
+.kunya-search__icon {
+  flex: none;
+  color: var(--ink-soft);
+}
+
+.kunya-search__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  letter-spacing: inherit;
+  caret-color: var(--accent);
+}
+
+.kunya-search__input:focus,
+.kunya-search__input:focus-visible {
+  /* The capsule itself carries the focus ring. */
+  outline: none;
+}
+
+.kunya-search__input::placeholder {
+  color: var(--ink-soft);
+}
+
+/* ---------- mode switch ---------- */
+
+.kunya-switch {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: color 180ms var(--ease-out), background 180ms var(--ease-out);
+}
+
+.kunya-switch:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ink);
+}
+
+.kunya-switch__track {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 180ms var(--ease-out), border-color 180ms var(--ease-out);
+}
+
+.kunya-switch__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  transition: transform 180ms var(--ease-out), background 180ms var(--ease-out);
+}
+
+.kunya-switch[aria-checked="true"] .kunya-switch__track {
+  border-color: rgba(224, 164, 94, 0.5);
+  background: rgba(224, 164, 94, 0.26);
+}
+
+.kunya-switch[aria-checked="true"] .kunya-switch__knob {
+  transform: translateX(20px);
+  background: var(--accent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- narrow screens ---------- */
+
+@media (max-width: 767px) {
+  .kunya-search {
+    bottom: 18px;
+    height: 44px;
+  }
+  .kunya-caption {
+    left: 9px;
+    right: 9px;
+    bottom: 9px;
+    padding: 6px 9px;
+  }
+}
+
+/* ---------- reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .kunya-search,
+  .kunya-search__input,
+  .kunya-tile,
+  .kunya-tile img,
+  .kunya-caption,
+  .kunya-switch,
+  .kunya-switch__track,
+  .kunya-switch__knob {
+    transition-duration: 1ms;
+  }
+  .kunya-search.is-ghost {
+    transform: translateX(-50%);
+  }
+  .kunya.is-interactive .kunya-tile:hover,
+  .kunya.is-interactive .kunya-tile:active {
+    transform: none;
+  }
 }

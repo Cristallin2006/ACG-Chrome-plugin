@@ -1,0 +1,705 @@
+<style>
+  .dir-d-stage {
+    --dir-d-ease: cubic-bezier(0.23, 1, 0.32, 1);
+    --dir-d-t: 130ms;
+    /* 安全带高度 = 命令行所在那一行，图墙从这里下方起排 */
+    --dir-d-belt: 8.6cqw;
+    --dir-d-ink: #171A1E;
+    --dir-d-ink-soft: #3D444C;
+    --dir-d-muted: #6B7280;
+    --dir-d-faint: #9AA2AC;
+    --dir-d-line: #E3E6EA;
+    --dir-d-line-strong: #D2D7DE;
+    --dir-d-accent: #0F63C4;
+    --dir-d-accent-soft: rgba(15, 99, 196, 0.2);
+    --dir-d-mono: "Cascadia Mono", Consolas, "SFMono-Regular", "DejaVu Sans Mono", monospace;
+    --dir-d-cjk: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+
+    container-type: inline-size;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    position: relative;
+    background-color: #F4F5F7;
+    color: var(--dir-d-ink);
+    font-family: var(--dir-d-mono);
+    font-variant-numeric: tabular-nums;
+    font-synthesis: none;
+    text-align: left;
+    line-height: 1.3;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .dir-d-stage ::selection {
+    background: var(--dir-d-accent-soft);
+    color: var(--dir-d-ink);
+  }
+
+  /* ---------- 入场：整体一次性 120ms 淡入，无花哨编排 ---------- */
+  .dir-d-grid,
+  .dir-d-belt,
+  .dir-d-bar {
+    animation: dir-d-boot 120ms var(--dir-d-ease) both;
+  }
+
+  @keyframes dir-d-boot {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ---------- 真实插画区：6 列密排 ---------- */
+  /* 图墙：JS 计算 6 列的位置与每列铺砖数，列高一律超过舞台高度，
+     末行越界由 overflow:hidden 裁切。不用 grid/multicol 的自动均衡——
+     它们会按内容高度收边，底部必然留空白带。 */
+  .dir-d-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .dir-d-col {
+    position: absolute;
+    top: 8.6cqw;
+    width: 15.73cqw;
+  }
+
+  .dir-d-tile {
+    display: block;
+    position: relative;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: #E9EBEF;
+    overflow: hidden;
+    color: var(--dir-d-ink);
+    font-family: var(--dir-d-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: left;
+    text-decoration: none;
+    cursor: default;
+    pointer-events: auto;
+  }
+
+  .dir-d-tile img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+    transition: opacity var(--dir-d-t) var(--dir-d-ease);
+  }
+
+  .dir-d-rank {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    padding: 0.35cqw 0.5cqw;
+    background-color: rgba(244, 245, 247, 0.9);
+    color: var(--dir-d-ink-soft);
+    font-size: max(1.7cqw, 8px);
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    pointer-events: none;
+  }
+
+  /* ---------- 「安全带」：只包住命令行那一行，挡住下方图片的点击 ---------- */
+  .dir-d-belt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    height: var(--dir-d-belt);
+    box-sizing: border-box;
+    background-color: #F4F5F7;
+    border-bottom: 1px solid var(--dir-d-line);
+    pointer-events: auto;
+  }
+
+  /* ---------- 左上角停靠的终端式命令行 = 唯一视觉焦点 ---------- */
+  .dir-d-bar {
+    position: absolute;
+    top: 1.25cqw;
+    left: 2.2cqw;
+    z-index: 3;
+    width: 46cqw;
+    min-width: 210px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 0.7cqw;
+    padding: 0.55cqw 1cqw;
+    background-color: #FBFCFD;
+    border: 1px solid var(--dir-d-line-strong);
+    border-radius: 2px;
+    transition: border-color var(--dir-d-t) var(--dir-d-ease), box-shadow var(--dir-d-t) var(--dir-d-ease);
+  }
+
+  .dir-d-bar::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2cqw;
+    background-color: var(--dir-d-accent);
+    opacity: 0;
+    transform: scaleY(0.55);
+    transform-origin: center;
+    transition: opacity 120ms var(--dir-d-ease), transform 120ms var(--dir-d-ease);
+    pointer-events: none;
+  }
+
+  .dir-d-bar:focus-within {
+    border-color: var(--dir-d-accent);
+    box-shadow: 0 0.5cqw 1.4cqw -0.6cqw var(--dir-d-accent-soft);
+  }
+
+  .dir-d-bar:focus-within::before {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+
+  /* 记忆点：聚焦时提示符 : → 实心方块 */
+  .dir-d-prompt {
+    position: relative;
+    flex: none;
+    width: 2.1cqw;
+    min-width: 12px;
+    height: 3.4cqw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dir-d-prompt::before,
+  .dir-d-prompt::after {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: max(2.5cqw, 12px);
+    font-weight: 600;
+    line-height: 1;
+    content: ":";
+  }
+
+  .dir-d-prompt::before {
+    color: var(--dir-d-muted);
+    opacity: 1;
+    transition: opacity 120ms var(--dir-d-ease);
+  }
+
+  .dir-d-prompt::after {
+    content: "\25A0";
+    font-size: max(2cqw, 10px);
+    color: var(--dir-d-accent);
+    opacity: 0;
+    transition: opacity 120ms var(--dir-d-ease);
+  }
+
+  .dir-d-bar:focus-within .dir-d-prompt::before { opacity: 0; }
+  .dir-d-bar:focus-within .dir-d-prompt::after  { opacity: 1; }
+
+  .dir-d-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.35cqw 0;
+    border: 0;
+    background-color: transparent;
+    color: var(--dir-d-ink);
+    font-family: var(--dir-d-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: max(2cqw, 11px);
+    line-height: 1.35;
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+  }
+
+  .dir-d-input::placeholder {
+    color: var(--dir-d-faint);
+    opacity: 1;
+  }
+
+  .dir-d-input:focus { outline: none; }
+
+  .dir-d-bar:focus-within .dir-d-enter { border-color: var(--dir-d-accent); }
+
+  .dir-d-enter {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45cqw;
+    padding: 0.4cqw 0.7cqw;
+    border: 1px solid var(--dir-d-line-strong);
+    border-radius: 2px;
+    background-color: #EFF1F4;
+    color: var(--dir-d-muted);
+    font-size: max(1.6cqw, 8px);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    transition: border-color var(--dir-d-t) var(--dir-d-ease);
+  }
+
+  /* ---------- 右上角分段控件 + 命令行右侧同排等宽统计 ---------- */
+  .dir-d-controls {
+    position: absolute;
+    top: 1.25cqw;
+    right: 2.2cqw;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 1.2cqw;
+  }
+
+  .dir-d-stat {
+    position: absolute;
+    top: 1.25cqw;
+    left: calc(2.2cqw + 46cqw + 1.6cqw);
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    height: 7.2cqw;
+    font-size: max(1.85cqw, 9px);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--dir-d-muted);
+    white-space: nowrap;
+  }
+
+  .dir-d-seg {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    box-sizing: border-box;
+    padding: 0.4cqw;
+    border: 1px solid var(--dir-d-line-strong);
+    border-radius: 2px;
+    background-color: #E9EBEF;
+  }
+
+  .dir-d-seg::before {
+    content: "";
+    position: absolute;
+    top: 0.4cqw;
+    bottom: 0.4cqw;
+    left: 0.4cqw;
+    width: calc((100% - 0.8cqw) / 2);
+    background-color: #2C3138;
+    border-radius: 1px;
+    transform: translateX(0);
+    transition: transform var(--dir-d-t) var(--dir-d-ease);
+    pointer-events: none;
+  }
+
+  .dir-d-stage[data-mode="watch"] .dir-d-seg::before {
+    transform: translateX(100%);
+  }
+
+  .dir-d-mode {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.5cqw 1.15cqw;
+    border: 0;
+    background-color: transparent;
+    color: var(--dir-d-muted);
+    font-family: var(--dir-d-cjk);
+    font-size: max(1.85cqw, 9px);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    cursor: pointer;
+    opacity: 0.86;
+    transition: color var(--dir-d-t) var(--dir-d-ease), opacity var(--dir-d-t) var(--dir-d-ease);
+  }
+
+  .dir-d-mode[aria-pressed="true"] {
+    color: #FFFFFF;
+    opacity: 1;
+  }
+
+  .dir-d-stage[data-mode="watch"] .dir-d-watchbtn,
+  .dir-d-stage[data-mode="interactive"] .dir-d-lookbtn {
+    color: #FFFFFF;
+    opacity: 1;
+  }
+
+  .dir-d-stage[data-mode="watch"] .dir-d-lookbtn,
+  .dir-d-stage[data-mode="interactive"] .dir-d-watchbtn {
+    color: var(--dir-d-muted);
+    opacity: 0.86;
+  }
+
+  /* ---------- 中性灰 · 重播动效 ---------- */
+  .dir-d-ghost {
+    display: inline-flex;
+    align-items: center;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.5cqw 1cqw;
+    border: 1px solid var(--dir-d-line-strong);
+    border-radius: 2px;
+    background-color: #E9EBEF;
+    color: var(--dir-d-ink-soft);
+    font-family: var(--dir-d-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: max(1.7cqw, 8px);
+    font-weight: 500;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color var(--dir-d-t) var(--dir-d-ease), transform var(--dir-d-t) var(--dir-d-ease);
+  }
+
+  /* ---------- 窄屏：6 列仍保留，只把三处间距放大 ---------- */
+  @container (max-width: 500px) {
+    .dir-d-col {
+      top: 9.3cqw;
+      width: 15.35cqw;
+    }
+
+    .dir-d-rank { font-size: 8px; }
+  }
+
+  @container (max-width: 430px) {
+    .dir-d-bar { width: 58cqw; min-width: 150px; }
+    .dir-d-stat { display: none; }
+  }
+
+  /* ---------- 交互态：仅在指针精确的 hover 设备上 ---------- */
+  @media (hover: hover) and (pointer: fine) {
+    .dir-d-tile { cursor: pointer; }
+
+    .dir-d-tile:hover {
+      z-index: 4;
+      outline: 1px solid var(--dir-d-accent);
+      outline-offset: -1px;
+    }
+
+    .dir-d-tile:hover img { opacity: 1; }
+
+    .dir-d-tile:active { transform: scale(0.985); transition: transform 90ms var(--dir-d-ease); }
+
+    .dir-d-ghost:hover { background-color: #DFE3E8; }
+    .dir-d-ghost:active { transform: scale(0.97); }
+  }
+
+  /* ---------- 纯看模式：cursor / hover 提亮 / 点击跳转 全部关闭 ---------- */
+  .dir-d-stage[data-mode="watch"] .dir-d-tile {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .dir-d-stage[data-mode="watch"] .dir-d-tile img {
+    opacity: 0.55;
+    transition: opacity var(--dir-d-t) var(--dir-d-ease);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .dir-d-stage[data-mode="watch"] .dir-d-tile:hover {
+      outline: 1px solid transparent;
+    }
+
+    .dir-d-stage[data-mode="watch"] .dir-d-tile:hover img { opacity: 0.55; }
+  }
+
+  .dir-d-stage[data-mode="watch"] .dir-d-tile:focus-visible { outline: none; }
+
+  /* ---------- 键盘焦点 ---------- */
+  .dir-d-mode:focus-visible,
+  .dir-d-ghost:focus-visible {
+    outline: 2px solid var(--dir-d-accent);
+    outline-offset: 1px;
+  }
+
+  .dir-d-tile:focus-visible {
+    outline: 2px solid var(--dir-d-accent);
+    outline-offset: -2px;
+  }
+
+  /* ---------- 重播：135ms 微脉冲，只有 transform + opacity ---------- */
+  @keyframes dir-d-pulse {
+    0%   { opacity: 1;    transform: translateY(0); }
+    35%  { opacity: 0.42; transform: translateY(-0.35cqw); }
+    100% { opacity: 1;    transform: translateY(0); }
+  }
+
+  .dir-d-tile.dir-d-pulse {
+    animation: dir-d-pulse 135ms var(--dir-d-ease) both;
+    animation-delay: var(--dir-d-d, 0ms);
+  }
+
+  /* ---------- reduced motion 兜底 ---------- */
+  @media (prefers-reduced-motion: reduce) {
+    .dir-d-grid,
+    .dir-d-belt,
+    .dir-d-bar,
+    .dir-d-tile,
+    .dir-d-tile img,
+    .dir-d-seg::before,
+    .dir-d-mode,
+    .dir-d-ghost,
+    .dir-d-input,
+    .dir-d-enter,
+    .dir-d-prompt::before,
+    .dir-d-prompt::after,
+    .dir-d-bar::before {
+      animation-duration: 1ms;
+      animation-delay: 0ms;
+      transition-duration: 1ms;
+    }
+
+    .dir-d-tile.dir-d-pulse { animation: none; }
+    .dir-d-tile:active { transform: none; }
+
+    .dir-d-stage[data-mode="watch"] .dir-d-seg::before {
+      transform: none;
+      background-color: transparent;
+      border: 1px solid var(--dir-d-ink);
+    }
+  }
+</style>
+
+<div class="dir-d-stage" data-mode="interactive">
+  <div class="dir-d-grid" id="dir-d-grid" aria-label="pixiv 日榜插画预览"></div>
+
+  <div class="dir-d-belt" aria-hidden="true"></div>
+
+  <div class="dir-d-bar">
+    <span class="dir-d-prompt" aria-hidden="true"></span>
+    <input
+      class="dir-d-input"
+      id="dir-d-q"
+      type="text"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder="搜索插画 / 标签 / 画师"
+      aria-label="搜索 pixiv 插画、标签或画师"
+    >
+    <span class="dir-d-enter">&#9166; 回车</span>
+  </div>
+
+  <span class="dir-d-stat">106 / 150 &#183; daily</span>
+
+  <div class="dir-d-controls">
+    <div class="dir-d-seg" role="group" aria-label="浏览模式">
+      <button class="dir-d-mode dir-d-watchbtn" type="button" data-mode-btn="watch" aria-pressed="false">纯看</button>
+      <button class="dir-d-mode dir-d-lookbtn" type="button" data-mode-btn="interactive" aria-pressed="true">交互</button>
+    </div>
+    <button class="dir-d-ghost" type="button" id="dir-d-replay">&#9654; 重播动效</button>
+  </div>
+
+  <span id="dir-d-live" aria-live="polite" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden"></span>
+</div>
+
+<script>
+  (function () {
+    var stage = document.querySelector('.dir-d-stage');
+    if (!stage) return;
+
+    var tiles = [
+      { src: 'assets/art-01.jpg', w: 480, h: 673 },
+      { src: 'assets/art-02.jpg', w: 480, h: 272 },
+      { src: 'assets/art-03.jpg', w: 480, h: 270 },
+      { src: 'assets/art-04.jpg', w: 480, h: 683 },
+      { src: 'assets/art-05.jpg', w: 480, h: 360 },
+      { src: 'assets/art-06.jpg', w: 480, h: 379 },
+      { src: 'assets/art-07.jpg', w: 480, h: 619 },
+      { src: 'assets/art-08.jpg', w: 480, h: 676 },
+      { src: 'assets/art-09.jpg', w: 480, h: 661 },
+      { src: 'assets/art-10.jpg', w: 480, h: 720 }
+    ];
+    var titles = [
+      '\u{1F339}\u30AC\u30FC\u30EB\u30BA\u00D7\u30F4\u30A1\u30F3\u30D1\u30A4\u30A2\u{1F339}',
+      '\u30ED\u30FC\u30C9\u30FB\u30ED\u30B0\u30EC\u30B9',
+      '\u30BF\u30A4\u30E0\u30AB\u30D7\u30BB\u30EB',
+      '\u5236\u670Drkgk\u5C11\u5973',
+      '\u3082\u307F\u3058\u9905\u982D',
+      '\u3069\u3053\u307E\u3067\u3082',
+      '\u6B63\u89E3',
+      '\u8D85\u304B\u3050\u3084\u5AEB!\u307E\u3068\u3081\u2462',
+      '\u30E1\u30B9\u304A\u5144\u3055\u3093',
+      'Waves'
+    ];
+    /* ---------- 生成 6 列密排瀑布流 ----------
+       宽度一律用 cqw，所以每张砖的高度可以精确算出来（列宽 × 高宽比），
+       按“最短列优先”铺到舞台底部，再补满最后一整行，保证每列都压过底边。
+       高度用 inline aspect-ratio 撑开，不依赖图片解码，首屏即稳定。 */
+    var COLUMNS = 6;
+    var grid = document.querySelector('.dir-d-stage #dir-d-grid');
+    if (grid) {
+      var stage = grid.parentNode;
+      var stageW = stage.clientWidth || 1000;
+      var stageH = stage.clientHeight || stageW / 1.6;
+      var cqwPx = stageW / 100;
+      var BELT_CQW = 8.6;      /* 与 --dir-d-belt 保持一致 */
+      var PAD_CQW = 0.8;
+      var GAP_CQW = 0.8;
+      var narrow = stageW <= 500;
+      var topCqw = narrow ? 9.3 : BELT_CQW;
+      var colCqw = narrow ? 15.35 : 15.73;
+
+      var target = stageH - (topCqw - PAD_CQW) * cqwPx;
+      var gapPx = GAP_CQW * cqwPx;
+      var colPx = colCqw * cqwPx;
+
+      var colH = [], colArt = [], c;
+      for (c = 0; c < COLUMNS; c++) { colH.push(0); colArt.push([]); }
+
+      var guard = 0, seen = 0;
+      while (guard < 900) {
+        guard++;
+        var short = 0;
+        for (c = 1; c < COLUMNS; c++) {
+          if (colH[c] < colH[short] - 0.5) short = c;
+        }
+        if (colH[short] >= target) break;
+        var art = tiles[seen % tiles.length];   /* 全局计数，保证 10 张图均匀轮转，不被列数整除关系锁死 */
+        seen++;
+        colArt[short].push(art);
+        colH[short] += colPx * art.h / art.w + gapPx;
+      }
+      /* 再补满最后一整行：末行必然越界，确保没有一列提前收边 */
+      for (c = 0; c < COLUMNS; c++) {
+        var artEnd = tiles[seen % tiles.length];
+        seen++;
+        colArt[c].push(artEnd);
+        colH[c] += colPx * artEnd.h / artEnd.w + gapPx;
+      }
+
+      var frag = document.createDocumentFragment();
+      var rank = 0;
+      for (c = 0; c < COLUMNS; c++) {
+        var col = document.createElement('div');
+        col.className = 'dir-d-col';
+        col.style.left = (PAD_CQW + c * (colCqw + GAP_CQW)).toFixed(2) + 'cqw';
+        var last = colArt[c].length - 1;
+        for (var q = 0; q <= last; q++) {
+          rank++;
+          var artQ = colArt[c][q];
+          var tile = makeTile(rank, artQ);
+          /* 末砖只保留铺到底所需的高度，避免尾部越界过多影响滚动/裁切成本 */
+          tile.style.aspectRatio = artQ.w + ' / ' + artQ.h;
+          tile.style.marginBottom = q === last ? '0' : GAP_CQW + 'cqw';
+          col.appendChild(tile);
+        }
+        frag.appendChild(col);
+      }
+      grid.appendChild(frag);
+    }
+
+    function makeTile(index, art) {
+      var i = index - 1;
+      var el = document.createElement('a');
+      el.className = 'dir-d-tile';
+      el.href = 'https://www.pixiv.net/artworks/' + (10000000 + i * 137 + 1);
+      el.target = '_blank';
+      el.rel = 'noopener noreferrer';
+      el.style.setProperty('--dir-d-d', (((i % COLUMNS) * 14) + 'ms'));
+      el.title = titles[i % titles.length];
+
+      var img = document.createElement('img');
+      img.src = art.src;
+      img.alt = titles[i % titles.length];
+      img.decoding = 'async';
+      img.loading = i < 24 ? 'eager' : 'lazy';
+      el.appendChild(img);
+
+      var rk = document.createElement('span');
+      rk.className = 'dir-d-rank';
+      rk.textContent = String(index);
+      el.appendChild(rk);
+
+      return el;
+    }
+
+    var allTiles = document.querySelectorAll('.dir-d-stage .dir-d-tile');
+
+    /* ---------- 模式切换 ---------- */
+    var modeBtns = document.querySelectorAll('.dir-d-stage .dir-d-mode');
+    var live = document.querySelector('.dir-d-stage #dir-d-live');
+
+    function setMode(mode) {
+      stage.setAttribute('data-mode', mode);
+      for (var i = 0; i < modeBtns.length; i++) {
+        var on = modeBtns[i].getAttribute('data-mode-btn') === mode;
+        modeBtns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+      if (live) live.textContent = mode === 'watch' ? '\u5F53\u524D\uFF1A\u7EAF\u770B\u6A21\u5F0F' : '\u5F53\u524D\uFF1A\u4EA4\u4E92\u6A21\u5F0F';
+    }
+
+    for (var b = 0; b < modeBtns.length; b++) {
+      modeBtns[b].addEventListener('click', function () {
+        setMode(this.getAttribute('data-mode-btn'));
+      });
+    }
+
+    setMode(stage.getAttribute('data-mode') === 'watch' ? 'watch' : 'interactive');
+
+    /* ---------- 纯看模式：拦截点击跳转 ---------- */
+    for (var t = 0; t < allTiles.length; t++) {
+      allTiles[t].addEventListener('click', function (e) {
+        if (stage.getAttribute('data-mode') === 'watch') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+      allTiles[t].setAttribute('tabindex', '-1');
+    }
+
+    function syncTabs() {
+      var watch = stage.getAttribute('data-mode') === 'watch';
+      for (var k = 0; k < allTiles.length; k++) {
+        allTiles[k].setAttribute('tabindex', watch ? '-1' : '0');
+      }
+    }
+
+    for (var m = 0; m < modeBtns.length; m++) {
+      modeBtns[m].addEventListener('click', syncTabs);
+    }
+
+    syncTabs();
+
+    /* ---------- 重播：135ms 逐列微脉冲 ---------- */
+    var replay = document.querySelector('.dir-d-stage #dir-d-replay');
+    if (replay) {
+      replay.addEventListener('click', function () {
+        for (var i = 0; i < allTiles.length; i++) {
+          allTiles[i].classList.remove('dir-d-pulse');
+        }
+        void stage.offsetWidth;
+        for (var j = 0; j < allTiles.length; j++) {
+          allTiles[j].classList.add('dir-d-pulse');
+        }
+        window.setTimeout(function () {
+          for (var n = 0; n < allTiles.length; n++) {
+            allTiles[n].classList.remove('dir-d-pulse');
+          }
+        }, 260);
+      });
+    }
+
+    /* ---------- 回车：跳 pixiv 站内搜索 ---------- */
+    var input = document.querySelector('.dir-d-stage #dir-d-q');
+    if (input) {
+      input.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter') return;
+        var q = input.value.trim();
+        if (!q) { e.preventDefault(); return; }
+        e.preventDefault();
+        window.open('https://www.pixiv.net/tags/' + encodeURIComponent(q) + '/artworks', '_blank', 'noopener');
+      });
+    }
+  })();
+</script>

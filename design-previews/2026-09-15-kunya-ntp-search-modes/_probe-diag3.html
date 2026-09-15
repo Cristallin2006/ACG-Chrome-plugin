@@ -1,0 +1,34 @@
+﻿<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>
+<iframe id="f" width="1280" height="800" style="border:0"></iframe>
+<pre id="o"></pre>
+<script type="module">
+import { MARKUP, CODE } from './_probe-d.data.mjs';
+const f = document.getElementById('f'), d = f.contentDocument;
+d.open(); d.write('<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0}</style></head><body>'+MARKUP+'</body></html>'); d.close();
+const s = d.createElement('script'); s.textContent = CODE; d.body.appendChild(s);
+const L = [];
+const stage = d.querySelector('.dir-d-stage'), grid = d.querySelector('.dir-d-grid');
+const tr = [...d.querySelectorAll('.dir-d-tile')];
+L.push('tile count = ' + tr.length + ' rankMax=' + tr[tr.length-1].textContent);
+// per-column pack from actual rendered rects
+const byCol = new Map();
+tr.forEach(t => { const r = t.getBoundingClientRect(); const k = Math.round(r.left); if(!byCol.has(k)) byCol.set(k,[]); byCol.get(k).push(r); });
+[...byCol.entries()].sort((a,b)=>a[0]-b[0]).forEach(([k,v]) => L.push('colL='+k+' n='+v.length+' lastBottom='+Math.round(v[v.length-1].bottom)+' relLast='+Math.round(v[v.length-1].bottom - stage.getBoundingClientRect().top)));
+L.push('stage rect h=' + stage.getBoundingClientRect().height + ' bottom=' + stage.getBoundingClientRect().bottom);
+L.push('grid scrollH=' + grid.scrollHeight + ' offsetH=' + grid.offsetHeight + ' clientH=' + grid.clientHeight);
+// simulate the loop
+const artList = [[480,673],[480,272],[480,270],[480,683],[480,360],[480,379],[480,619],[480,676],[480,661],[480,720]];
+const padTop = 110.08, stageH = 800, colW = (1280 - 2*padTop)/6, gap = colW*0.05, target = Math.max(stageH-padTop, colW*2);
+const colH = [0,0,0,0,0,0]; let n = 0; const trace = [];
+while (n < 600) {
+  let short = 0; for (let c=1;c<6;c++) if (colH[c] < colH[short]-0.5) short = c;
+  if (colH[short] >= target - gap) { trace.push('BREAK at n='+n+' minH='+colH[short].toFixed(1)+' target-gap='+(target-gap).toFixed(1)); break; }
+  const a = artList[n % artList.length]; const h = colW*a[1]/a[0] + gap;
+  colH[short] += h; n++;
+  if (n <= 8 || n % 6 === 0) trace.push('n='+n+' col='+short+' h='+h.toFixed(1)+' cols='+colH.map(x=>x.toFixed(0)).join('/'));
+}
+L.push('simulated placed n=' + n);
+L.push(...trace.slice(0, 16));
+document.getElementById('o').textContent = L.join('\n');
+document.title = 'DIAG3-DONE';
+</script></body></html>
