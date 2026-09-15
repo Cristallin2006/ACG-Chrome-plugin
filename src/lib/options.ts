@@ -20,7 +20,10 @@ export enum ViewModes {
 }
 
 export interface Options {
-  mode: Modes
+  /** Built-in ranking (Modes) or a user-defined tag source: 'tag:<keyword>'. */
+  mode: string
+  /** User-defined tag categories, selectable in the mode dropdown. */
+  customTags: string[]
   excludingTags: string[]
   isExcludingHighAspectRatio: boolean
   smallestIncludableAspectRatio: number
@@ -31,6 +34,7 @@ export interface Options {
 /** What a fresh install runs with, and what a page falls back to. */
 export const defaultOptions: Options = {
   mode: Modes.Illust,
+  customTags: [],
   excludingTags: [],
   isExcludingHighAspectRatio: false,
   smallestIncludableAspectRatio: 3,

@@ -44,6 +44,13 @@ export default class App extends Component<Props, State> {
   private screenCount = 0
   private sentinelObserver: IntersectionObserver | null = null
   private sentinelEl: HTMLDivElement | null = null
+  /** Wheel paging: accumulated delta of the current gesture, its idle reset,
+      and a lock that holds back new page turns while a glide is in flight. */
+  private wheelRemainder = 0
+  private wheelResetTimer: number = 0
+  private pageLockTimer: number = 0
+  /** Where the in-flight page glide is headed; landing there lifts the lock. */
+  private pageTargetY = 0
 
   constructor(props: Props) {
     super(props)
@@ -60,6 +67,9 @@ export default class App extends Component<Props, State> {
     const { options } = this.props
 
     window.addEventListener('resize', this.handleResize)
+    // Not passive: paging the wall means swallowing the native scroll.
+    window.addEventListener('wheel', this.handleWheel, { passive: false })
+    window.addEventListener('scroll', this.handleScroll, { passive: true })
 
     let allIllusts: IllustEntry[]
     try {
@@ -96,8 +106,77 @@ export default class App extends Component<Props, State> {
 
   componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize)
+    window.removeEventListener('wheel', this.handleWheel)
+    window.removeEventListener('scroll', this.handleScroll)
     window.clearTimeout(this.resizeTimer)
+    window.clearTimeout(this.wheelResetTimer)
+    window.clearTimeout(this.pageLockTimer)
     if (this.sentinelObserver) this.sentinelObserver.disconnect()
+  }
+
+  /**
+   * The wall is paged, not scrolled: one wheel gesture turns exactly one
+   * screen of the puzzle, like slides. A mouse wheel arrives as one big
+   * delta per notch; a touchpad streams small ones, so deltas accumulate
+   * until the gesture clearly means a page (60px, reset after 180ms of
+   * silence). While a glide is in flight the lock drops further input —
+   * otherwise a single long flick would tear through half the ranking.
+   */
+  private handleWheel = (e: WheelEvent) => {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+    e.preventDefault()
+    if (this.pageLockTimer) {
+      this.wheelRemainder = 0
+      return
+    }
+    this.wheelRemainder += e.deltaY
+    window.clearTimeout(this.wheelResetTimer)
+    this.wheelResetTimer = window.setTimeout(() => {
+      this.wheelRemainder = 0
+    }, 180)
+    if (Math.abs(this.wheelRemainder) < 60) return
+    const dir = this.wheelRemainder > 0 ? 1 : -1
+    this.wheelRemainder = 0
+    this.turnPage(dir)
+  }
+
+  /**
+   * The glide unlocks when it LANDS, not after a fixed delay: a timer guess
+   * that outlives the animation lets one flick turn two pages, while a guess
+   * that the main thread delays (image decode storms) swallows the next
+   * gesture whole. The fallback timer only covers the glide never arriving —
+   * e.g. the user grabs the scrollbar mid-flight.
+   */
+  private turnPage = (dir: number) => {
+    const h = window.innerHeight
+    const current = Math.round(window.scrollY / h)
+    const target = current + dir
+    if (target < 0) return
+    if (target >= this.screenCount) {
+      // Past the dealt end: try to deal the next screen on the spot; if the
+      // ranking is exhausted there is simply no page to turn to.
+      this.appendScreen()
+      if (target >= this.screenCount) return
+    }
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)')
+      .matches
+    this.pageTargetY = target * h
+    window.scrollTo({ top: this.pageTargetY, behavior: reduced ? 'auto' : 'smooth' })
+    window.clearTimeout(this.pageLockTimer)
+    this.pageLockTimer = window.setTimeout(() => {
+      this.pageLockTimer = 0
+    }, 1200)
+    if (reduced) this.handleScroll()
+  }
+
+  private handleScroll = () => {
+    if (
+      this.pageLockTimer &&
+      Math.abs(window.scrollY - this.pageTargetY) < 2
+    ) {
+      window.clearTimeout(this.pageLockTimer)
+      this.pageLockTimer = 0
+    }
   }
 
   private handleResize = () => {

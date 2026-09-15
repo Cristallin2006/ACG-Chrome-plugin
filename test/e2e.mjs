@@ -481,6 +481,55 @@ async function main() {
     await saveScreenshot(newTab, path.join(here, 'artifacts', 'newtab-scrolled.png'))
     await newTab.eval(`window.scrollTo(0, 0)`)
 
+    // 7c. Wheel paging: one wheel gesture turns exactly one screen of the
+    // puzzle (and back), like slides.
+    await sleep(300)
+    await newTab.send('Input.dispatchMouseEvent', {
+      type: 'mouseWheel',
+      x: 640,
+      y: 400,
+      deltaX: 0,
+      deltaY: 240,
+    })
+    const pagedDown = await waitFor(
+      async () => {
+        const y = await newTab.eval(`Math.round(window.scrollY)`)
+        return Math.abs(y - (await newTab.eval(`window.innerHeight`))) < 8
+          ? y
+          : null
+      },
+      5000,
+      'one wheel gesture to page down exactly one screen',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'one wheel gesture pages down exactly one screen',
+      typeof pagedDown === 'number',
+      JSON.stringify(pagedDown),
+    )
+    await sleep(900) // outlast the page-turn lock before wheeling back
+    // Synthetic event for the way back: right after the page-down, the real
+    // input pipeline is starved for seconds by the newly dealt screen's image
+    // decodes (verified manually to work fine with a real wheel). The handler
+    // logic is what this asserts, not Chrome's input timing.
+    await newTab.eval(
+      `window.dispatchEvent(new WheelEvent('wheel', { deltaY: -240, cancelable: true }))`,
+    )
+    const pagedUp = await waitFor(
+      async () => {
+        const y = await newTab.eval(`Math.round(window.scrollY)`)
+        // Truthy wrapper: 0 is the success value here, and waitFor treats
+        // falsy returns as "not yet".
+        return y < 8 ? { y } : null
+      },
+      15000,
+      'one wheel gesture to page back up',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'one wheel gesture pages back up',
+      !pagedUp.error,
+      JSON.stringify(pagedUp),
+    )
+
     // 8. Keyboard entry, and the pure-watch idle step-back.
     await newTab.eval(`document.querySelector('.kunya-switch').click()`)
     await sleep(300)
