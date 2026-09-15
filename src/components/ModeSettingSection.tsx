@@ -52,7 +52,7 @@ export default class ModeSettingSection extends Component<Props, State> {
               {selectable}
             </option>
           ))}
-          {this.props.customTags.map(tag => (
+          {(this.props.customTags || []).map(tag => (
             <option key={tag} value={`tag:${tag}`}>
               {tag} (tag)
             </option>

@@ -27,7 +27,9 @@ interface State {
 export default class SettingPanel extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { customTags: props.initialOptions.customTags }
+    // A stale pre-categories service worker answers getOptions without
+    // customTags; render the panel anyway (an empty list is the truth then).
+    this.state = { customTags: props.initialOptions.customTags || [] }
   }
 
   handleCustomTags = (tags: string[]) => {
