@@ -16,7 +16,10 @@ export default class TagInput extends Component<Props, State> {
     this.state = { value: '' }
   }
 
-  handleChange = (ev: Event) => {
+  // onInput, not onChange: Preact 8 does not normalise change to per-keystroke
+  // delivery, so onChange would only fire on blur — racing the Add click that
+  // caused the blur.
+  handleInput = (ev: Event) => {
     const target = ev.target as HTMLInputElement
     this.setState({ value: target.value })
   }
@@ -34,7 +37,7 @@ export default class TagInput extends Component<Props, State> {
     const {
       props: { label, placeholder },
       state: { value },
-      handleChange,
+      handleInput,
       handleAddClick,
     } = this
 
@@ -45,7 +48,7 @@ export default class TagInput extends Component<Props, State> {
           <input
             type="text"
             value={value}
-            onChange={handleChange}
+            onInput={handleInput}
             placeholder={placeholder}
           />
         </label>

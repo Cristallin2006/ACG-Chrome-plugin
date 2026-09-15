@@ -661,6 +661,34 @@ async function main() {
         roundTrip.after !== roundTrip.before,
         JSON.stringify(roundTrip),
       )
+
+      // Custom categories must persist: type a tag, click its Add button,
+      // then read the store back. The input is located by its placeholder.
+      const tagRoundTrip = await popup.eval(`(async () => {
+        const input = document.querySelector('input[placeholder="初音ミク"]')
+        if (!input) return {
+          error: 'custom tag input not found',
+          placeholders: Array.from(document.querySelectorAll('input')).map(i => i.placeholder),
+          sections: Array.from(document.querySelectorAll('h1,h2,h3,legend')).map(el => el.textContent),
+        }
+        input.value = '風景'
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+        input.closest('span').querySelector('button').click()
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('custom_tags', r))
+        return {
+          stored: stored.custom_tags,
+          listed: Array.from(document.querySelectorAll('li.tag')).map(li => li.textContent),
+        }
+      })()`)
+      check(
+        'custom tag added in the popup persists to chrome.storage.local',
+        !tagRoundTrip.error &&
+          !!tagRoundTrip.stored &&
+          tagRoundTrip.stored.indexOf('風景') !== -1,
+        JSON.stringify(tagRoundTrip),
+      )
     }
 
     const popupLogs = popup.logs.filter(l => l.level === 'error' || l.level === 'exception')
