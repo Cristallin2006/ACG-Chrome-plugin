@@ -23,11 +23,22 @@ wall** that reveals itself screen by screen as you scroll.
 > - 「暗房」视觉系统：暖调近黑画布 + 底部磨砂搜索胶囊（见 [DESIGN.md](DESIGN.md)）
 > - **精确拼合拼图墙**：以二叉空间分割（BSP，i3/bspwm 式）为每张图分配与原图
 >   宽高比严格相等的格子，零裁切、零拉伸、灰缝均匀（`src/lib/tiling.ts`）
-> - **渐进式加载**：一视口一屏拼图，下滑逐屏追加、拼块入屏逐块渐入
+> - **渐进式加载**：一视口一屏拼图，下滑逐屏追加、拼块入屏逐块渐入；首载遇网络
+>   热身期会静默重试，不再闪现空态
+> - **自定义标签分类**：任意 pixiv 标签成为内容源，按需翻页续取（不止首页 120 张）；
+>   无热度档走 `s_tag_full` 服务端精确匹配，带热度档走模糊搜索 + 客户端精确过滤，
+>   无关作品不上墙
+> - **标签热度分层**：`Nusers入り` 收藏门槛（100–10000 单档或四档混合），免费账号
+>   也能按热度筛图
+> - **算法推荐源（discovery）**：pixiv「みつける」推荐信息流，登录即可用的高热
+>   内容源，无需 Premium
+> - **pixiv 登录会话**：可开关请求携带登录状态（按账号浏览设置返回，含 R-18 开关），
+>   弹窗实时探测并显示登录态
+> - **多图过滤**：一键剔除多页作品（多为漫画，墙上只能展示封面）
 > - 图源修复：统一归一化为等比 `master` 图（修复 `_custom` 方图缩略图导致的
 >   拉伸），分辨率提升至 `600x1200_90`
-> - 插画均来自 pixiv 公开榜单，版权归原作者及 pixiv 所有；本扩展仅作展示与
->   跳转，不存储、不分发图片内容
+> - 插画均来自 pixiv 公开榜单与公开搜索/推荐接口，版权归原作者及 pixiv 所有；
+>   本扩展仅作展示与跳转，不存储、不分发图片内容
 
 ## Build
 
@@ -62,9 +73,18 @@ why.
   screen of the puzzle (like slides), and each piece ripples into place as it
   enters view
 - The content source is yours: the popup picks among the built-in rankings
-  (illust / manga / original / ugoira / newer / popular), or any **custom tag
-  category** you define — each tag you add becomes a choice in the Ranking Mode
-  dropdown and turns the wall into that tag's latest search results
+  (illust / manga / original / ugoira / newer / popular), the **discovery feed**
+  (pixiv's own recommendation stream — the best source of high-heat works short
+  of Premium; it needs your pixiv login, which the popup can carry and detects),
+  or any **custom tag category** you define — each tag you add becomes a choice in
+  the Ranking Mode dropdown and turns the wall into that tag's latest search
+  results, paged deeper on demand as you scroll. Tag sources can carry a
+  **bookmark-tier filter** (`Nusers入り`, a single tier or a layered mix) so only
+  works above a popularity floor reach the wall, and matching is exact: plain tag
+  searches use pixiv's exact mode, tiered searches re-check every entry's tags
+  client-side, so unrelated fuzzy matches never make it onto the wall. A popup
+  toggle also hides **multi-page works** (usually manga, whose wall tile could
+  only show the cover)
 - A frosted search capsule sits at the bottom centre and searches **the web** with
   your default search engine (what the address bar does); anything that looks like
   an address is opened directly
