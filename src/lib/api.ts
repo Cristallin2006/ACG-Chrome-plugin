@@ -240,9 +240,11 @@ export const createTagLoader = (
               if (entries.length === 0) exhausted[i] = true
               return entries
             })
-            .catch((): IllustEntry[] => {
+            .catch((error): IllustEntry[] => {
               // A network failure must not kill the cursor: stay retryable,
-              // the next user gesture asks again.
+              // the next user gesture asks again. Warn so an all-cursor
+              // failure (proxy still down, etc.) is visible in DevTools.
+              console.warn('Ku-nya: tag search request failed', error)
               return []
             })
         }),

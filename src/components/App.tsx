@@ -57,6 +57,8 @@ export default class App extends Component<Props, State> {
   /** Tag sources paginate; null for the finite built-in rankings. */
   private tagLoader: TagLoader | null = null
   private isFetchingMore = false
+  /** Pending quiet retry of the first load (see loadWall). */
+  private retryTimer: number = 0
 
   constructor(props: Props) {
     super(props)
@@ -70,36 +72,55 @@ export default class App extends Component<Props, State> {
   }
 
   async componentDidMount() {
+    window.addEventListener('resize', this.handleResize)
+    // Not passive: paging the wall means swallowing the native scroll.
+    window.addEventListener('wheel', this.handleWheel, { passive: false })
+    window.addEventListener('scroll', this.handleScroll, { passive: true })
+
+    this.loadWall(0)
+  }
+
+  /**
+   * The first load can land in a dead window: right after a browser or
+   * extension restart the proxy/VPN stack is still reconnecting, and every
+   * pixiv request times out at once — the wall showed the empty state for
+   * what a single F5 then fixes. Retry quietly (2.5s, 5s) before giving up.
+   */
+  private loadWall = async (attempt: number) => {
     const { options } = this.props
 
     // Cookie carrying is a module-level axios switch, so it has to be
     // decided before the first request goes out.
     applyLoginPreference(options.usePixivLogin)
 
-    window.addEventListener('resize', this.handleResize)
-    // Not passive: paging the wall means swallowing the native scroll.
-    window.addEventListener('wheel', this.handleWheel, { passive: false })
-    window.addEventListener('scroll', this.handleScroll, { passive: true })
-
     let allIllusts: IllustEntry[]
     try {
       const { mode } = options
       if (mode.indexOf('tag:') === 0) {
         // Tag sources are paginated: the first batch is the newest slice,
-        // and the wall asks for deeper pages when the pool runs dry.
+        // and the wall asks for deeper pages when the pool runs dry. A fresh
+        // loader per attempt, so a failed first try re-reads pages 1-2.
         this.tagLoader = createTagLoader(mode.slice(4), options.tagBookmarkTier)
         allIllusts = await this.tagLoader.next()
       } else {
         allIllusts = await this.loadContent(options)
       }
     } catch (error) {
-      // An empty dark page with no explanation reads as a broken extension.
       console.error('Ku-nya: could not load illustrations', error)
+      if (attempt < 2) {
+        this.retryTimer = window.setTimeout(() => this.loadWall(attempt + 1), 2500)
+        return
+      }
+      // An empty dark page with no explanation reads as a broken extension.
       this.setState({ isUnavailable: true })
       return
     }
 
     const illusts = this.filterPool(await shuffle(allIllusts))
+    if (illusts.length === 0 && attempt < 2) {
+      this.retryTimer = window.setTimeout(() => this.loadWall(attempt + 1), 2500)
+      return
+    }
 
     this.screenCount = 0
     this.setState(
@@ -172,6 +193,7 @@ export default class App extends Component<Props, State> {
     window.clearTimeout(this.resizeTimer)
     window.clearTimeout(this.wheelResetTimer)
     window.clearTimeout(this.pageLockTimer)
+    window.clearTimeout(this.retryTimer)
     if (this.sentinelObserver) this.sentinelObserver.disconnect()
   }
 
