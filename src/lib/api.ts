@@ -219,26 +219,35 @@ export const getIllustsByTag = async (
 export interface LoginStatus {
   loggedIn: boolean
   userName: string | null
+  /** The probe never reached pixiv — distinct from a definite logged-out. */
+  networkError: boolean
 }
 
 /**
  * Asks pixiv who the current session belongs to. Always credentialed —
- * detecting "not logged in" is the point — and deliberately quiet: a network
- * failure reads as logged-out, the popup's status line says so either way.
+ * detecting "not logged in" is the point. The endpoint answers 200 both ways:
+ * anonymous is `{ userData: null, ... }`, a session fills `userData`. (An
+ * earlier guess at pixiv's usual `{ error, body }` envelope read every real
+ * session as logged-out.) A thrown request means the network, not pixiv,
+ * answered — the popup reports that separately instead of claiming logged-out.
  */
 export const getLoginStatus = async (): Promise<LoginStatus> => {
   try {
     const res = await axios.get('https://www.pixiv.net/ajax/user/self', {
       withCredentials: true,
     })
-    const body = res.data && res.data.body
-    if (res.data && res.data.error === false && body && body.userId) {
-      return { loggedIn: true, userName: body.userName || null }
+    const userData = res.data && res.data.userData
+    if (userData && (userData.id || userData.userId)) {
+      return {
+        loggedIn: true,
+        userName: userData.name || userData.userName || null,
+        networkError: false,
+      }
     }
+    return { loggedIn: false, userName: null, networkError: false }
   } catch {
-    // fall through to logged-out
+    return { loggedIn: false, userName: null, networkError: true }
   }
-  return { loggedIn: false, userName: null }
 }
 
 export const getRanking = async (

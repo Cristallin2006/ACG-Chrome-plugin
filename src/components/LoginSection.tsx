@@ -10,7 +10,7 @@ interface Props {
 interface State {
   enabled: boolean
   /** What the last probe heard back; 'checking' until it answers. */
-  status: 'checking' | 'logged-in' | 'logged-out'
+  status: 'checking' | 'logged-in' | 'logged-out' | 'error'
   userName: string | null
 }
 
@@ -40,7 +40,11 @@ export default class LoginSection extends Component<Props, State> {
     this.setState({ status: 'checking' })
     const result = await getLoginStatus()
     this.setState({
-      status: result.loggedIn ? 'logged-in' : 'logged-out',
+      status: result.networkError
+        ? 'error'
+        : result.loggedIn
+        ? 'logged-in'
+        : 'logged-out',
       userName: result.userName,
     })
   }
@@ -58,12 +62,28 @@ export default class LoginSection extends Component<Props, State> {
     })
   }
 
+  renderStatus() {
+    const {
+      state: { status, userName },
+    } = this
+    switch (status) {
+      case 'checking':
+        return 'Checking the session… 检测登录状态…'
+      case 'logged-in':
+        return `Logged in as ${userName || 'a pixiv user'} 已登录`
+      case 'logged-out':
+        return 'Not logged in 未登录'
+      default:
+        return 'Probe failed (network error) 检测失败，请检查网络'
+    }
+  }
+
   render() {
     const {
       handleCheckboxClick,
       handleLoginClick,
       probe,
-      state: { enabled, status, userName },
+      state: { enabled, status },
     } = this
 
     return (
@@ -79,11 +99,7 @@ export default class LoginSection extends Component<Props, State> {
           children: ['send the pixiv login session with requests 请求携带登录状态'],
         })}
         <p className="login-status">
-          {status === 'checking'
-            ? 'Checking the session… 检测登录状态…'
-            : status === 'logged-in'
-            ? `Logged in as ${userName || 'a pixiv user'} 已登录`
-            : 'Not logged in 未登录'}
+          {this.renderStatus()}
           <button className="login-refresh" onClick={probe}>
             re-check
           </button>

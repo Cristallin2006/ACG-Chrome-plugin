@@ -764,7 +764,8 @@ async function main() {
       ).catch(e => ({ error: e.message }))
       check(
         'popup login probe settles on a definite status',
-        !loginStatus.error && /Not logged in|Logged in/.test(loginStatus.text),
+        !loginStatus.error &&
+          /Not logged in|Logged in|Probe failed/.test(loginStatus.text),
         JSON.stringify(loginStatus),
       )
     }
