@@ -3,6 +3,7 @@ import Illust from './Illust'
 import SearchBar from './SearchBar'
 import {
   IllustEntry,
+  applyLoginPreference,
   getOriginalRanking,
   getNewIllusts,
   getPopularIllusts,
@@ -66,6 +67,10 @@ export default class App extends Component<Props, State> {
 
   async componentDidMount() {
     const { options } = this.props
+
+    // Cookie carrying is a module-level axios switch, so it has to be
+    // decided before the first request goes out.
+    applyLoginPreference(options.usePixivLogin)
 
     window.addEventListener('resize', this.handleResize)
     // Not passive: paging the wall means swallowing the native scroll.
@@ -294,8 +299,10 @@ export default class App extends Component<Props, State> {
   loadContent(options: Options): Promise<IllustEntry[]> {
     const { mode } = options
 
-    // A user-defined tag category (see the popup's custom category section).
-    if (mode.indexOf('tag:') === 0) return getIllustsByTag(mode.slice(4))
+    // A user-defined tag category (see the popup's custom category section),
+    // with the popup's bookmark tier as its popularity filter.
+    if (mode.indexOf('tag:') === 0)
+      return getIllustsByTag(mode.slice(4), options.tagBookmarkTier)
 
     return mode === Modes.Original
       ? getOriginalRanking()

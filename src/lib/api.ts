@@ -1,5 +1,16 @@
 import axios from 'axios'
 
+/**
+ * Whether pixiv requests carry the browser's login session (PHPSESSID). The
+ * new tab page flips this from the stored `usePixivLogin` option before its
+ * first fetch; anonymous requests behave exactly as before, a logged-in
+ * session unlocks the account's full search results (incl. R-18 per the
+ * account's own browsing settings).
+ */
+export const applyLoginPreference = (usePixivLogin: boolean) => {
+  axios.defaults.withCredentials = usePixivLogin
+}
+
 export interface IllustEntry {
   id: number
   imageUrl: string
@@ -119,19 +130,29 @@ export const getOriginalRanking = async (): Promise<IllustEntry[]> => {
 }
 
 /**
+ * Bookmark tiers for the `Nusers入り` search keyword: the only popularity
+ * filter a tag search gets without a premium login. `TAG_TIER_MIXED` asks for
+ * the layered search instead of one tier.
+ */
+export const TAG_TIER_MIXED = -1
+const MIXED_TIERS = [10000, 5000, 1000, 500]
+
+/**
  * A user-defined tag category. The search listing answers anonymously; each
  * entry carries its own width/height, so the puzzle wall can size tiles
  * without a detail round-trip. `order=date_d` because the popular ordering
  * requires a premium login.
  */
-export const getIllustsByTag = async (tag: string): Promise<IllustEntry[]> => {
+const searchTag = async (
+  word: string,
+  pages: number[],
+): Promise<IllustEntry[]> => {
   const URL = `https://www.pixiv.net/ajax/search/artworks/${encodeURIComponent(
-    tag,
+    word,
   )}?order=date_d&mode=all&s_mode=s_tag`
-  const responses = await Promise.all([
-    axios.get(`${URL}&p=1`),
-    axios.get(`${URL}&p=2`),
-  ])
+  const responses = await Promise.all(
+    pages.map(p => axios.get(`${URL}&p=${p}`)),
+  )
 
   return responses
     .filter(
@@ -159,6 +180,65 @@ export const getIllustsByTag = async (tag: string): Promise<IllustEntry[]> => {
         ),
     )
     .reduce((l, r) => l.concat(...r), []) // flatten
+}
+
+/**
+ * `tier` is a bookmark floor: 100 filters to `tag 100users入り`, and so on.
+ * `TAG_TIER_MIXED` runs the layered search — one query per tier, high tiers
+ * first, deduped by id — so the wall mixes flagship pieces with merely-good
+ * ones instead of starving on a single high bar.
+ */
+export const getIllustsByTag = async (
+  tag: string,
+  tier: number = 0,
+): Promise<IllustEntry[]> => {
+  if (tier === TAG_TIER_MIXED) {
+    // A tier with no recent uploads answers 0 entries; treat a failed layer
+    // as empty rather than sinking the whole wall.
+    const layers = await Promise.all(
+      MIXED_TIERS.map(t =>
+        searchTag(`${tag} ${t}users入り`, [1]).catch((): IllustEntry[] => []),
+      ),
+    )
+    const seen: { [id: number]: boolean } = {}
+    const merged: IllustEntry[] = []
+    layers.forEach(layer =>
+      layer.forEach(entry => {
+        if (seen[entry.id]) return
+        seen[entry.id] = true
+        merged.push(entry)
+      }),
+    )
+    return merged
+  }
+
+  const word = tier > 0 ? `${tag} ${tier}users入り` : tag
+  return searchTag(word, [1, 2])
+}
+
+export interface LoginStatus {
+  loggedIn: boolean
+  userName: string | null
+}
+
+/**
+ * Asks pixiv who the current session belongs to. Always credentialed —
+ * detecting "not logged in" is the point — and deliberately quiet: a network
+ * failure reads as logged-out, the popup's status line says so either way.
+ */
+export const getLoginStatus = async (): Promise<LoginStatus> => {
+  try {
+    const res = await axios.get('https://www.pixiv.net/ajax/user/self', {
+      withCredentials: true,
+    })
+    const body = res.data && res.data.body
+    if (res.data && res.data.error === false && body && body.userId) {
+      return { loggedIn: true, userName: body.userName || null }
+    }
+  } catch {
+    // fall through to logged-out
+  }
+  return { loggedIn: false, userName: null }
 }
 
 export const getRanking = async (

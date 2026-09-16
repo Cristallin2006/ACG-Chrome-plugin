@@ -24,6 +24,13 @@ export interface Options {
   mode: string
   /** User-defined tag categories, selectable in the mode dropdown. */
   customTags: string[]
+  /**
+   * Bookmark floor for tag sources: 0 = unfiltered, a positive number becomes
+   * the `Nusers入り` keyword, api.TAG_TIER_MIXED (-1) = layered search.
+   */
+  tagBookmarkTier: number
+  /** Whether pixiv requests carry the browser's login session. */
+  usePixivLogin: boolean
   excludingTags: string[]
   isExcludingHighAspectRatio: boolean
   smallestIncludableAspectRatio: number
@@ -35,6 +42,10 @@ export interface Options {
 export const defaultOptions: Options = {
   mode: Modes.Illust,
   customTags: [],
+  tagBookmarkTier: 0,
+  // Carrying the session only changes anything once the user logs in on
+  // pixiv; until then requests are anonymous either way.
+  usePixivLogin: true,
   excludingTags: [],
   isExcludingHighAspectRatio: false,
   smallestIncludableAspectRatio: 3,
@@ -53,11 +64,23 @@ export const getOptions = async (): Promise<Options> => {
     ),
   )
 
+  // Same string-to-number story as the aspect ratio: the store hands back the
+  // raw string, and a missing key must fall back to the default, not NaN.
+  const storedTier = await storageUtil.getValue('tag_bookmark_tier')
+  const tier = Number(
+    storedTier === undefined ? defaultOptions.tagBookmarkTier : storedTier,
+  )
+
   return {
     mode: await storageUtil.getValue('content', defaultOptions.mode),
     customTags: await storageUtil.getJSON(
       'custom_tags',
       defaultOptions.customTags,
+    ),
+    tagBookmarkTier: Number.isFinite(tier) ? tier : defaultOptions.tagBookmarkTier,
+    usePixivLogin: await storageUtil.getBoolean(
+      'use_pixiv_login',
+      defaultOptions.usePixivLogin,
     ),
     excludingTags: await storageUtil.getJSON(
       'excluding_tags',
@@ -88,6 +111,30 @@ export const setCustomTags = (tags: string[]) => {
       method: 'setCustomTags',
       params: {
         custom_tags: tags,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setTagBookmarkTier = (tier: number) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setTagBookmarkTier',
+      params: {
+        tag_bookmark_tier: tier,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setUsePixivLogin = (usePixivLogin: boolean) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setUsePixivLogin',
+      params: {
+        use_pixiv_login: usePixivLogin,
       },
     },
     () => {},

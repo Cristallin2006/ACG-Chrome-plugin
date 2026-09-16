@@ -714,6 +714,59 @@ async function main() {
         JSON.stringify(reopened),
       )
       await cdp.send('Target.closeTarget', { targetId: popupTarget2.targetId })
+
+      // The bookmark-tier dropdown writes tag_bookmark_tier as a string.
+      const tierRoundTrip = await popup.eval(`(async () => {
+        const select = document.querySelector('#tag-tier-selector')
+        if (!select) return { error: 'tier selector not found' }
+        select.value = '500'
+        select.dispatchEvent(new Event('input', { bubbles: true }))
+        select.dispatchEvent(new Event('change', { bubbles: true }))
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('tag_bookmark_tier', r))
+        return { stored: stored.tag_bookmark_tier, ui: select.value }
+      })()`)
+      check(
+        'tag bookmark tier persists to chrome.storage.local',
+        !tierRoundTrip.error && tierRoundTrip.stored === '500',
+        JSON.stringify(tierRoundTrip),
+      )
+
+      // The login toggle writes use_pixiv_login as '1'/'0'.
+      const loginRoundTrip = await popup.eval(`(async () => {
+        const box = document.querySelector('#checkbox_for_pixiv_login')
+        if (!box) return { error: 'login checkbox not found' }
+        const before = box.checked
+        box.click()
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('use_pixiv_login', r))
+        return { before, checkedInUi: box.checked, stored: stored.use_pixiv_login }
+      })()`)
+      check(
+        'pixiv login toggle persists to chrome.storage.local',
+        !loginRoundTrip.error &&
+          loginRoundTrip.checkedInUi === !loginRoundTrip.before &&
+          loginRoundTrip.stored === (loginRoundTrip.before ? '0' : '1'),
+        JSON.stringify(loginRoundTrip),
+      )
+
+      // The login probe must settle: a fresh profile has no pixiv session,
+      // and a network failure reads as logged-out rather than hanging.
+      const loginStatus = await waitFor(
+        async () => {
+          const text = await popup.eval(
+            `(document.querySelector('.login-status') || {}).textContent || ''`,
+          )
+          return text && text.indexOf('…') === -1 ? { text } : null
+        },
+        20000,
+        'the popup login probe to settle',
+      ).catch(e => ({ error: e.message }))
+      check(
+        'popup login probe settles on a definite status',
+        !loginStatus.error && /Not logged in|Logged in/.test(loginStatus.text),
+        JSON.stringify(loginStatus),
+      )
     }
 
     const popupLogs = popup.logs.filter(l => l.level === 'error' || l.level === 'exception')

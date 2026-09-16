@@ -12,3 +12,13 @@
   color: #8c1d18;
   font-size: 12px;
 }
+
+.login-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-refresh {
+  margin-left: auto;
+}

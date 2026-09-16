@@ -48,6 +48,20 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           await storageUtil.setJSON('custom_tags', request.params.custom_tags)
           sendResponse({ data: 'setCustomTags' })
           break
+        case 'setTagBookmarkTier':
+          await storageUtil.setValue(
+            'tag_bookmark_tier',
+            request.params.tag_bookmark_tier,
+          )
+          sendResponse({ data: 'setTagBookmarkTier' })
+          break
+        case 'setUsePixivLogin':
+          await storageUtil.setBoolean(
+            'use_pixiv_login',
+            request.params.use_pixiv_login,
+          )
+          sendResponse({ data: 'setUsePixivLogin' })
+          break
         case 'setSafe':
           await storageUtil.setBoolean('is_safe', request.params.is_safe)
           sendResponse({ data: 'setSafe', isSafe: request.params.is_safe })

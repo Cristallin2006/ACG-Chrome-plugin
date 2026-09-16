@@ -24,11 +24,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Unpacked-development guard: page code is re-read from disk on every open,
   // but Chrome keeps a RUNNING service worker on its old code until the
-  // extension is reloaded. A worker from before custom categories answers
-  // getOptions without `customTags` — without this banner that mix presents
-  // as "tags don't persist", because the old worker silently drops every
-  // setCustomTags it doesn't recognise.
-  if (!('customTags' in options)) {
+  // extension is reloaded. A worker from before these settings answers
+  // getOptions without the newest key — without this banner that mix presents
+  // as "settings don't persist", because the old worker silently drops every
+  // setter message it doesn't recognise. Check the newest option key; any
+  // worker that knows it knows the rest.
+  if (!('usePixivLogin' in options)) {
     const banner = document.createElement('p')
     banner.className = 'stale-worker'
     banner.textContent =
