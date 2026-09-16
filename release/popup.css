@@ -2,3 +2,13 @@
   width: 400px;
   padding: 12px;
 }
+
+.stale-worker {
+  margin: 0 0 12px;
+  padding: 8px 10px;
+  border: 1px solid #c53929;
+  border-radius: 6px;
+  background: #fdeceb;
+  color: #8c1d18;
+  font-size: 12px;
+}

@@ -689,6 +689,31 @@ async function main() {
           tagRoundTrip.stored.indexOf('風景') !== -1,
         JSON.stringify(tagRoundTrip),
       )
+
+      // ...and survives a full popup reopen: a fresh page must read the tag
+      // back through getOptions and list it.
+      const popupTarget2 = await cdp.send('Target.createTarget', {
+        url: `chrome-extension://${extensionId}/popup.html`,
+      })
+      const popup2 = await cdp.attach(popupTarget2.targetId)
+      const reopened = await waitFor(
+        async () => {
+          const listed = await popup2.eval(
+            `Array.from(document.querySelectorAll('li.tag')).map(li => li.textContent)`,
+          )
+          return listed && listed.some(t => t.indexOf('風景') !== -1)
+            ? { listed }
+            : null
+        },
+        15000,
+        'a reopened popup to list the stored custom tag',
+      ).catch(e => ({ error: e.message }))
+      check(
+        'custom tag survives a popup reopen',
+        !reopened.error,
+        JSON.stringify(reopened),
+      )
+      await cdp.send('Target.closeTarget', { targetId: popupTarget2.targetId })
     }
 
     const popupLogs = popup.logs.filter(l => l.level === 'error' || l.level === 'exception')

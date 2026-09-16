@@ -21,4 +21,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   render(<SettingPanel initialOptions={options} />, settings)
+
+  // Unpacked-development guard: page code is re-read from disk on every open,
+  // but Chrome keeps a RUNNING service worker on its old code until the
+  // extension is reloaded. A worker from before custom categories answers
+  // getOptions without `customTags` — without this banner that mix presents
+  // as "tags don't persist", because the old worker silently drops every
+  // setCustomTags it doesn't recognise.
+  if (!('customTags' in options)) {
+    const banner = document.createElement('p')
+    banner.className = 'stale-worker'
+    banner.textContent =
+      '扩展程序已在磁盘上更新：请到 chrome://extensions 点一次「重新加载」，否则设置无法保存。'
+    settings.insertBefore(banner, settings.firstChild)
+  }
 })
