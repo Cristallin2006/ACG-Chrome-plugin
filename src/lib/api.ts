@@ -115,6 +115,48 @@ export const getPopularIllusts = async (): Promise<IllustEntry[]> => {
     .reduce((l, r) => l.concat(...r), []) // flatten
 }
 
+/**
+ * The recommendation feed ("みつける" / For You): pixiv's own algorithmic
+ * popularity+personalisation pick, and the only free source of high-heat
+ * works beyond the rankings — no Premium needed. It answers ONLY with a
+ * login session (anonymous calls are rejected with `error:true`), so a
+ * failure is thrown for the caller's retry/empty-state path rather than
+ * silently yielding an empty wall. Entries carry the same fields as the
+ * search listing, including width/height and pageCount.
+ */
+export const getDiscovery = async (): Promise<IllustEntry[]> => {
+  const res = await axios.get(
+    'https://www.pixiv.net/ajax/discovery/artworks?mode=all&limit=180&lang=zh',
+  )
+  const thumbnails =
+    res.status === 200 &&
+    res.data &&
+    !res.data.error &&
+    res.data.body &&
+    res.data.body.thumbnails
+      ? res.data.body.thumbnails
+      : null
+  if (!thumbnails || !Array.isArray(thumbnails.illust)) {
+    throw new Error('discovery feed unavailable (a pixiv login is required)')
+  }
+
+  return thumbnails.illust
+    .filter(content => content && content.id)
+    .map(
+      (content): IllustEntry => ({
+        id: Number(content.id),
+        imageUrl: toMasterUrl(content.url),
+        title: content.title,
+        tags: content.tags || [],
+        width: content.width,
+        height: content.height,
+        authorName: content.userName,
+        sl: typeof content.sl === 'number' ? content.sl : null,
+        pageCount: toPageCount(content.pageCount),
+      }),
+    )
+}
+
 export const getOriginalRanking = async (): Promise<IllustEntry[]> => {
   const URL = 'https://www.pixiv.net/ranking.php?format=json&mode=original'
   const responses = await Promise.all([

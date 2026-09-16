@@ -9,6 +9,7 @@ import {
   getOriginalRanking,
   getNewIllusts,
   getPopularIllusts,
+  getDiscovery,
   getRanking,
 } from '../lib/api'
 import { Options, Modes, ViewModes, setViewMode } from '../lib/options'
@@ -397,6 +398,8 @@ export default class App extends Component<Props, State> {
       ? getNewIllusts()
       : mode === Modes.Popular
       ? getPopularIllusts()
+      : mode === Modes.Discovery
+      ? getDiscovery()
       : getRanking(mode as 'illust' | 'manga' | 'ugoira')
   }
 

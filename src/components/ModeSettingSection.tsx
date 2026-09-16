@@ -21,6 +21,7 @@ export default class ModeSettingSection extends Component<Props, State> {
     Modes.Ugoira,
     Modes.Newer,
     Modes.Popular,
+    Modes.Discovery,
   ]
 
   constructor(props: Props) {
@@ -49,7 +50,9 @@ export default class ModeSettingSection extends Component<Props, State> {
         <select id="content-selector" value={value} onChange={handleModeChange}>
           {this.selectableOptions.map(selectable => (
             <option key={selectable} value={selectable}>
-              {selectable}
+              {selectable === Modes.Discovery
+                ? 'discovery 推荐(需登录)'
+                : selectable}
             </option>
           ))}
           {(this.props.customTags || []).map(tag => (

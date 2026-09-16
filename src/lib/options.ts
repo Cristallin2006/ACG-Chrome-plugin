@@ -7,6 +7,8 @@ export enum Modes {
   Ugoira = 'ugoira',
   Newer = 'newer',
   Popular = 'popular',
+  /** Algorithmic recommendation feed; requires a carried pixiv login. */
+  Discovery = 'discovery',
 }
 
 /**
