@@ -10,6 +10,7 @@ import {
   setViewMode,
   setTagBookmarkTier,
   setUsePixivLogin,
+  setExcludeMultiPage,
 } from '../lib/options'
 import ModeSettingsSection from './ModeSettingSection'
 import AspectRatioSettingSection from './AspectRatioSettingSection'
@@ -17,6 +18,7 @@ import TagSettingSection from './TagSettingSection'
 import CustomTagSection from './CustomTagSection'
 import TagHeatSection from './TagHeatSection'
 import LoginSection from './LoginSection'
+import MultiPageSection from './MultiPageSection'
 import SafeSection from './SafeSection'
 import ViewModeSection from './ViewModeSection'
 
@@ -62,6 +64,10 @@ export default class SettingPanel extends Component<Props, State> {
       this.props.initialOptions.usePixivLogin === undefined
         ? defaultOptions.usePixivLogin
         : this.props.initialOptions.usePixivLogin
+    const isExcludingMultiPage =
+      this.props.initialOptions.isExcludingMultiPage === undefined
+        ? defaultOptions.isExcludingMultiPage
+        : this.props.initialOptions.isExcludingMultiPage
 
     return (
       <div>
@@ -78,6 +84,10 @@ export default class SettingPanel extends Component<Props, State> {
         />
         <TagHeatSection initialValue={tagBookmarkTier} update={setTagBookmarkTier} />
         <LoginSection initialValue={usePixivLogin} update={setUsePixivLogin} />
+        <MultiPageSection
+          initialValue={isExcludingMultiPage}
+          update={setExcludeMultiPage}
+        />
         <AspectRatioSettingSection
           initial_is_excluding_high_aspect_ratio={isExcludingHighAspectRatio}
           initial_smallest_includable_aspect_ratio={

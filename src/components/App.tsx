@@ -102,6 +102,12 @@ export default class App extends Component<Props, State> {
         if (options.isSafe) return illust.sl === 2
         return true
       })
+      .filter(illust => {
+        // Multi-page works are usually manga: the wall would show the cover.
+        if (!options.isExcludingMultiPage) return true
+        // Unknown page count is kept — never filter on missing data.
+        return illust.pageCount === null || illust.pageCount <= 1
+      })
 
     this.screenCount = 0
     this.setState(

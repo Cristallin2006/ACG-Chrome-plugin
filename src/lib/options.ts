@@ -31,6 +31,8 @@ export interface Options {
   tagBookmarkTier: number
   /** Whether pixiv requests carry the browser's login session. */
   usePixivLogin: boolean
+  /** Hide multi-page works (usually manga) from the wall. */
+  isExcludingMultiPage: boolean
   excludingTags: string[]
   isExcludingHighAspectRatio: boolean
   smallestIncludableAspectRatio: number
@@ -46,6 +48,7 @@ export const defaultOptions: Options = {
   // Carrying the session only changes anything once the user logs in on
   // pixiv; until then requests are anonymous either way.
   usePixivLogin: true,
+  isExcludingMultiPage: false,
   excludingTags: [],
   isExcludingHighAspectRatio: false,
   smallestIncludableAspectRatio: 3,
@@ -81,6 +84,10 @@ export const getOptions = async (): Promise<Options> => {
     usePixivLogin: await storageUtil.getBoolean(
       'use_pixiv_login',
       defaultOptions.usePixivLogin,
+    ),
+    isExcludingMultiPage: await storageUtil.getBoolean(
+      'is_excluding_multi_page',
+      defaultOptions.isExcludingMultiPage,
     ),
     excludingTags: await storageUtil.getJSON(
       'excluding_tags',
@@ -135,6 +142,18 @@ export const setUsePixivLogin = (usePixivLogin: boolean) => {
       method: 'setUsePixivLogin',
       params: {
         use_pixiv_login: usePixivLogin,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setExcludeMultiPage = (isExcluding: boolean) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setExcludeMultiPage',
+      params: {
+        is_excluding_multi_page: isExcluding,
       },
     },
     () => {},

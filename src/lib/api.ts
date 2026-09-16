@@ -20,7 +20,18 @@ export interface IllustEntry {
   height: number
   authorName: string
   sl: number | null
+  /**
+   * How many images the work contains. Multi-page works are usually manga
+   * (or compilations), so the popup can filter them out. Every source API
+   * carries the count, but under different names; null means the source
+   * didn't say, and null is never filtered out.
+   */
+  pageCount: number | null
 }
+
+/** Page counts arrive as `pageCount` or `illust_page_count`, or not at all. */
+const toPageCount = (value: any): number | null =>
+  typeof value === 'number' ? value : null
 
 const imageResolution = '600x1200_90'
 
@@ -64,6 +75,7 @@ export const getNewIllusts = async (): Promise<IllustEntry[]> => {
           height: content.illust_height,
           authorName: content.user_name,
           sl: content.illust_sanity_level,
+          pageCount: toPageCount(content.illust_page_count),
         }),
       ),
     )
@@ -96,6 +108,7 @@ export const getPopularIllusts = async (): Promise<IllustEntry[]> => {
           height: content.illust_height,
           authorName: content.user_name,
           sl: content.illust_sanity_level,
+          pageCount: toPageCount(content.illust_page_count),
         }),
       ),
     )
@@ -123,6 +136,7 @@ export const getOriginalRanking = async (): Promise<IllustEntry[]> => {
           height: content.height,
           authorName: content.user_name,
           sl: null,
+          pageCount: toPageCount(content.illust_page_count),
         }),
       ),
     )
@@ -176,6 +190,7 @@ const searchTag = async (
             height: content.height,
             authorName: content.userName,
             sl: typeof content.sl === 'number' ? content.sl : null,
+            pageCount: toPageCount(content.pageCount),
           }),
         ),
     )
@@ -290,6 +305,7 @@ const getIllustsDetail = async (ids: Array<number>): Promise<IllustEntry[]> => {
           height: content.height,
           authorName: content.user_name,
           sl: content.sl,
+          pageCount: toPageCount(content.pageCount),
         })
       }
       return entities

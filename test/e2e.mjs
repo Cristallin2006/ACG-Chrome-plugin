@@ -750,6 +750,24 @@ async function main() {
         JSON.stringify(loginRoundTrip),
       )
 
+      // The multi-page filter toggle writes is_excluding_multi_page as '1'/'0'.
+      const multiPageRoundTrip = await popup.eval(`(async () => {
+        const box = document.querySelector('#checkbox_for_multi_page')
+        if (!box) return { error: 'multi-page checkbox not found' }
+        const before = box.checked
+        box.click()
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('is_excluding_multi_page', r))
+        return { before, checkedInUi: box.checked, stored: stored.is_excluding_multi_page }
+      })()`)
+      check(
+        'multi-page filter toggle persists to chrome.storage.local',
+        !multiPageRoundTrip.error &&
+          multiPageRoundTrip.checkedInUi === !multiPageRoundTrip.before &&
+          multiPageRoundTrip.stored === (multiPageRoundTrip.before ? '0' : '1'),
+        JSON.stringify(multiPageRoundTrip),
+      )
+
       // The login probe must settle: a fresh profile has no pixiv session,
       // and a network failure reads as logged-out rather than hanging.
       const loginStatus = await waitFor(

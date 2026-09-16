@@ -62,6 +62,13 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           )
           sendResponse({ data: 'setUsePixivLogin' })
           break
+        case 'setExcludeMultiPage':
+          await storageUtil.setBoolean(
+            'is_excluding_multi_page',
+            request.params.is_excluding_multi_page,
+          )
+          sendResponse({ data: 'setExcludeMultiPage' })
+          break
         case 'setSafe':
           await storageUtil.setBoolean('is_safe', request.params.is_safe)
           sendResponse({ data: 'setSafe', isSafe: request.params.is_safe })
