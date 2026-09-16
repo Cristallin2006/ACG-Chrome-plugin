@@ -3,11 +3,12 @@ import Illust from './Illust'
 import SearchBar from './SearchBar'
 import {
   IllustEntry,
+  TagLoader,
   applyLoginPreference,
+  createTagLoader,
   getOriginalRanking,
   getNewIllusts,
   getPopularIllusts,
-  getIllustsByTag,
   getRanking,
 } from '../lib/api'
 import { Options, Modes, ViewModes, setViewMode } from '../lib/options'
@@ -53,6 +54,9 @@ export default class App extends Component<Props, State> {
   private pageLockTimer: number = 0
   /** Where the in-flight page glide is headed; landing there lifts the lock. */
   private pageTargetY = 0
+  /** Tag sources paginate; null for the finite built-in rankings. */
+  private tagLoader: TagLoader | null = null
+  private isFetchingMore = false
 
   constructor(props: Props) {
     super(props)
@@ -79,7 +83,15 @@ export default class App extends Component<Props, State> {
 
     let allIllusts: IllustEntry[]
     try {
-      allIllusts = await this.loadContent(options)
+      const { mode } = options
+      if (mode.indexOf('tag:') === 0) {
+        // Tag sources are paginated: the first batch is the newest slice,
+        // and the wall asks for deeper pages when the pool runs dry.
+        this.tagLoader = createTagLoader(mode.slice(4), options.tagBookmarkTier)
+        allIllusts = await this.tagLoader.next()
+      } else {
+        allIllusts = await this.loadContent(options)
+      }
     } catch (error) {
       // An empty dark page with no explanation reads as a broken extension.
       console.error('Ku-nya: could not load illustrations', error)
@@ -87,7 +99,22 @@ export default class App extends Component<Props, State> {
       return
     }
 
-    const illusts = await shuffle(allIllusts)
+    const illusts = this.filterPool(await shuffle(allIllusts))
+
+    this.screenCount = 0
+    this.setState(
+      { illusts, isUnavailable: illusts.length === 0 },
+      this.appendScreen,
+    )
+  }
+
+  /**
+   * Every filter the wall applies, factored out so a refilled batch passes
+   * the same gates as the first one.
+   */
+  private filterPool(entries: IllustEntry[]): IllustEntry[] {
+    const { options } = this.props
+    return entries
       .filter(illust => {
         // reject if contains tags to be excluded
         return !illust.tags.some(tag => options.excludingTags.includes(tag))
@@ -108,12 +135,34 @@ export default class App extends Component<Props, State> {
         // Unknown page count is kept — never filter on missing data.
         return illust.pageCount === null || illust.pageCount <= 1
       })
+  }
 
-    this.screenCount = 0
-    this.setState(
-      { illusts, isUnavailable: illusts.length === 0 },
-      this.appendScreen,
-    )
+  /**
+   * The pool ran dry but the tag source has deeper pages: pull the next
+   * batch, filter it like the first, and grow the wall by a screen. Empty
+   * batches (transient failures) leave everything as-is — the next wheel
+   * gesture or sentinel crossing asks again.
+   */
+  private fetchMore = async () => {
+    const loader = this.tagLoader
+    if (!loader || this.isFetchingMore || !loader.hasMore()) return
+    this.isFetchingMore = true
+    try {
+      const fresh = this.filterPool(await shuffle(await loader.next()))
+      if (fresh.length > 0) {
+        this.setState({ illusts: this.state.illusts.concat(fresh) }, () =>
+          this.layOutScreens(this.screenCount + 1),
+        )
+      } else {
+        // Empty batch: either the source just exhausted (the re-layout drops
+        // the sentinel) or the network flaked (a later gesture asks again).
+        this.layOutScreens(this.screenCount)
+      }
+    } catch (error) {
+      console.error('Ku-nya: could not fetch more illustrations', error)
+    } finally {
+      this.isFetchingMore = false
+    }
   }
 
   componentWillUnmount() {
@@ -202,7 +251,10 @@ export default class App extends Component<Props, State> {
     this.layOutScreens(this.screenCount)
   }
 
-  /** Deal one more screen of the wall (no-op once the ranking is exhausted). */
+  /**
+   * Deal one more screen of the wall. A dry pool asks the tag source for the
+   * next page (see layOutScreens); a finite ranking simply stops.
+   */
   private appendScreen = () => {
     if (this.state.illusts.length === 0) return
     this.layOutScreens(this.screenCount + 1)
@@ -259,10 +311,21 @@ export default class App extends Component<Props, State> {
     this.screenCount = screens
     this.setState({ tiles, wallHeight: screens * h })
 
-    // The ranking is exhausted: no sentinel can ever deal another screen.
-    if (remaining.length === 0 && this.sentinelObserver) {
-      this.sentinelObserver.disconnect()
-      this.sentinelObserver = null
+    const loader = this.tagLoader
+    const canRefill = loader !== null && loader.hasMore()
+    // The pool is running low. A paginated tag source has deeper pages
+    // upstream: start the refill BEFORE the wall runs dry — a screen's
+    // evicted runts go back into the pool, so an exact zero is never
+    // guaranteed and waiting for it could stall the refill forever.
+    if (canRefill && remaining.length < perScreen) {
+      this.fetchMore()
+    }
+    if (remaining.length === 0 && !canRefill) {
+      // Truly exhausted: no sentinel can ever deal another screen.
+      if (this.sentinelObserver) {
+        this.sentinelObserver.disconnect()
+        this.sentinelObserver = null
+      }
       return
     }
     // IntersectionObserver only fires on boundary CROSSES, but the sentinel
@@ -302,13 +365,9 @@ export default class App extends Component<Props, State> {
     this.sentinelObserver.observe(el)
   }
 
+  /** Built-in rankings only; tag sources are paginated (see componentDidMount). */
   loadContent(options: Options): Promise<IllustEntry[]> {
     const { mode } = options
-
-    // A user-defined tag category (see the popup's custom category section),
-    // with the popup's bookmark tier as its popularity filter.
-    if (mode.indexOf('tag:') === 0)
-      return getIllustsByTag(mode.slice(4), options.tagBookmarkTier)
 
     return mode === Modes.Original
       ? getOriginalRanking()

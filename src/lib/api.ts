@@ -198,37 +198,63 @@ const searchTag = async (
 }
 
 /**
- * `tier` is a bookmark floor: 100 filters to `tag 100users入り`, and so on.
- * `TAG_TIER_MIXED` runs the layered search — one query per tier, high tiers
- * first, deduped by id — so the wall mixes flagship pieces with merely-good
- * ones instead of starving on a single high bar.
+ * A paginated tag content source. pixiv caps every search listing at 60
+ * entries per page, so one pull is only the newest slice of a large tag; the
+ * loader walks deeper pages on demand (App calls next() when its pool of
+ * unshown entries runs dry).
  */
-export const getIllustsByTag = async (
+export interface TagLoader {
+  /** Next batch of fresh entries; empty once the query has no more pages. */
+  next(): Promise<IllustEntry[]>
+  hasMore(): boolean
+}
+
+export const createTagLoader = (
   tag: string,
   tier: number = 0,
-): Promise<IllustEntry[]> => {
-  if (tier === TAG_TIER_MIXED) {
-    // A tier with no recent uploads answers 0 entries; treat a failed layer
-    // as empty rather than sinking the whole wall.
-    const layers = await Promise.all(
-      MIXED_TIERS.map(t =>
-        searchTag(`${tag} ${t}users入り`, [1]).catch((): IllustEntry[] => []),
-      ),
-    )
-    const seen: { [id: number]: boolean } = {}
-    const merged: IllustEntry[] = []
-    layers.forEach(layer =>
-      layer.forEach(entry => {
-        if (seen[entry.id]) return
-        seen[entry.id] = true
-        merged.push(entry)
-      }),
-    )
-    return merged
-  }
+): TagLoader => {
+  // One cursor per query: a single tier walks its own pages two at a time;
+  // the layered mix walks every tier in lockstep so a thin high tier (some
+  // tags have a dozen 10000users入り works in total) can't starve the wall.
+  const mixed = tier === TAG_TIER_MIXED
+  const words = mixed
+    ? MIXED_TIERS.map(t => `${tag} ${t}users入り`)
+    : [tier > 0 ? `${tag} ${tier}users入り` : tag]
+  const cursors = words.map(() => 1)
+  const exhausted = words.map(() => false)
+  // New uploads shift page boundaries between batches, so overlap happens;
+  // everything the loader ever hands out is deduped here.
+  const seen: { [id: number]: boolean } = {}
 
-  const word = tier > 0 ? `${tag} ${tier}users入り` : tag
-  return searchTag(word, [1, 2])
+  return {
+    hasMore: () => exhausted.some(isDone => !isDone),
+    next: async () => {
+      const batch = await Promise.all(
+        words.map((word, i) => {
+          if (exhausted[i]) return Promise.resolve([] as IllustEntry[])
+          const pages = mixed ? [cursors[i]] : [cursors[i], cursors[i] + 1]
+          cursors[i] += pages.length
+          return searchTag(word, pages)
+            .then(entries => {
+              // pixiv answers an out-of-range page with an empty listing.
+              if (entries.length === 0) exhausted[i] = true
+              return entries
+            })
+            .catch((): IllustEntry[] => {
+              // A network failure must not kill the cursor: stay retryable,
+              // the next user gesture asks again.
+              return []
+            })
+        }),
+      )
+      const merged: IllustEntry[] = batch.reduce((l, r) => l.concat(...r), [])
+      return merged.filter(entry => {
+        if (seen[entry.id]) return false
+        seen[entry.id] = true
+        return true
+      })
+    },
+  }
 }
 
 export interface LoginStatus {

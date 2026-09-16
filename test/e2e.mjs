@@ -551,6 +551,39 @@ async function main() {
       !tagWall.error,
       JSON.stringify(tagWall),
     )
+
+    // 7e. Tag sources refill from deeper search pages: the first batch is at
+    // most 120 entries (2 pages × 60, deduped), so a wall growing past that
+    // has pulled page 3+ from pixiv by itself. Scroll to the bottom on every
+    // poll — a one-shot jump lands mid-wall because the wall keeps growing
+    // past the position it was aimed at.
+    const refill = await waitFor(
+      async () => {
+        await newTab.eval(`window.scrollTo(0, document.body.scrollHeight)`)
+        const n = await newTab.eval(
+          `document.querySelectorAll('.kunya-gallery img').length`,
+        )
+        return n > 125 ? { images: n } : null
+      },
+      60000,
+      'the tag wall to refill past the first search batch',
+    ).catch(async e => ({
+      error: e.message,
+      diag: await newTab
+        .eval(
+          `JSON.stringify({
+            images: document.querySelectorAll('.kunya-gallery img').length,
+            scrollY: Math.round(window.scrollY),
+            docH: document.documentElement.scrollHeight,
+          })`,
+        )
+        .catch(x => String(x)),
+    }))
+    check(
+      'tag wall refills from deeper search pages',
+      !refill.error,
+      JSON.stringify(refill),
+    )
     // Hand the ranking mode back to the default for whatever runs next.
     await newTab.eval(`chrome.storage.local.set({ content: 'illust' })`)
 
