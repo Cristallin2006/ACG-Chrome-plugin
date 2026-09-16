@@ -156,14 +156,36 @@ const MIXED_TIERS = [10000, 5000, 1000, 500]
  * entry carries its own width/height, so the puzzle wall can size tiles
  * without a detail round-trip. `order=date_d` because the popular ordering
  * requires a premium login.
+ *
+ * Two match modes, because pixiv has no mode that is both exact AND
+ * compatible with a bookmark-tier keyword:
+ *  - s_tag_full (plain tag): exact server-side match.
+ *  - s_tag (tag + "Nusers入り"): the tier keyword is not understood under
+ *    s_tag_full — the whole string becomes one tag name — so we accept the
+ *    looser fuzzy match (substrings, translation aliases) and filter
+ *    client-side to entries that carry the exact tag.
+ *
+ * Tag comparison is normalised on both sides: pixiv tags may contain spaces
+ * while users write them with underscores (Fate/Grand_Order), and case is
+ * not meaningful.
  */
+const normalizeTag = (tag: string) =>
+  tag.toLowerCase().replace(/_/g, ' ').trim()
+
+const hasExactTag = (entry: IllustEntry, tag: string) => {
+  const wanted = normalizeTag(tag)
+  return entry.tags.some(t => normalizeTag(t) === wanted)
+}
+
 const searchTag = async (
   word: string,
   pages: number[],
+  tiered: boolean,
 ): Promise<IllustEntry[]> => {
+  const sMode = tiered ? 's_tag' : 's_tag_full'
   const URL = `https://www.pixiv.net/ajax/search/artworks/${encodeURIComponent(
     word,
-  )}?order=date_d&mode=all&s_mode=s_tag`
+  )}?order=date_d&mode=all&s_mode=${sMode}`
   const responses = await Promise.all(
     pages.map(p => axios.get(`${URL}&p=${p}`)),
   )
@@ -216,10 +238,12 @@ export const createTagLoader = (
   // One cursor per query: a single tier walks its own pages two at a time;
   // the layered mix walks every tier in lockstep so a thin high tier (some
   // tags have a dozen 10000users入り works in total) can't starve the wall.
+  const baseTag = tag.trim()
   const mixed = tier === TAG_TIER_MIXED
+  const tiered = mixed || tier > 0
   const words = mixed
-    ? MIXED_TIERS.map(t => `${tag} ${t}users入り`)
-    : [tier > 0 ? `${tag} ${tier}users入り` : tag]
+    ? MIXED_TIERS.map(t => `${baseTag} ${t}users入り`)
+    : [tier > 0 ? `${baseTag} ${tier}users入り` : baseTag]
   const cursors = words.map(() => 1)
   const exhausted = words.map(() => false)
   // New uploads shift page boundaries between batches, so overlap happens;
@@ -234,11 +258,16 @@ export const createTagLoader = (
           if (exhausted[i]) return Promise.resolve([] as IllustEntry[])
           const pages = mixed ? [cursors[i]] : [cursors[i], cursors[i] + 1]
           cursors[i] += pages.length
-          return searchTag(word, pages)
+          return searchTag(word, pages, tiered)
             .then(entries => {
               // pixiv answers an out-of-range page with an empty listing.
+              // Judge exhaustion on the RAW page: a page that existed but
+              // was all fuzzy noise (below) must not kill the cursor.
               if (entries.length === 0) exhausted[i] = true
-              return entries
+              // s_tag is fuzzy; keep only works carrying the exact tag.
+              return tiered
+                ? entries.filter(entry => hasExactTag(entry, baseTag))
+                : entries
             })
             .catch((error): IllustEntry[] => {
               // A network failure must not kill the cursor: stay retryable,

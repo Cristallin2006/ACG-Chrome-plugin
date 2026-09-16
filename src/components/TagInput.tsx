@@ -29,7 +29,11 @@ export default class TagInput extends Component<Props, State> {
       props: { add },
       state: { value },
     } = this
-    add(value)
+    // Stray whitespace would become part of the search keyword (and break
+    // exact matching), so it never reaches the store.
+    const tag = value.trim()
+    if (!tag) return
+    add(tag)
     this.setState({ value: '' })
   }
 
