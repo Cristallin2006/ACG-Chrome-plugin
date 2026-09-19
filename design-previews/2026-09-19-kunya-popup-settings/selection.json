@@ -1,0 +1,14 @@
+{
+  "id": "A",
+  "label": "A: 暗房延伸",
+  "name": "暗房延伸",
+  "notes": "",
+  "dials": {
+    "variance": 4,
+    "motion": 4,
+    "density": 6
+  },
+  "adjustments": "",
+  "source": "click",
+  "receivedAt": "2026-09-19T10:34:19.728Z"
+}

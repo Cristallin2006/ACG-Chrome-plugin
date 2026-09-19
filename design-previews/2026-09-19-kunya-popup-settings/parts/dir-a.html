@@ -1,0 +1,504 @@
+<!-- 方向 A · 暗房延伸:popup 是画廊的调光台 -->
+<style>
+  .dir-a-stage {
+    container-type: inline-size;
+    width: 100%;
+    aspect-ratio: 5 / 8;
+    overflow: hidden;
+    isolation: isolate;
+    position: relative;
+    background: #131110;
+    font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    color: rgba(255, 255, 255, 0.92);
+  }
+  .dir-a-stage *,
+  .dir-a-stage *::before,
+  .dir-a-stage *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* 暗房环境:极轻的顶光晕开,像红灯熄灭后的余温 */
+  .dir-a-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(90cqw 60cqw at 50% -12cqw, rgba(224, 164, 94, 0.045), transparent 70%),
+      radial-gradient(120cqw 90cqw at 50% 115%, rgba(255, 255, 255, 0.02), transparent 60%);
+    pointer-events: none;
+  }
+
+  .dir-a-popup {
+    position: absolute;
+    left: 50%;
+    top: 4.6cqw;
+    transform: translateX(-50%);
+    width: 58cqw;
+    max-height: 150cqw;
+    overflow: hidden;
+    border-radius: 3.2cqw;
+    border: 0.15cqw solid rgba(255, 255, 255, 0.10);
+    background: rgba(19, 17, 16, 0.86);
+    box-shadow:
+      0 2.4cqw 7cqw rgba(0, 0, 0, 0.55),
+      inset 0 0.15cqw 0 rgba(255, 255, 255, 0.06);
+    padding: 4.4cqw 3.4cqw 6cqw;
+  }
+
+  /* ---- 标题栏 ---- */
+  .dir-a-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 1.2cqw 3.6cqw;
+  }
+  .dir-a-title {
+    font-size: 2.9cqw;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+  }
+  .dir-a-ver {
+    font-size: 1.55cqw;
+    color: rgba(255, 255, 255, 0.38);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.03em;
+  }
+
+  /* ---- 分组卡片:底片片夹 ---- */
+  .dir-a-card {
+    position: relative;
+    border-radius: 2.4cqw;
+    border: 0.14cqw solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.028);
+    margin-bottom: 3cqw;
+    overflow: hidden;
+  }
+  /* 片夹上沿的小缺口 —— 分组的记忆点 */
+  .dir-a-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 7cqw;
+    height: 0.5cqw;
+    border-radius: 0 0 0.5cqw 0.5cqw;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .dir-a-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2.4cqw;
+    padding: 2.5cqw 2.8cqw;
+    min-height: 7.4cqw;
+  }
+  .dir-a-divider {
+    height: 0.12cqw;
+    background: rgba(255, 255, 255, 0.08);
+    margin-left: 2.8cqw;
+  }
+  .dir-a-label {
+    font-size: 1.95cqw;
+    font-weight: 550;
+    flex: 0 0 auto;
+  }
+  .dir-a-note {
+    font-size: 1.6cqw;
+    color: rgba(255, 255, 255, 0.48);
+    margin-top: 0.5cqw;
+    font-weight: 400;
+  }
+
+  /* ---- 分段控件(中性,不用琥珀) ---- */
+  .dir-a-seg {
+    display: flex;
+    border-radius: 1.7cqw;
+    background: rgba(0, 0, 0, 0.32);
+    border: 0.12cqw solid rgba(255, 255, 255, 0.09);
+    padding: 0.5cqw;
+    gap: 0.5cqw;
+    flex: 0 0 auto;
+  }
+  .dir-a-seg-item {
+    font-size: 1.7cqw;
+    line-height: 1;
+    padding: 1.5cqw 2.1cqw;
+    border-radius: 1.25cqw;
+    color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .dir-a-seg-on {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 600;
+    box-shadow: inset 0 0.12cqw 0 rgba(255, 255, 255, 0.10);
+  }
+
+  /* ---- 开关:开态才给琥珀 ---- */
+  .dir-a-switch {
+    width: 7.6cqw;
+    height: 4.2cqw;
+    border-radius: 2.1cqw;
+    background: #e0a45e;
+    position: relative;
+    flex: 0 0 auto;
+    transition: background 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .dir-a-switch::after {
+    content: "";
+    position: absolute;
+    top: 0.5cqw;
+    right: 0.5cqw;
+    width: 3.2cqw;
+    height: 3.2cqw;
+    border-radius: 50%;
+    background: rgba(255, 252, 248, 0.96);
+    box-shadow: 0 0.2cqw 0.6cqw rgba(0, 0, 0, 0.35);
+  }
+
+  /* ---- 内容源下拉(展开态) ---- */
+  .dir-a-select {
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+    font-size: 1.85cqw;
+    font-weight: 550;
+    padding: 1.5cqw 2.2cqw;
+    border-radius: 1.5cqw;
+    background: rgba(0, 0, 0, 0.32);
+    border: 0.12cqw solid rgba(255, 255, 255, 0.09);
+    flex: 0 0 auto;
+  }
+  .dir-a-caret {
+    width: 0;
+    height: 0;
+    border-left: 0.85cqw solid transparent;
+    border-right: 0.85cqw solid transparent;
+    border-top: 1.1cqw solid rgba(255, 255, 255, 0.55);
+  }
+  .dir-a-menu {
+    margin: 0 2.8cqw 2.6cqw;
+    border-radius: 1.7cqw;
+    background: rgba(9, 8, 7, 0.72);
+    border: 0.12cqw solid rgba(255, 255, 255, 0.10);
+    overflow: hidden;
+  }
+  .dir-a-opt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.9cqw 2.4cqw;
+    font-size: 1.8cqw;
+    color: rgba(255, 255, 255, 0.68);
+    border-bottom: 0.1cqw solid rgba(255, 255, 255, 0.05);
+  }
+  .dir-a-opt:last-child { border-bottom: none; }
+  .dir-a-opt-on {
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .dir-a-check-mark { font-size: 1.7cqw; font-weight: 700; }
+  .dir-a-opt-dim { color: rgba(255, 255, 255, 0.32); }
+  .dir-a-opt-tag {
+    font-size: 1.45cqw;
+    color: rgba(255, 255, 255, 0.38);
+    font-variant-numeric: tabular-nums;
+  }
+  .dir-a-menu-sep {
+    height: 0.9cqw;
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  /* ---- chips ---- */
+  .dir-a-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.2cqw;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .dir-a-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 1cqw;
+    font-size: 1.7cqw;
+    padding: 1.15cqw 1.9cqw;
+    border-radius: 1.4cqw;
+    background: rgba(255, 255, 255, 0.08);
+    border: 0.12cqw solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.88);
+    white-space: nowrap;
+  }
+  .dir-a-chip-x {
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 1.6cqw;
+    line-height: 1;
+  }
+  .dir-a-input {
+    font-size: 1.7cqw;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(0, 0, 0, 0.30);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.10);
+    border-radius: 1.3cqw;
+    padding: 1.3cqw 1.9cqw;
+    min-width: 15cqw;
+    flex: 1 1 15cqw;
+    font-family: inherit;
+  }
+  .dir-a-input::placeholder { color: rgba(255, 255, 255, 0.36); }
+  /* 焦点环:琥珀的第三处合法出现 */
+  .dir-a-input-focus {
+    border-color: #e0a45e;
+    box-shadow: 0 0 0 0.45cqw rgba(224, 164, 94, 0.18);
+  }
+
+  /* ---- 登录行:琥珀呼吸点 ---- */
+  .dir-a-login { display: flex; align-items: center; gap: 1.8cqw; min-width: 0; }
+  .dir-a-dot {
+    width: 1.7cqw;
+    height: 1.7cqw;
+    border-radius: 50%;
+    background: #e0a45e;
+    flex: 0 0 auto;
+    animation: dir-a-breathe 2.6s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+  }
+  @keyframes dir-a-breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+  .dir-a-login-name {
+    font-size: 1.95cqw;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .dir-a-login-sub {
+    font-size: 1.55cqw;
+    color: rgba(255, 255, 255, 0.48);
+    margin-top: 0.4cqw;
+  }
+  .dir-a-link {
+    font-size: 1.75cqw;
+    font-weight: 550;
+    color: rgba(255, 255, 255, 0.68);
+    padding: 1.3cqw 2.1cqw;
+    border-radius: 1.3cqw;
+    border: 0.12cqw solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+    flex: 0 0 auto;
+  }
+
+  /* ---- 复选框(中性,不给琥珀) ---- */
+  .dir-a-checkline { display: flex; align-items: center; gap: 2cqw; min-width: 0; }
+  .dir-a-checkbox {
+    width: 3cqw;
+    height: 3cqw;
+    border-radius: 0.9cqw;
+    border: 0.16cqw solid rgba(255, 255, 255, 0.30);
+    background: rgba(255, 255, 255, 0.04);
+    position: relative;
+    flex: 0 0 auto;
+  }
+  .dir-a-checkbox-on {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+  .dir-a-checkbox-on::after {
+    content: "";
+    position: absolute;
+    left: 0.95cqw;
+    top: 0.5cqw;
+    width: 0.85cqw;
+    height: 1.5cqw;
+    border-right: 0.3cqw solid rgba(255, 255, 255, 0.92);
+    border-bottom: 0.3cqw solid rgba(255, 255, 255, 0.92);
+    transform: rotate(42deg);
+  }
+  .dir-a-checklabel { font-size: 1.9cqw; font-weight: 500; }
+
+  /* ---- 数字输入 ---- */
+  .dir-a-num {
+    width: 9.4cqw;
+    text-align: center;
+    font-size: 1.85cqw;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(0, 0, 0, 0.30);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.10);
+    border-radius: 1.3cqw;
+    padding: 1.3cqw 0;
+    font-family: inherit;
+    flex: 0 0 auto;
+  }
+
+  /* ---- 底部渐隐:暗示继续滚动 ---- */
+  .dir-a-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 16cqw;
+    background: linear-gradient(to bottom, rgba(19, 17, 16, 0), rgba(16, 14, 13, 0.96) 78%);
+    pointer-events: none;
+  }
+  .dir-a-scrollhint {
+    position: absolute;
+    left: 50%;
+    bottom: 2.2cqw;
+    transform: translateX(-50%);
+    width: 6.4cqw;
+    height: 0.7cqw;
+    border-radius: 0.35cqw;
+    background: rgba(255, 255, 255, 0.16);
+  }
+</style>
+
+<div class="dir-a-stage">
+  <div class="dir-a-glow"></div>
+
+  <div class="dir-a-popup">
+    <!-- 标题栏 -->
+    <div class="dir-a-head">
+      <div class="dir-a-title">Ku-nya 设置</div>
+      <div class="dir-a-ver">v2.14.0</div>
+    </div>
+
+    <!-- 片夹 1:观看 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div>
+          <div class="dir-a-label">浏览模式</div>
+          <div class="dir-a-note">纯看只保留拼图画廊</div>
+        </div>
+        <div class="dir-a-seg">
+          <span class="dir-a-seg-item dir-a-seg-on">纯看</span>
+          <span class="dir-a-seg-item">交互</span>
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div>
+          <div class="dir-a-label">内容安全</div>
+          <div class="dir-a-note">开启后不含 R-18</div>
+        </div>
+        <div class="dir-a-switch" role="switch" aria-checked="true" aria-label="仅安全"></div>
+      </div>
+    </div>
+
+    <!-- 片夹 2:内容 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div class="dir-a-label">内容源</div>
+        <div class="dir-a-select">插画日榜 <span class="dir-a-caret"></span></div>
+      </div>
+      <div class="dir-a-menu">
+        <div class="dir-a-opt dir-a-opt-on">插画日榜 <span class="dir-a-check-mark">✓</span></div>
+        <div class="dir-a-opt">漫画日榜</div>
+        <div class="dir-a-opt">动图</div>
+        <div class="dir-a-opt">原创</div>
+        <div class="dir-a-opt">最新</div>
+        <div class="dir-a-opt">人气</div>
+        <div class="dir-a-opt dir-a-opt-dim">发现 <span class="dir-a-opt-tag">需登录</span></div>
+        <div class="dir-a-menu-sep"></div>
+        <div class="dir-a-opt">初音ミク <span class="dir-a-opt-tag">自定义</span></div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-label">自定义标签</div>
+        <div class="dir-a-chips">
+          <span class="dir-a-chip">初音ミク <span class="dir-a-chip-x">×</span></span>
+          <span class="dir-a-chip">可爱 <span class="dir-a-chip-x">×</span></span>
+          <input class="dir-a-input dir-a-input-focus" placeholder="添加标签…" />
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-label">标签热度</div>
+        <div class="dir-a-seg">
+          <span class="dir-a-seg-item">全部</span>
+          <span class="dir-a-seg-item">500+</span>
+          <span class="dir-a-seg-item">1000+</span>
+          <span class="dir-a-seg-item">5000+</span>
+          <span class="dir-a-seg-item">10000+</span>
+          <span class="dir-a-seg-item dir-a-seg-on">混合</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 片夹 3:账号 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div class="dir-a-login">
+          <span class="dir-a-dot"></span>
+          <div>
+            <div class="dir-a-login-name">Yukino_821</div>
+            <div class="dir-a-login-sub">pixiv 已登录</div>
+          </div>
+        </div>
+        <span class="dir-a-link">刷新</span>
+      </div>
+    </div>
+
+    <!-- 片夹 4:过滤 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div class="dir-a-checkline">
+          <span class="dir-a-checkbox dir-a-checkbox-on"></span>
+          <div>
+            <div class="dir-a-checklabel">隐藏多图作品</div>
+            <div class="dir-a-note">多为漫画</div>
+          </div>
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-checkline">
+          <span class="dir-a-checkbox"></span>
+          <span class="dir-a-checklabel">隐藏 AI 生成作品</span>
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <span class="dir-a-checklabel">收藏数不低于</span>
+        <input class="dir-a-num" value="1000" />
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-checkline">
+          <span class="dir-a-checkbox dir-a-checkbox-on"></span>
+          <div>
+            <div class="dir-a-checklabel">排除竖长图</div>
+            <div class="dir-a-note">高 / 宽不超过</div>
+          </div>
+        </div>
+        <input class="dir-a-num" value="3" />
+      </div>
+    </div>
+
+    <!-- 片夹 5:屏蔽 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div class="dir-a-label">屏蔽画师</div>
+        <div class="dir-a-chips">
+          <span class="dir-a-chip">画师A <span class="dir-a-chip-x">×</span></span>
+          <input class="dir-a-input" placeholder="添加画师名…" />
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-label">屏蔽标签</div>
+        <div class="dir-a-chips">
+          <span class="dir-a-chip">R-18G <span class="dir-a-chip-x">×</span></span>
+          <span class="dir-a-chip">AI 生成 <span class="dir-a-chip-x">×</span></span>
+          <input class="dir-a-input" placeholder="添加标签…" />
+        </div>
+      </div>
+    </div>
+
+    <div class="dir-a-fade"></div>
+    <div class="dir-a-scrollhint"></div>
+  </div>
+</div>

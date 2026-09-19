@@ -11,6 +11,9 @@ import {
   setTagBookmarkTier,
   setUsePixivLogin,
   setExcludeMultiPage,
+  setExcludeAI,
+  setMinBookmarks,
+  setExcludedAuthors,
 } from '../lib/options'
 import ModeSettingsSection from './ModeSettingSection'
 import AspectRatioSettingSection from './AspectRatioSettingSection'
@@ -21,6 +24,9 @@ import LoginSection from './LoginSection'
 import MultiPageSection from './MultiPageSection'
 import SafeSection from './SafeSection'
 import ViewModeSection from './ViewModeSection'
+import AISection from './AISection'
+import BookmarkFloorSection from './BookmarkFloorSection'
+import ExcludedAuthorsSection from './ExcludedAuthorsSection'
 
 interface Props {
   initialOptions: Options
@@ -68,37 +74,87 @@ export default class SettingPanel extends Component<Props, State> {
       this.props.initialOptions.isExcludingMultiPage === undefined
         ? defaultOptions.isExcludingMultiPage
         : this.props.initialOptions.isExcludingMultiPage
+    const isExcludingAI =
+      this.props.initialOptions.isExcludingAI === undefined
+        ? defaultOptions.isExcludingAI
+        : this.props.initialOptions.isExcludingAI
+    const minBookmarks =
+      this.props.initialOptions.minBookmarks === undefined
+        ? defaultOptions.minBookmarks
+        : this.props.initialOptions.minBookmarks
+    const excludedAuthors =
+      this.props.initialOptions.excludedAuthors === undefined
+        ? defaultOptions.excludedAuthors
+        : this.props.initialOptions.excludedAuthors
+
+    const version =
+      chrome.runtime && chrome.runtime.getManifest
+        ? chrome.runtime.getManifest().version
+        : ''
 
     return (
-      <div>
-        <ViewModeSection initialValue={viewMode} update={setViewMode} />
-        <SafeSection initial_is_safe={isSafe} update={setSafe} />
-        <ModeSettingsSection
-          initialValue={mode}
-          customTags={this.state.customTags}
-          update={setMode}
-        />
-        <CustomTagSection
-          initialTags={this.state.customTags}
-          update={this.handleCustomTags}
-        />
-        <TagHeatSection initialValue={tagBookmarkTier} update={setTagBookmarkTier} />
-        <LoginSection initialValue={usePixivLogin} update={setUsePixivLogin} />
-        <MultiPageSection
-          initialValue={isExcludingMultiPage}
-          update={setExcludeMultiPage}
-        />
-        <AspectRatioSettingSection
-          initial_is_excluding_high_aspect_ratio={isExcludingHighAspectRatio}
-          initial_smallest_includable_aspect_ratio={
-            smallestIncludableAspectRatio
-          }
-          update={setAspectRatioSettings}
-        />
-        <TagSettingSection
-          initialTags={excludingTags}
-          update={setExcludingTags}
-        />
+      <div className="knp">
+        <header className="knp-head">
+          <h1 className="knp-head__title">Ku-nya 设置</h1>
+          <span className="knp-head__ver">v{version}</span>
+        </header>
+
+        <div className="knp-card">
+          <ViewModeSection initialValue={viewMode} update={setViewMode} />
+          <SafeSection initial_is_safe={isSafe} update={setSafe} />
+        </div>
+
+        <div className="knp-card">
+          <ModeSettingsSection
+            initialValue={mode}
+            customTags={this.state.customTags}
+            update={setMode}
+          />
+          <CustomTagSection
+            initialTags={this.state.customTags}
+            update={this.handleCustomTags}
+          />
+          <TagHeatSection
+            initialValue={tagBookmarkTier}
+            update={setTagBookmarkTier}
+          />
+        </div>
+
+        <div className="knp-card">
+          <LoginSection initialValue={usePixivLogin} update={setUsePixivLogin} />
+        </div>
+
+        <div className="knp-card">
+          <MultiPageSection
+            initialValue={isExcludingMultiPage}
+            update={setExcludeMultiPage}
+          />
+          <AISection initialValue={isExcludingAI} update={setExcludeAI} />
+          <BookmarkFloorSection
+            initialValue={minBookmarks}
+            update={setMinBookmarks}
+          />
+          <AspectRatioSettingSection
+            initial_is_excluding_high_aspect_ratio={isExcludingHighAspectRatio}
+            initial_smallest_includable_aspect_ratio={
+              smallestIncludableAspectRatio
+            }
+            update={setAspectRatioSettings}
+          />
+        </div>
+
+        <div className="knp-card">
+          <ExcludedAuthorsSection
+            initialAuthors={excludedAuthors}
+            update={setExcludedAuthors}
+          />
+          <TagSettingSection
+            initialTags={excludingTags}
+            update={setExcludingTags}
+          />
+        </div>
+
+        <p className="knp-foot">设置即时生效,新标签页刷新后应用</p>
       </div>
     )
   }

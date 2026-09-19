@@ -1,0 +1,97 @@
+
+      <section class="kny-notes" aria-label="方向说明">
+        <div class="kny-note">
+          <h3>A · 暗房延伸(推荐)</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>沿用主页面的暗房 token:暖黑底、烟熏玻璃卡片、琥珀只给开态与焦点——popup 是画廊的调光台。</dd>
+            <dt>材质</dt>
+            <dd>rgba(19,17,16) 面板 + 琥珀 #e0a45e;分组卡片带「片夹缺口」;登录状态一枚琥珀呼吸点。</dd>
+            <dt>记忆点</dt>
+            <dd>底片片夹式分组——设置页第一次看起来像这个产品自己的东西。</dd>
+            <dt>代价</dt>
+            <dd>保守:它是「正确的默认」,惊喜感不如 C/D;深色 popup 在白底浏览器工具栏下对比强。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>B · 分类工作台</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>左侧分类导航(内容源 / 过滤 / 账户)+ 右栏内容,设置按任务归类而不是一列到底。</dd>
+            <dt>材质</dt>
+            <dd>偏冷的蓝灰 + 琥珀选中竖条;Linear / macOS 设置式密度。</dd>
+            <dt>记忆点</dt>
+            <dd>左栏琥珀竖条——一眼知道自己在改哪类东西。</dd>
+            <dt>代价</dt>
+            <dd>400px 宽塞双栏,每栏都变窄;导航在 10 个区块的规模下略重。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>C · 印刷目录</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>浅暖纸面 + 深墨字 + Georgia 衬线大编号,控件做成表单线——popup 像展览图录的清单页。</dd>
+            <dt>材质</dt>
+            <dd>纸色 #f5f1ea + 墨 #241f1a + 印刷琥珀 #b4762e;唯一的亮色方向。</dd>
+            <dt>记忆点</dt>
+            <dd>衬线 01–10 大编号目录节奏,设置页有了「出版物」的气质。</dd>
+            <dt>代价</dt>
+            <dd>与暗房主界面是两种气质(这可以是优点也可以是断裂);实现时要小心与主页面 token 的关系。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>D · 控制台</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>等宽字体 + 1px 分隔线 + [x]/[ ] 记号,设置即一份可读的配置文件。</dd>
+            <dt>材质</dt>
+            <dd>暗底 + 等宽栈 + 字符状态记号;无圆角、无投影、无卡片。</dd>
+            <dt>记忆点</dt>
+            <dd>`# source mode` 注释行区块标题——terminal 用户会会心一笑。</dd>
+            <dt>代价</dt>
+            <dd>等宽 + 中文混排天然局促;对非技术用户最不友好,扫读门槛最高。</dd>
+          </dl>
+        </div>
+      </section>
+
+      <p class="kny-mix">
+        也可以只取某个细节混搭:比如「A 的暗房材质 + B 的分类导航」「C 的衬线标题用到 A 上」,在确认弹层的建议框里写一句即可。
+      </p>
+    </div>
+
+    <script>
+      // Static-preview fallback only. When the local preview server serves this
+      // page it owns selection entirely (buttons, confirm dialog, POST),
+      // so this must stay dormant there to avoid duplicate controls.
+      if (location.protocol === 'file:') {
+        var bar = document.createElement('p')
+        bar.className = 'kny-fallback'
+        bar.textContent = '静态打开:当前不会自动回传,请点下面按钮复制选择后回到对话发送。'
+        document.querySelector('.kny-mix').after(bar)
+
+        document.querySelectorAll('[data-design-option]').forEach(function (card) {
+          var button = document.createElement('button')
+          button.type = 'button'
+          button.textContent = '复制「选 ' + card.dataset.dir + ':' + card.dataset.name + '」'
+          button.addEventListener('click', function () {
+            var text = '选 ' + card.dataset.dir + ':' + card.dataset.name + ';拨盘:视觉冒险度 / 动效强度 / 信息密度 = '
+            text += Array.prototype.map
+              .call(document.querySelectorAll('[data-qmdp-dial]'), function (input) {
+                return input.value
+              })
+              .join(' / ')
+            navigator.clipboard.writeText(text).then(
+              function () {
+                button.textContent = '已复制,请回到对话发送'
+              },
+              function () {
+                button.textContent = text
+              },
+            )
+          })
+          card.appendChild(button)
+        })
+      }
+    </script>
+  </body>
+</html>

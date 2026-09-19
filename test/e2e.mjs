@@ -698,7 +698,7 @@ async function main() {
       // Custom categories must persist: type a tag, click its Add button,
       // then read the store back. The input is located by its placeholder.
       const tagRoundTrip = await popup.eval(`(async () => {
-        const input = document.querySelector('input[placeholder="初音ミク"]')
+        const input = document.querySelector('input[placeholder="添加标签,如 初音ミク…"]')
         if (!input) return {
           error: 'custom tag input not found',
           placeholders: Array.from(document.querySelectorAll('input')).map(i => i.placeholder),
@@ -712,7 +712,7 @@ async function main() {
         const stored = await new Promise(r => chrome.storage.local.get('custom_tags', r))
         return {
           stored: stored.custom_tags,
-          listed: Array.from(document.querySelectorAll('li.tag')).map(li => li.textContent),
+          listed: Array.from(document.querySelectorAll('li.knp-chip')).map(li => li.textContent),
         }
       })()`)
       check(
@@ -732,7 +732,7 @@ async function main() {
       const reopened = await waitFor(
         async () => {
           const listed = await popup2.eval(
-            `Array.from(document.querySelectorAll('li.tag')).map(li => li.textContent)`,
+            `Array.from(document.querySelectorAll('li.knp-chip')).map(li => li.textContent)`,
           )
           return listed && listed.some(t => t.indexOf('風景') !== -1)
             ? { listed }
@@ -748,20 +748,18 @@ async function main() {
       )
       await cdp.send('Target.closeTarget', { targetId: popupTarget2.targetId })
 
-      // The bookmark-tier dropdown writes tag_bookmark_tier as a string.
+      // The bookmark-tier segmented control writes tag_bookmark_tier as a string.
       const tierRoundTrip = await popup.eval(`(async () => {
-        const select = document.querySelector('#tag-tier-selector')
-        if (!select) return { error: 'tier selector not found' }
-        select.value = '500'
-        select.dispatchEvent(new Event('input', { bubbles: true }))
-        select.dispatchEvent(new Event('change', { bubbles: true }))
+        const radio = document.querySelector('input[name="knp-tag-tier"][value="500"]')
+        if (!radio) return { error: 'tier radio not found' }
+        radio.click()
         await new Promise(r => setTimeout(r, 800))
         const stored = await new Promise(r => chrome.storage.local.get('tag_bookmark_tier', r))
-        return { stored: stored.tag_bookmark_tier, ui: select.value }
+        return { stored: stored.tag_bookmark_tier, ui: radio.checked }
       })()`)
       check(
         'tag bookmark tier persists to chrome.storage.local',
-        !tierRoundTrip.error && tierRoundTrip.stored === '500',
+        !tierRoundTrip.error && tierRoundTrip.stored === '500' && tierRoundTrip.ui === true,
         JSON.stringify(tierRoundTrip),
       )
 
@@ -801,12 +799,67 @@ async function main() {
         JSON.stringify(multiPageRoundTrip),
       )
 
+      // The AI filter toggle writes is_excluding_ai as '1'/'0'.
+      const aiRoundTrip = await popup.eval(`(async () => {
+        const box = document.querySelector('#checkbox_for_ai')
+        if (!box) return { error: 'AI checkbox not found' }
+        const before = box.checked
+        box.click()
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('is_excluding_ai', r))
+        return { before, checkedInUi: box.checked, stored: stored.is_excluding_ai }
+      })()`)
+      check(
+        'AI filter toggle persists to chrome.storage.local',
+        !aiRoundTrip.error &&
+          aiRoundTrip.checkedInUi === !aiRoundTrip.before &&
+          aiRoundTrip.stored === (aiRoundTrip.before ? '0' : '1'),
+        JSON.stringify(aiRoundTrip),
+      )
+
+      // The bookmark floor writes min_bookmarks as a string.
+      const floorRoundTrip = await popup.eval(`(async () => {
+        const input = document.querySelector('input[aria-label="收藏数下限"]')
+        if (!input) return { error: 'bookmark floor input not found' }
+        input.value = '500'
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('min_bookmarks', r))
+        return { stored: stored.min_bookmarks, ui: input.value }
+      })()`)
+      check(
+        'bookmark floor persists to chrome.storage.local',
+        !floorRoundTrip.error && floorRoundTrip.stored === '500',
+        JSON.stringify(floorRoundTrip),
+      )
+
+      // Muting an author writes excluding_authors as a JSON list.
+      const authorRoundTrip = await popup.eval(`(async () => {
+        const input = document.querySelector('input[placeholder="添加画师名…"]')
+        if (!input) return { error: 'author input not found' }
+        input.value = '测试画师'
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+        input.dispatchEvent(new Event('change', { bubbles: true }))
+        input.closest('span').querySelector('button').click()
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('excluding_authors', r))
+        return { stored: stored.excluding_authors }
+      })()`)
+      check(
+        'muted author persists to chrome.storage.local',
+        !authorRoundTrip.error &&
+          !!authorRoundTrip.stored &&
+          authorRoundTrip.stored.indexOf('测试画师') !== -1,
+        JSON.stringify(authorRoundTrip),
+      )
+
       // The login probe must settle: a fresh profile has no pixiv session,
       // and a network failure reads as logged-out rather than hanging.
       const loginStatus = await waitFor(
         async () => {
           const text = await popup.eval(
-            `(document.querySelector('.login-status') || {}).textContent || ''`,
+            `(document.querySelector('.knp-login__text') || {}).textContent || ''`,
           )
           return text && text.indexOf('…') === -1 ? { text } : null
         },
@@ -816,7 +869,7 @@ async function main() {
       check(
         'popup login probe settles on a definite status',
         !loginStatus.error &&
-          /Not logged in|Logged in|Probe failed/.test(loginStatus.text),
+          /未登录|已登录|检测失败/.test(loginStatus.text),
         JSON.stringify(loginStatus),
       )
     }

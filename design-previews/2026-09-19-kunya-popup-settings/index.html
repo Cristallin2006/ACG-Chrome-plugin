@@ -1,0 +1,1874 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ku-nya 设置面板 · 方向样机</title>
+    <style>
+      /* Neutral shell only: it must not compete with the four mockups.
+         Selection chrome (buttons, confirm dialog, toast) is injected
+         by the local preview server; dials are native to this page. */
+      :root {
+        --kny-bg: #eef0f2;
+        --kny-card: #ffffff;
+        --kny-line: #dfe3e8;
+        --kny-line-soft: #e9edf1;
+        --kny-ink: #1c2024;
+        --kny-ink-soft: #5b636c;
+        --kny-ink-faint: #8b939c;
+        --kny-rec: #14624a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 28px 24px 64px;
+        background: var(--kny-bg);
+        color: var(--kny-ink);
+        font: 400 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text",
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .kny-wrap {
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+
+      .kny-head {
+        max-width: 70ch;
+        margin: 0 0 22px;
+      }
+
+      .kny-head h1 {
+        margin: 0 0 6px;
+        font-size: 21px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+      }
+
+      .kny-head p {
+        margin: 0;
+        color: var(--kny-ink-soft);
+        font-size: 13.5px;
+      }
+
+      .kny-contract {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        border: 1px solid var(--kny-line);
+        border-radius: 8px;
+        background: #f7f8f9;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+      }
+
+      .kny-dials {
+        margin: 14px 0 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .kny-dial {
+        display: grid;
+        gap: 6px;
+        padding: 10px 14px;
+        border: 1px solid var(--kny-line);
+        border-radius: 8px;
+        background: #f7f8f9;
+      }
+
+      .kny-dial-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 12.5px;
+        font-weight: 650;
+        color: var(--kny-ink);
+      }
+
+      .kny-dial-head output {
+        font-variant-numeric: tabular-nums;
+        color: var(--kny-rec);
+      }
+
+      .kny-dial input {
+        width: 100%;
+        accent-color: #1c2024;
+      }
+
+      .kny-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+        margin-top: 22px;
+      }
+
+      .kny-card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--kny-line);
+        border-radius: 12px;
+        background: var(--kny-card);
+      }
+
+      .kny-card-head {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        min-width: 0;
+      }
+
+      .kny-key-cap {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--kny-line);
+        border-radius: 6px;
+        background: #f6f7f9;
+        color: var(--kny-ink-soft);
+        font-size: 12px;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .kny-card h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+
+      .kny-latin {
+        color: var(--kny-ink-faint);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+      }
+
+      .kny-rec {
+        margin-left: auto;
+        flex: none;
+        padding: 2px 8px;
+        border: 1px solid #bfe0d3;
+        border-radius: 999px;
+        background: #eef8f3;
+        color: var(--kny-rec);
+        font-size: 11.5px;
+        font-weight: 650;
+      }
+
+      .kny-tagline {
+        margin: 0;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .kny-stage {
+        border: 1px solid var(--kny-line-soft);
+        border-radius: 9px;
+        overflow: hidden;
+        background: #131110;
+      }
+
+      .kny-notes {
+        margin: 30px 0 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .kny-note {
+        padding: 14px 16px;
+        border: 1px solid var(--kny-line);
+        border-radius: 10px;
+        background: var(--kny-card);
+      }
+
+      .kny-note h3 {
+        margin: 0 0 8px;
+        font-size: 14.5px;
+        font-weight: 650;
+      }
+
+      .kny-note dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 4.2em minmax(0, 1fr);
+        gap: 4px 10px;
+        font-size: 13px;
+      }
+
+      .kny-note dt {
+        color: var(--kny-ink-faint);
+      }
+
+      .kny-note dd {
+        margin: 0;
+        color: var(--kny-ink-soft);
+      }
+
+      .kny-mix {
+        margin: 18px 0 0;
+        padding: 12px 16px;
+        border: 1px dashed var(--kny-line);
+        border-radius: 10px;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+      }
+
+      .kny-fallback {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        border: 1px solid #f0d9a8;
+        border-radius: 8px;
+        background: #fdf6e7;
+        color: #6b4e12;
+        font-size: 13px;
+      }
+
+      .kny-fallback button {
+        margin-left: 8px;
+        padding: 4px 10px;
+        border: 1px solid #d9bf85;
+        border-radius: 6px;
+        background: #fff;
+        color: inherit;
+        font: inherit;
+      }
+
+      @media (max-width: 900px) {
+        body {
+          padding: 20px 14px 48px;
+        }
+        .kny-grid,
+        .kny-notes,
+        .kny-dials {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="kny-wrap">
+      <header class="kny-head">
+        <h1>Ku-nya 设置面板:让 popup 走进同一间暗房</h1>
+        <p>
+          四个方向都是<strong>设计方向样机</strong>,只看视觉与交互气质,不是最终页面。点选或按 1–4
+          后确认,才进入正式实现。
+        </p>
+        <p class="kny-contract">
+          功能契约:3 秒内看懂「当前内容源 + 登录状态」· 全部设置区块分组可扫、改了即存 ·
+          Chrome popup 上限 800×600,超出纵向滚动 · 「扩展已更新请重载」警告必须醒目。
+        </p>
+        <div class="kny-dials">
+          <label class="kny-dial">
+            <span class="kny-dial-head"><span>视觉冒险度</span><output data-qmdp-output="variance">4</output></span>
+            <input data-qmdp-dial="variance" type="range" min="1" max="10" value="4" />
+          </label>
+          <label class="kny-dial">
+            <span class="kny-dial-head"><span>动效强度</span><output data-qmdp-output="motion">4</output></span>
+            <input data-qmdp-dial="motion" type="range" min="1" max="10" value="4" />
+          </label>
+          <label class="kny-dial">
+            <span class="kny-dial-head"><span>信息密度</span><output data-qmdp-output="density">6</output></span>
+            <input data-qmdp-dial="density" type="range" min="1" max="10" value="6" />
+          </label>
+        </div>
+      </header>
+
+      <main class="kny-grid">
+        <article class="kny-card" data-design-option data-direction="A" data-dir="A" data-name="暗房延伸">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">A</span>
+            <h2>暗房延伸</h2>
+            <span class="kny-latin">DARKROOM EXTENSION</span>
+            <span class="kny-rec">推荐</span>
+          </div>
+          <div class="kny-stage"><!-- 方向 A · 暗房延伸:popup 是画廊的调光台 -->
+<style>
+  .dir-a-stage {
+    container-type: inline-size;
+    width: 100%;
+    aspect-ratio: 5 / 8;
+    overflow: hidden;
+    isolation: isolate;
+    position: relative;
+    background: #131110;
+    font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    color: rgba(255, 255, 255, 0.92);
+  }
+  .dir-a-stage *,
+  .dir-a-stage *::before,
+  .dir-a-stage *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* 暗房环境:极轻的顶光晕开,像红灯熄灭后的余温 */
+  .dir-a-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(90cqw 60cqw at 50% -12cqw, rgba(224, 164, 94, 0.045), transparent 70%),
+      radial-gradient(120cqw 90cqw at 50% 115%, rgba(255, 255, 255, 0.02), transparent 60%);
+    pointer-events: none;
+  }
+
+  .dir-a-popup {
+    position: absolute;
+    left: 50%;
+    top: 4.6cqw;
+    transform: translateX(-50%);
+    width: 58cqw;
+    max-height: 150cqw;
+    overflow: hidden;
+    border-radius: 3.2cqw;
+    border: 0.15cqw solid rgba(255, 255, 255, 0.10);
+    background: rgba(19, 17, 16, 0.86);
+    box-shadow:
+      0 2.4cqw 7cqw rgba(0, 0, 0, 0.55),
+      inset 0 0.15cqw 0 rgba(255, 255, 255, 0.06);
+    padding: 4.4cqw 3.4cqw 6cqw;
+  }
+
+  /* ---- 标题栏 ---- */
+  .dir-a-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 1.2cqw 3.6cqw;
+  }
+  .dir-a-title {
+    font-size: 2.9cqw;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+  }
+  .dir-a-ver {
+    font-size: 1.55cqw;
+    color: rgba(255, 255, 255, 0.38);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.03em;
+  }
+
+  /* ---- 分组卡片:底片片夹 ---- */
+  .dir-a-card {
+    position: relative;
+    border-radius: 2.4cqw;
+    border: 0.14cqw solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.028);
+    margin-bottom: 3cqw;
+    overflow: hidden;
+  }
+  /* 片夹上沿的小缺口 —— 分组的记忆点 */
+  .dir-a-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 7cqw;
+    height: 0.5cqw;
+    border-radius: 0 0 0.5cqw 0.5cqw;
+    background: rgba(255, 255, 255, 0.14);
+  }
+
+  .dir-a-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2.4cqw;
+    padding: 2.5cqw 2.8cqw;
+    min-height: 7.4cqw;
+  }
+  .dir-a-divider {
+    height: 0.12cqw;
+    background: rgba(255, 255, 255, 0.08);
+    margin-left: 2.8cqw;
+  }
+  .dir-a-label {
+    font-size: 1.95cqw;
+    font-weight: 550;
+    flex: 0 0 auto;
+  }
+  .dir-a-note {
+    font-size: 1.6cqw;
+    color: rgba(255, 255, 255, 0.48);
+    margin-top: 0.5cqw;
+    font-weight: 400;
+  }
+
+  /* ---- 分段控件(中性,不用琥珀) ---- */
+  .dir-a-seg {
+    display: flex;
+    border-radius: 1.7cqw;
+    background: rgba(0, 0, 0, 0.32);
+    border: 0.12cqw solid rgba(255, 255, 255, 0.09);
+    padding: 0.5cqw;
+    gap: 0.5cqw;
+    flex: 0 0 auto;
+  }
+  .dir-a-seg-item {
+    font-size: 1.7cqw;
+    line-height: 1;
+    padding: 1.5cqw 2.1cqw;
+    border-radius: 1.25cqw;
+    color: rgba(255, 255, 255, 0.55);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .dir-a-seg-on {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 600;
+    box-shadow: inset 0 0.12cqw 0 rgba(255, 255, 255, 0.10);
+  }
+
+  /* ---- 开关:开态才给琥珀 ---- */
+  .dir-a-switch {
+    width: 7.6cqw;
+    height: 4.2cqw;
+    border-radius: 2.1cqw;
+    background: #e0a45e;
+    position: relative;
+    flex: 0 0 auto;
+    transition: background 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .dir-a-switch::after {
+    content: "";
+    position: absolute;
+    top: 0.5cqw;
+    right: 0.5cqw;
+    width: 3.2cqw;
+    height: 3.2cqw;
+    border-radius: 50%;
+    background: rgba(255, 252, 248, 0.96);
+    box-shadow: 0 0.2cqw 0.6cqw rgba(0, 0, 0, 0.35);
+  }
+
+  /* ---- 内容源下拉(展开态) ---- */
+  .dir-a-select {
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+    font-size: 1.85cqw;
+    font-weight: 550;
+    padding: 1.5cqw 2.2cqw;
+    border-radius: 1.5cqw;
+    background: rgba(0, 0, 0, 0.32);
+    border: 0.12cqw solid rgba(255, 255, 255, 0.09);
+    flex: 0 0 auto;
+  }
+  .dir-a-caret {
+    width: 0;
+    height: 0;
+    border-left: 0.85cqw solid transparent;
+    border-right: 0.85cqw solid transparent;
+    border-top: 1.1cqw solid rgba(255, 255, 255, 0.55);
+  }
+  .dir-a-menu {
+    margin: 0 2.8cqw 2.6cqw;
+    border-radius: 1.7cqw;
+    background: rgba(9, 8, 7, 0.72);
+    border: 0.12cqw solid rgba(255, 255, 255, 0.10);
+    overflow: hidden;
+  }
+  .dir-a-opt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.9cqw 2.4cqw;
+    font-size: 1.8cqw;
+    color: rgba(255, 255, 255, 0.68);
+    border-bottom: 0.1cqw solid rgba(255, 255, 255, 0.05);
+  }
+  .dir-a-opt:last-child { border-bottom: none; }
+  .dir-a-opt-on {
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .dir-a-check-mark { font-size: 1.7cqw; font-weight: 700; }
+  .dir-a-opt-dim { color: rgba(255, 255, 255, 0.32); }
+  .dir-a-opt-tag {
+    font-size: 1.45cqw;
+    color: rgba(255, 255, 255, 0.38);
+    font-variant-numeric: tabular-nums;
+  }
+  .dir-a-menu-sep {
+    height: 0.9cqw;
+    background: rgba(255, 255, 255, 0.045);
+  }
+
+  /* ---- chips ---- */
+  .dir-a-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1.2cqw;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .dir-a-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 1cqw;
+    font-size: 1.7cqw;
+    padding: 1.15cqw 1.9cqw;
+    border-radius: 1.4cqw;
+    background: rgba(255, 255, 255, 0.08);
+    border: 0.12cqw solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.88);
+    white-space: nowrap;
+  }
+  .dir-a-chip-x {
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 1.6cqw;
+    line-height: 1;
+  }
+  .dir-a-input {
+    font-size: 1.7cqw;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(0, 0, 0, 0.30);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.10);
+    border-radius: 1.3cqw;
+    padding: 1.3cqw 1.9cqw;
+    min-width: 15cqw;
+    flex: 1 1 15cqw;
+    font-family: inherit;
+  }
+  .dir-a-input::placeholder { color: rgba(255, 255, 255, 0.36); }
+  /* 焦点环:琥珀的第三处合法出现 */
+  .dir-a-input-focus {
+    border-color: #e0a45e;
+    box-shadow: 0 0 0 0.45cqw rgba(224, 164, 94, 0.18);
+  }
+
+  /* ---- 登录行:琥珀呼吸点 ---- */
+  .dir-a-login { display: flex; align-items: center; gap: 1.8cqw; min-width: 0; }
+  .dir-a-dot {
+    width: 1.7cqw;
+    height: 1.7cqw;
+    border-radius: 50%;
+    background: #e0a45e;
+    flex: 0 0 auto;
+    animation: dir-a-breathe 2.6s cubic-bezier(0.23, 1, 0.32, 1) infinite;
+  }
+  @keyframes dir-a-breathe {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+  .dir-a-login-name {
+    font-size: 1.95cqw;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .dir-a-login-sub {
+    font-size: 1.55cqw;
+    color: rgba(255, 255, 255, 0.48);
+    margin-top: 0.4cqw;
+  }
+  .dir-a-link {
+    font-size: 1.75cqw;
+    font-weight: 550;
+    color: rgba(255, 255, 255, 0.68);
+    padding: 1.3cqw 2.1cqw;
+    border-radius: 1.3cqw;
+    border: 0.12cqw solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.05);
+    flex: 0 0 auto;
+  }
+
+  /* ---- 复选框(中性,不给琥珀) ---- */
+  .dir-a-checkline { display: flex; align-items: center; gap: 2cqw; min-width: 0; }
+  .dir-a-checkbox {
+    width: 3cqw;
+    height: 3cqw;
+    border-radius: 0.9cqw;
+    border: 0.16cqw solid rgba(255, 255, 255, 0.30);
+    background: rgba(255, 255, 255, 0.04);
+    position: relative;
+    flex: 0 0 auto;
+  }
+  .dir-a-checkbox-on {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.55);
+  }
+  .dir-a-checkbox-on::after {
+    content: "";
+    position: absolute;
+    left: 0.95cqw;
+    top: 0.5cqw;
+    width: 0.85cqw;
+    height: 1.5cqw;
+    border-right: 0.3cqw solid rgba(255, 255, 255, 0.92);
+    border-bottom: 0.3cqw solid rgba(255, 255, 255, 0.92);
+    transform: rotate(42deg);
+  }
+  .dir-a-checklabel { font-size: 1.9cqw; font-weight: 500; }
+
+  /* ---- 数字输入 ---- */
+  .dir-a-num {
+    width: 9.4cqw;
+    text-align: center;
+    font-size: 1.85cqw;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(0, 0, 0, 0.30);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.10);
+    border-radius: 1.3cqw;
+    padding: 1.3cqw 0;
+    font-family: inherit;
+    flex: 0 0 auto;
+  }
+
+  /* ---- 底部渐隐:暗示继续滚动 ---- */
+  .dir-a-fade {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 16cqw;
+    background: linear-gradient(to bottom, rgba(19, 17, 16, 0), rgba(16, 14, 13, 0.96) 78%);
+    pointer-events: none;
+  }
+  .dir-a-scrollhint {
+    position: absolute;
+    left: 50%;
+    bottom: 2.2cqw;
+    transform: translateX(-50%);
+    width: 6.4cqw;
+    height: 0.7cqw;
+    border-radius: 0.35cqw;
+    background: rgba(255, 255, 255, 0.16);
+  }
+</style>
+
+<div class="dir-a-stage">
+  <div class="dir-a-glow"></div>
+
+  <div class="dir-a-popup">
+    <!-- 标题栏 -->
+    <div class="dir-a-head">
+      <div class="dir-a-title">Ku-nya 设置</div>
+      <div class="dir-a-ver">v2.14.0</div>
+    </div>
+
+    <!-- 片夹 1:观看 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div>
+          <div class="dir-a-label">浏览模式</div>
+          <div class="dir-a-note">纯看只保留拼图画廊</div>
+        </div>
+        <div class="dir-a-seg">
+          <span class="dir-a-seg-item dir-a-seg-on">纯看</span>
+          <span class="dir-a-seg-item">交互</span>
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div>
+          <div class="dir-a-label">内容安全</div>
+          <div class="dir-a-note">开启后不含 R-18</div>
+        </div>
+        <div class="dir-a-switch" role="switch" aria-checked="true" aria-label="仅安全"></div>
+      </div>
+    </div>
+
+    <!-- 片夹 2:内容 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div class="dir-a-label">内容源</div>
+        <div class="dir-a-select">插画日榜 <span class="dir-a-caret"></span></div>
+      </div>
+      <div class="dir-a-menu">
+        <div class="dir-a-opt dir-a-opt-on">插画日榜 <span class="dir-a-check-mark">✓</span></div>
+        <div class="dir-a-opt">漫画日榜</div>
+        <div class="dir-a-opt">动图</div>
+        <div class="dir-a-opt">原创</div>
+        <div class="dir-a-opt">最新</div>
+        <div class="dir-a-opt">人气</div>
+        <div class="dir-a-opt dir-a-opt-dim">发现 <span class="dir-a-opt-tag">需登录</span></div>
+        <div class="dir-a-menu-sep"></div>
+        <div class="dir-a-opt">初音ミク <span class="dir-a-opt-tag">自定义</span></div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-label">自定义标签</div>
+        <div class="dir-a-chips">
+          <span class="dir-a-chip">初音ミク <span class="dir-a-chip-x">×</span></span>
+          <span class="dir-a-chip">可爱 <span class="dir-a-chip-x">×</span></span>
+          <input class="dir-a-input dir-a-input-focus" placeholder="添加标签…" />
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-label">标签热度</div>
+        <div class="dir-a-seg">
+          <span class="dir-a-seg-item">全部</span>
+          <span class="dir-a-seg-item">500+</span>
+          <span class="dir-a-seg-item">1000+</span>
+          <span class="dir-a-seg-item">5000+</span>
+          <span class="dir-a-seg-item">10000+</span>
+          <span class="dir-a-seg-item dir-a-seg-on">混合</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 片夹 3:账号 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div class="dir-a-login">
+          <span class="dir-a-dot"></span>
+          <div>
+            <div class="dir-a-login-name">Yukino_821</div>
+            <div class="dir-a-login-sub">pixiv 已登录</div>
+          </div>
+        </div>
+        <span class="dir-a-link">刷新</span>
+      </div>
+    </div>
+
+    <!-- 片夹 4:过滤 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div class="dir-a-checkline">
+          <span class="dir-a-checkbox dir-a-checkbox-on"></span>
+          <div>
+            <div class="dir-a-checklabel">隐藏多图作品</div>
+            <div class="dir-a-note">多为漫画</div>
+          </div>
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-checkline">
+          <span class="dir-a-checkbox"></span>
+          <span class="dir-a-checklabel">隐藏 AI 生成作品</span>
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <span class="dir-a-checklabel">收藏数不低于</span>
+        <input class="dir-a-num" value="1000" />
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-checkline">
+          <span class="dir-a-checkbox dir-a-checkbox-on"></span>
+          <div>
+            <div class="dir-a-checklabel">排除竖长图</div>
+            <div class="dir-a-note">高 / 宽不超过</div>
+          </div>
+        </div>
+        <input class="dir-a-num" value="3" />
+      </div>
+    </div>
+
+    <!-- 片夹 5:屏蔽 -->
+    <div class="dir-a-card">
+      <div class="dir-a-row">
+        <div class="dir-a-label">屏蔽画师</div>
+        <div class="dir-a-chips">
+          <span class="dir-a-chip">画师A <span class="dir-a-chip-x">×</span></span>
+          <input class="dir-a-input" placeholder="添加画师名…" />
+        </div>
+      </div>
+      <div class="dir-a-divider"></div>
+      <div class="dir-a-row">
+        <div class="dir-a-label">屏蔽标签</div>
+        <div class="dir-a-chips">
+          <span class="dir-a-chip">R-18G <span class="dir-a-chip-x">×</span></span>
+          <span class="dir-a-chip">AI 生成 <span class="dir-a-chip-x">×</span></span>
+          <input class="dir-a-input" placeholder="添加标签…" />
+        </div>
+      </div>
+    </div>
+
+    <div class="dir-a-fade"></div>
+    <div class="dir-a-scrollhint"></div>
+  </div>
+</div>
+</div>
+          <p class="kny-tagline">与画廊同一间暗房:分组卡片如底片片夹,琥珀只给交互态——设置也是这个产品的皮肤。</p>
+        </article>
+
+        <article class="kny-card" data-design-option data-direction="B" data-dir="B" data-name="分类工作台">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">B</span>
+            <h2>分类工作台</h2>
+            <span class="kny-latin">CATEGORIZED BENCH</span>
+          </div>
+          <div class="kny-stage"><style>
+  .dir-b-stage {
+    container-type: inline-size;
+    width: 100%;
+    aspect-ratio: 5 / 7.4;
+    overflow: hidden;
+    isolation: isolate;
+    position: relative;
+    background: #171a1f;
+    color: rgba(238, 242, 248, 0.92);
+    font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.35;
+  }
+  .dir-b-stage *, .dir-b-stage *::before, .dir-b-stage *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── 标题栏 ── */
+  .dir-b-titlebar {
+    display: flex;
+    align-items: baseline;
+    gap: 1.6cqw;
+    padding: 3.2cqw 4cqw 2.6cqw;
+    border-bottom: 0.14cqw solid rgba(255, 255, 255, 0.08);
+    background: #1a1e24;
+  }
+  .dir-b-title {
+    font-size: 2.7cqw;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+  }
+  .dir-b-version {
+    font-size: 1.55cqw;
+    color: rgba(238, 242, 248, 0.42);
+    font-weight: 500;
+  }
+  .dir-b-titlebar-spacer { flex: 1; }
+  .dir-b-titlebar-hint {
+    font-size: 1.55cqw;
+    color: rgba(238, 242, 248, 0.42);
+  }
+
+  /* ── 双栏骨架 ── */
+  .dir-b-body {
+    display: flex;
+    height: calc(100% - 8.6cqw);
+  }
+
+  /* ── 左侧分类导航 ── */
+  .dir-b-nav {
+    flex: 0 0 24%;
+    background: #14171c;
+    border-right: 0.14cqw solid rgba(255, 255, 255, 0.07);
+    padding: 2.2cqw 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3cqw;
+  }
+  .dir-b-nav-label {
+    font-size: 1.5cqw;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: rgba(238, 242, 248, 0.38);
+    padding: 0 3cqw 1.2cqw;
+  }
+  .dir-b-nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+    padding: 1.5cqw 3cqw;
+    font-size: 1.95cqw;
+    font-weight: 500;
+    color: rgba(238, 242, 248, 0.62);
+  }
+  .dir-b-nav-item .dir-b-nav-dot {
+    width: 1.1cqw;
+    height: 1.1cqw;
+    border-radius: 50%;
+    background: rgba(238, 242, 248, 0.22);
+    flex: none;
+  }
+  .dir-b-nav-item-active {
+    color: rgba(238, 242, 248, 0.95);
+    font-weight: 650;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .dir-b-nav-item-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 0.55cqw;
+    border-radius: 0 0.4cqw 0.4cqw 0;
+    background: #e0a45e;
+  }
+  .dir-b-nav-item-active .dir-b-nav-dot { background: #e0a45e; }
+  .dir-b-nav-count {
+    margin-left: auto;
+    font-size: 1.45cqw;
+    color: rgba(238, 242, 248, 0.38);
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 1cqw;
+    padding: 0.15cqw 1cqw;
+  }
+  .dir-b-nav-foot {
+    margin-top: auto;
+    padding: 2cqw 3cqw 0;
+    font-size: 1.5cqw;
+    color: rgba(238, 242, 248, 0.36);
+    border-top: 0.14cqw solid rgba(255, 255, 255, 0.07);
+    padding-top: 1.8cqw;
+  }
+
+  /* ── 右侧内容区 ── */
+  .dir-b-content {
+    flex: 1;
+    min-width: 0;
+    padding: 2.4cqw 3.4cqw 4cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 2.1cqw;
+  }
+  .dir-b-group {
+    background: rgba(255, 255, 255, 0.035);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.07);
+    border-radius: 1.6cqw;
+    overflow: hidden;
+  }
+  .dir-b-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5cqw 2.4cqw;
+    font-size: 1.7cqw;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    color: rgba(238, 242, 248, 0.5);
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 0.14cqw solid rgba(255, 255, 255, 0.06);
+  }
+  .dir-b-group-head .dir-b-group-meta {
+    font-size: 1.45cqw;
+    font-weight: 500;
+    color: rgba(238, 242, 248, 0.34);
+    letter-spacing: 0;
+  }
+  .dir-b-row {
+    display: flex;
+    align-items: center;
+    gap: 2cqw;
+    padding: 1.45cqw 2.4cqw;
+    font-size: 1.95cqw;
+  }
+  .dir-b-row + .dir-b-row { border-top: 0.14cqw solid rgba(255, 255, 255, 0.05); }
+  .dir-b-row-label { flex: none; color: rgba(238, 242, 248, 0.85); font-weight: 550; }
+  .dir-b-row-sub {
+    display: block;
+    font-size: 1.55cqw;
+    font-weight: 400;
+    color: rgba(238, 242, 248, 0.44);
+    margin-top: 0.3cqw;
+  }
+  .dir-b-row-control { margin-left: auto; display: flex; align-items: center; gap: 1.2cqw; flex: none; }
+
+  /* 分段控件 */
+  .dir-b-seg {
+    display: flex;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 1.1cqw;
+    padding: 0.3cqw;
+    gap: 0.3cqw;
+  }
+  .dir-b-seg-item {
+    font-size: 1.7cqw;
+    font-weight: 550;
+    padding: 0.55cqw 1.7cqw;
+    border-radius: 0.85cqw;
+    color: rgba(238, 242, 248, 0.55);
+  }
+  .dir-b-seg-item-on {
+    background: #2a2f37;
+    color: #e0a45e;
+    box-shadow: inset 0 0 0 0.14cqw rgba(224, 164, 94, 0.45);
+  }
+
+  /* 下拉 */
+  .dir-b-select {
+    display: flex;
+    align-items: center;
+    gap: 1.4cqw;
+    background: rgba(255, 255, 255, 0.06);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.09);
+    border-radius: 1.1cqw;
+    padding: 0.8cqw 1.6cqw;
+    font-size: 1.85cqw;
+    font-weight: 550;
+    color: rgba(238, 242, 248, 0.9);
+  }
+  .dir-b-select-caret { color: rgba(238, 242, 248, 0.45); font-size: 1.6cqw; }
+
+  /* chips */
+  .dir-b-chips { display: flex; flex-wrap: wrap; gap: 0.9cqw; align-items: center; }
+  .dir-b-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8cqw;
+    background: rgba(224, 164, 94, 0.12);
+    border: 0.14cqw solid rgba(224, 164, 94, 0.35);
+    color: #e6bd85;
+    border-radius: 3cqw;
+    padding: 0.4cqw 1.3cqw;
+    font-size: 1.7cqw;
+    font-weight: 550;
+  }
+  .dir-b-chip-x { color: rgba(230, 189, 133, 0.7); font-weight: 700; }
+  .dir-b-chip-muted {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(238, 242, 248, 0.72);
+  }
+  .dir-b-chip-muted .dir-b-chip-x { color: rgba(238, 242, 248, 0.4); }
+
+  /* 输入框 */
+  .dir-b-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.09);
+    border-radius: 1cqw;
+    padding: 0.7cqw 1.4cqw;
+    font-size: 1.75cqw;
+    color: rgba(238, 242, 248, 0.42);
+    min-width: 16cqw;
+  }
+  .dir-b-input-num {
+    min-width: 0;
+    width: 9cqw;
+    text-align: center;
+    color: rgba(238, 242, 248, 0.9);
+    font-weight: 600;
+  }
+
+  /* 热度行小按钮 */
+  .dir-b-heat { display: flex; flex-wrap: wrap; gap: 0.7cqw; }
+  .dir-b-heat-item {
+    font-size: 1.65cqw;
+    font-weight: 550;
+    padding: 0.45cqw 1.3cqw;
+    border-radius: 0.9cqw;
+    color: rgba(238, 242, 248, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .dir-b-heat-item-on {
+    color: #e0a45e;
+    background: rgba(224, 164, 94, 0.13);
+    box-shadow: inset 0 0 0 0.14cqw rgba(224, 164, 94, 0.45);
+  }
+
+  /* 登录态 */
+  .dir-b-dot-on {
+    width: 1.2cqw;
+    height: 1.2cqw;
+    border-radius: 50%;
+    background: #7fc78f;
+    flex: none;
+  }
+  .dir-b-account { display: flex; align-items: center; gap: 1.2cqw; font-size: 1.95cqw; font-weight: 600; }
+  .dir-b-account-name { color: rgba(238, 242, 248, 0.92); }
+  .dir-b-btn-ghost {
+    font-size: 1.65cqw;
+    font-weight: 600;
+    color: #e0a45e;
+    border: 0.14cqw solid rgba(224, 164, 94, 0.4);
+    border-radius: 1cqw;
+    padding: 0.5cqw 1.6cqw;
+  }
+
+  /* 复选行 */
+  .dir-b-check {
+    width: 2.1cqw;
+    height: 2.1cqw;
+    border-radius: 0.6cqw;
+    border: 0.16cqw solid rgba(255, 255, 255, 0.25);
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5cqw;
+    color: #14171c;
+  }
+  .dir-b-check-on { background: #e0a45e; border-color: #e0a45e; font-weight: 800; }
+  .dir-b-check-text { font-size: 1.9cqw; color: rgba(238, 242, 248, 0.85); }
+  .dir-b-check-text .dir-b-row-sub { margin-top: 0.2cqw; }
+
+  /* 底部渐隐 */
+  .dir-b-fade {
+    position: absolute;
+    left: 24%;
+    right: 0;
+    bottom: 0;
+    height: 12cqw;
+    background: linear-gradient(to bottom, rgba(23, 26, 31, 0), #171a1f 82%);
+    pointer-events: none;
+  }
+  .dir-b-fade-hint {
+    position: absolute;
+    right: 3.4cqw;
+    bottom: 2cqw;
+    font-size: 1.5cqw;
+    color: rgba(238, 242, 248, 0.38);
+  }
+</style>
+
+<div class="dir-b-stage">
+  <div class="dir-b-titlebar">
+    <span class="dir-b-title">Ku-nya 设置</span>
+    <span class="dir-b-version">v2.14.0</span>
+    <span class="dir-b-titlebar-spacer"></span>
+    <span class="dir-b-titlebar-hint">更改即时生效</span>
+  </div>
+
+  <div class="dir-b-body">
+    <nav class="dir-b-nav">
+      <div class="dir-b-nav-label">设置</div>
+      <div class="dir-b-nav-item dir-b-nav-item-active">
+        <span class="dir-b-nav-dot"></span>全部
+      </div>
+      <div class="dir-b-nav-item">
+        <span class="dir-b-nav-dot"></span>内容源
+        <span class="dir-b-nav-count">4</span>
+      </div>
+      <div class="dir-b-nav-item">
+        <span class="dir-b-nav-dot"></span>过滤
+        <span class="dir-b-nav-count">4</span>
+      </div>
+      <div class="dir-b-nav-item">
+        <span class="dir-b-nav-dot"></span>账户
+      </div>
+      <div class="dir-b-nav-foot">已登录 · Yukino_821</div>
+    </nav>
+
+    <div class="dir-b-content">
+      <!-- 通用 -->
+      <section class="dir-b-group">
+        <div class="dir-b-group-head">通用<span class="dir-b-group-meta">2 项</span></div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">浏览模式
+            <span class="dir-b-row-sub">纯看模式隐藏页面上的一切交互按钮</span>
+          </span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-seg">
+              <span class="dir-b-seg-item dir-b-seg-item-on">纯看</span>
+              <span class="dir-b-seg-item">交互</span>
+            </span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">内容安全</span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-seg">
+              <span class="dir-b-seg-item dir-b-seg-item-on">仅安全</span>
+              <span class="dir-b-seg-item">包含 R-18</span>
+            </span>
+          </span>
+        </div>
+      </section>
+
+      <!-- 内容源 -->
+      <section class="dir-b-group">
+        <div class="dir-b-group-head">内容源<span class="dir-b-group-meta">4 项</span></div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">排行榜来源</span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-select">插画日榜<span class="dir-b-select-caret">▾</span></span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">自定义标签
+            <span class="dir-b-row-sub">选择「自定义」来源时生效</span>
+          </span>
+          <span class="dir-b-row-control dir-b-chips">
+            <span class="dir-b-chip">初音ミク <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-chip">可爱 <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-input">添加标签…</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">标签热度</span>
+          <span class="dir-b-row-control dir-b-heat">
+            <span class="dir-b-heat-item">全部</span>
+            <span class="dir-b-heat-item">500+</span>
+            <span class="dir-b-heat-item">1000+</span>
+            <span class="dir-b-heat-item">5000+</span>
+            <span class="dir-b-heat-item">10000+</span>
+            <span class="dir-b-heat-item dir-b-heat-item-on">混合</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">可选来源
+            <span class="dir-b-row-sub">漫画日榜 · 动图 · 原创 · 最新 · 人气 · 发现(需登录)· 初音ミク(自定义)</span>
+          </span>
+        </div>
+      </section>
+
+      <!-- 账户 -->
+      <section class="dir-b-group">
+        <div class="dir-b-group-head">账户</div>
+        <div class="dir-b-row">
+          <span class="dir-b-account">
+            <span class="dir-b-dot-on"></span>pixiv 已登录&nbsp;<span class="dir-b-account-name">Yukino_821</span>
+          </span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-btn-ghost">刷新</span>
+          </span>
+        </div>
+      </section>
+
+      <!-- 过滤 -->
+      <section class="dir-b-group">
+        <div class="dir-b-group-head">过滤<span class="dir-b-group-meta">4 项</span></div>
+        <div class="dir-b-row">
+          <span class="dir-b-check dir-b-check-on">✓</span>
+          <span class="dir-b-check-text">隐藏多图作品
+            <span class="dir-b-row-sub">多图作品多为漫画</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-check"></span>
+          <span class="dir-b-check-text">隐藏 AI 生成作品</span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">收藏数不低于</span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-input dir-b-input-num">1000</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">屏蔽画师</span>
+          <span class="dir-b-row-control dir-b-chips">
+            <span class="dir-b-chip dir-b-chip-muted">画师A <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-input">添加画师名…</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">屏蔽标签</span>
+          <span class="dir-b-row-control dir-b-chips">
+            <span class="dir-b-chip dir-b-chip-muted">R-18G <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-chip dir-b-chip-muted">AI 生成 <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-input">添加标签…</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-check dir-b-check-on">✓</span>
+          <span class="dir-b-check-text">排除竖长图,高/宽不超过</span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-input dir-b-input-num">3</span>
+          </span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="dir-b-fade"></div>
+  <div class="dir-b-fade-hint">向下滚动查看全部</div>
+</div>
+</div>
+          <p class="kny-tagline">左侧分类导航 + 右栏内容:设置是工作台,冷灰与琥珀选中条,密度更高。</p>
+        </article>
+
+        <article class="kny-card" data-design-option data-direction="C" data-dir="C" data-name="印刷目录">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">C</span>
+            <h2>印刷目录</h2>
+            <span class="kny-latin">PRINTED CATALOGUE</span>
+          </div>
+          <div class="kny-stage"><!-- 方向 C · 印刷目录：浅暖纸面 + 深墨字 + 衬线大编号 + 表单线控件 -->
+<style>
+  .dir-c-stage{
+    container-type:inline-size;
+    width:100%;
+    aspect-ratio:5/7;
+    overflow:hidden;
+    isolation:isolate;
+    position:relative;
+    box-sizing:border-box;
+    background:linear-gradient(175deg,#f7f3ec 0%,#f5f1ea 55%,#f2ede3 100%);
+    color:#241f1a;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+    font-variant-numeric:tabular-nums;
+    padding:5cqw 6cqw 0;
+  }
+  .dir-c-stage *,.dir-c-stage *::before,.dir-c-stage *::after{box-sizing:border-box;margin:0;padding:0;font-style:normal;}
+
+  /* ── 标题栏 ── */
+  .dir-c-head{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:2.6cqw;border-bottom:0.3cqw solid #241f1a;}
+  .dir-c-brand{font-family:Georgia,"Iowan Old Style",serif;font-size:4.6cqw;line-height:1;letter-spacing:0.02em;color:#241f1a;}
+  .dir-c-brand-cn{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:2.9cqw;font-weight:600;margin-left:1.4cqw;letter-spacing:0.28em;}
+  .dir-c-sub{margin-top:1.5cqw;font-size:1.9cqw;color:rgba(36,31,26,.62);letter-spacing:0.12em;}
+  .dir-c-ver{font-family:Georgia,"Iowan Old Style",serif;font-size:2cqw;color:#b4762e;padding-bottom:0.4cqw;}
+
+  /* ── 章节：目录节奏 ── */
+  .dir-c-sec{display:grid;grid-template-columns:8cqw 1fr;column-gap:1.6cqw;padding:2.3cqw 0 2.1cqw;border-bottom:0.14cqw solid rgba(36,31,26,.2);}
+  .dir-c-num{font-family:Georgia,"Iowan Old Style",serif;font-size:3.8cqw;line-height:1.05;color:#b4762e;font-variant-numeric:tabular-nums;}
+  .dir-c-body{min-width:0;}
+  .dir-c-row{display:flex;align-items:baseline;justify-content:space-between;gap:2cqw;}
+  .dir-c-title{font-size:2.1cqw;font-weight:600;letter-spacing:0.1em;color:#241f1a;white-space:nowrap;}
+  .dir-c-note{margin-top:1.2cqw;font-size:1.9cqw;line-height:1.5;color:rgba(36,31,26,.55);}
+
+  /* ── 表单线控件：下划线而非填充卡片 ── */
+  .dir-c-opts{display:flex;align-items:baseline;gap:2.6cqw;flex-wrap:wrap;justify-content:flex-end;}
+  .dir-c-opt{font-size:1.95cqw;color:rgba(36,31,26,.55);padding-bottom:0.5cqw;border-bottom:0.16cqw solid transparent;white-space:nowrap;}
+  .dir-c-opt-on{color:#b4762e;font-weight:600;border-bottom-color:#b4762e;}
+
+  .dir-c-select{display:flex;align-items:baseline;gap:1.4cqw;font-size:1.95cqw;font-weight:600;color:#241f1a;border-bottom:0.16cqw solid rgba(36,31,26,.5);padding-bottom:0.5cqw;white-space:nowrap;}
+  .dir-c-caret{font-size:1.7cqw;color:#b4762e;}
+
+  .dir-c-chips{display:flex;align-items:center;gap:1.4cqw;flex-wrap:wrap;margin-top:1.6cqw;}
+  .dir-c-chip{display:inline-flex;align-items:baseline;gap:0.8cqw;font-size:1.9cqw;color:#241f1a;border:0.14cqw solid rgba(36,31,26,.4);border-radius:0.7cqw;padding:0.5cqw 1.2cqw;background:transparent;}
+  .dir-c-chip-x{color:#b4762e;font-weight:600;}
+  .dir-c-input{font-size:1.9cqw;color:rgba(36,31,26,.45);border-bottom:0.16cqw solid rgba(36,31,26,.35);padding:0.5cqw 0.2cqw;min-width:16cqw;}
+
+  /* ── 登录行 ── */
+  .dir-c-login{display:flex;align-items:baseline;gap:1.2cqw;font-size:1.95cqw;}
+  .dir-c-dot{color:#b4762e;font-size:1.6cqw;transform:translateY(-0.1cqw);}
+  .dir-c-user{font-weight:600;font-family:Georgia,"Iowan Old Style",serif;letter-spacing:0.02em;}
+  .dir-c-action{font-size:1.9cqw;color:#b4762e;font-weight:600;border-bottom:0.16cqw solid #b4762e;padding-bottom:0.3cqw;white-space:nowrap;}
+
+  /* ── 勾选项 ── */
+  .dir-c-checks{display:flex;flex-direction:column;gap:1.3cqw;margin-top:1.5cqw;}
+  .dir-c-checkline{display:flex;align-items:baseline;gap:1.3cqw;font-size:1.9cqw;color:#241f1a;}
+  .dir-c-box{display:inline-flex;align-items:center;justify-content:center;width:2cqw;height:2cqw;border:0.16cqw solid rgba(36,31,26,.55);border-radius:0.3cqw;transform:translateY(0.25cqw);flex:none;}
+  .dir-c-box-on{border-color:#b4762e;color:#b4762e;}
+  .dir-c-tick{font-size:1.7cqw;line-height:1;font-weight:700;}
+  .dir-c-dim{color:rgba(36,31,26,.55);}
+  .dir-c-field{display:inline-block;min-width:7cqw;text-align:center;font-size:1.95cqw;font-weight:600;color:#b4762e;border-bottom:0.16cqw solid #b4762e;padding:0 0.8cqw 0.3cqw;font-variant-numeric:tabular-nums;}
+
+  /* ── 底部渐隐：暗示滚动 ── */
+  .dir-c-fade{position:absolute;left:0;right:0;bottom:0;height:9cqw;background:linear-gradient(to bottom,rgba(245,241,234,0),#f5f1ea 78%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:1.6cqw;}
+  .dir-c-fade-note{font-family:Georgia,"Iowan Old Style",serif;font-size:1.7cqw;letter-spacing:0.3em;color:rgba(36,31,26,.45);}
+</style>
+
+<div class="dir-c-stage">
+  <header class="dir-c-head">
+    <div>
+      <div class="dir-c-brand">Ku-nya<span class="dir-c-brand-cn">设置</span></div>
+      <div class="dir-c-sub">pixiv 新标签页拼图墙 · 设置目录</div>
+    </div>
+    <div class="dir-c-ver">v2.14.0</div>
+  </header>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">01</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">浏览模式</h3>
+        <div class="dir-c-opts">
+          <span class="dir-c-opt dir-c-opt-on">纯看</span>
+          <span class="dir-c-opt">交互</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">02</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">内容安全</h3>
+        <div class="dir-c-opts">
+          <span class="dir-c-opt dir-c-opt-on">仅安全</span>
+          <span class="dir-c-opt">包含 R-18</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">03</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">内容源</h3>
+        <div class="dir-c-select">插画日榜<span class="dir-c-caret">▾</span></div>
+      </div>
+      <div class="dir-c-note">漫画日榜 · 动图 · 原创 · 最新 · 人气 · 发现（需登录）· ―― · 初音ミク（自定义）</div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">04</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">自定义标签</h3></div>
+      <div class="dir-c-chips">
+        <span class="dir-c-chip">初音ミク<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-chip">可爱<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-input">添加标签…</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">05</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">标签热度</h3>
+        <div class="dir-c-opts">
+          <span class="dir-c-opt">全部</span>
+          <span class="dir-c-opt">500+</span>
+          <span class="dir-c-opt">1000+</span>
+          <span class="dir-c-opt">5000+</span>
+          <span class="dir-c-opt">10000+</span>
+          <span class="dir-c-opt dir-c-opt-on">混合</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">06</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">pixiv 登录</h3>
+        <div class="dir-c-login">
+          <span class="dir-c-dot">●</span><span>已登录&nbsp;<span class="dir-c-user">Yukino_821</span></span>
+        </div>
+        <span class="dir-c-action">刷新</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">07</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">过滤</h3></div>
+      <div class="dir-c-checks">
+        <div class="dir-c-checkline">
+          <span class="dir-c-box dir-c-box-on"><span class="dir-c-tick">✓</span></span>
+          <span>隐藏多图作品<span class="dir-c-dim">（多为漫画）</span></span>
+        </div>
+        <div class="dir-c-checkline">
+          <span class="dir-c-box"></span>
+          <span class="dir-c-dim">隐藏 AI 生成作品</span>
+        </div>
+        <div class="dir-c-checkline">
+          <span>收藏数不低于</span><span class="dir-c-field">1000</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">08</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">屏蔽画师</h3></div>
+      <div class="dir-c-chips">
+        <span class="dir-c-chip">画师A<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-input">添加画师名…</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">09</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">屏蔽标签</h3></div>
+      <div class="dir-c-chips">
+        <span class="dir-c-chip">R-18G<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-chip">AI 生成<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-input">添加标签…</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">10</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">宽高比</h3></div>
+      <div class="dir-c-checks">
+        <div class="dir-c-checkline">
+          <span class="dir-c-box dir-c-box-on"><span class="dir-c-tick">✓</span></span>
+          <span>排除竖长图，高/宽不超过</span><span class="dir-c-field">3</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="dir-c-fade"><span class="dir-c-fade-note">· SCROLL ·</span></div>
+</div>
+</div>
+          <p class="kny-tagline">浅暖纸面 + 衬线大编号目录:popup 像展览图录的清单页——唯一的亮色方向。</p>
+        </article>
+
+        <article class="kny-card" data-design-option data-direction="D" data-dir="D" data-name="控制台">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">D</span>
+            <h2>控制台</h2>
+            <span class="kny-latin">CONSOLE</span>
+          </div>
+          <div class="kny-stage"><!-- 方向 D · 控制台:设置即配置文件 -->
+<style>
+.dir-d-stage {
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 5/7;
+  overflow: hidden;
+  isolation: isolate;
+  position: relative;
+  background: #131110;
+  color: rgba(255,255,255,.92);
+  font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  flex-direction: column;
+}
+.dir-d-stage * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── 标题栏 ── */
+.dir-d-titlebar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 4.2cqw 5cqw 3.2cqw;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.dir-d-title {
+  font-size: 3.1cqw;
+  font-weight: 700;
+  letter-spacing: .18cqw;
+}
+.dir-d-title::before { content: "❯ "; color: #e0a45e; font-weight: 400; }
+.dir-d-ver {
+  font-size: 1.8cqw;
+  color: rgba(255,255,255,.40);
+}
+
+.dir-d-scroll { flex: 1; min-height: 0; position: relative; }
+
+.dir-d-section {
+  display: block;
+  padding: 3cqw 5cqw 3.2cqw;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.dir-d-section:last-child { border-bottom: none; }
+
+/* `# key` 注释行式区块标题 */
+.dir-d-head {
+  display: block;
+  font-size: 1.9cqw;
+  color: rgba(255,255,255,.42);
+  letter-spacing: .08cqw;
+  margin-bottom: 1.6cqw;
+}
+.dir-d-head::before { content: "# "; color: rgba(224,164,94,.55); }
+
+.dir-d-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2.4cqw;
+  font-size: 2.15cqw;
+  line-height: 1.75;
+  font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace,
+              "PingFang SC", "Microsoft YaHei", "Noto Sans SC";
+}
+.dir-d-label {
+  flex: 0 0 24cqw;
+  color: rgba(255,255,255,.68);
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+              ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace;
+}
+.dir-d-val { color: rgba(255,255,255,.92); }
+.dir-d-dim  { color: rgba(255,255,255,.45); }
+.dir-d-amber { color: #e0a45e; }
+.dir-d-mark { font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace; }
+
+/* 开态 [x] 琥珀,关态 [ ] 暗 */
+.dir-d-on  { color: #e0a45e; }
+.dir-d-off { color: rgba(255,255,255,.45); }
+
+.dir-d-choice { white-space: nowrap; }
+.dir-d-choice .dir-d-on { font-weight: 700; }
+
+/* 下拉形态 */
+.dir-d-select {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1.4cqw;
+  border-bottom: 1px dashed rgba(255,255,255,.35);
+  padding-bottom: .4cqw;
+}
+.dir-d-menu {
+  margin: 1.4cqw 0 0 2.6cqw;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6cqw 2.4cqw;
+  font-size: 2cqw;
+}
+.dir-d-menu .dir-d-item { display: flex; gap: 1cqw; align-items: baseline; }
+.dir-d-menu .dir-d-item .dir-d-mark { width: 2.4cqw; flex: none; }
+.dir-d-menu .dir-d-cur { color: #e0a45e; font-weight: 700; }
+
+/* chips */
+.dir-d-chips { display: flex; flex-wrap: wrap; gap: 1.2cqw; margin-bottom: 1.4cqw; }
+.dir-d-chip {
+  font-size: 1.95cqw;
+  padding: .5cqw 1.4cqw;
+  border: 1px solid rgba(255,255,255,.22);
+  color: rgba(255,255,255,.85);
+}
+.dir-d-chip .dir-d-x { color: #e0a45e; margin-left: .8cqw; }
+.dir-d-input {
+  font-size: 1.95cqw;
+  color: rgba(255,255,255,.42);
+  border: 1px dashed rgba(255,255,255,.22);
+  padding: .6cqw 1.4cqw;
+}
+.dir-d-input::before { content: "+ "; color: rgba(224,164,94,.6); }
+
+.dir-d-login {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 2.15cqw;
+}
+.dir-d-refresh {
+  color: #e0a45e;
+  font-size: 1.95cqw;
+  border: 1px solid rgba(224,164,94,.45);
+  padding: .4cqw 1.6cqw;
+}
+
+.dir-d-num {
+  border: 1px solid rgba(255,255,255,.25);
+  padding: .2cqw 1.2cqw;
+  color: #e0a45e;
+  font-variant-numeric: tabular-nums;
+}
+
+.dir-d-sub {
+  display: block;
+  font-size: 1.7cqw;
+  color: rgba(255,255,255,.38);
+  margin-top: 1cqw;
+}
+
+/* 底部渐隐:暗示以下滚动 */
+.dir-d-fade {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 12cqw;
+  background: linear-gradient(to bottom, rgba(19,17,16,0), #131110 82%);
+  pointer-events: none;
+}
+</style>
+
+<div class="dir-d-stage">
+  <div class="dir-d-titlebar">
+    <div class="dir-d-title">Ku-nya 设置</div>
+    <div class="dir-d-ver">v2.14.0</div>
+  </div>
+
+  <div class="dir-d-scroll">
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source mode</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">浏览模式</span>
+        <span class="dir-d-val dir-d-choice"><span class="dir-d-mark dir-d-on">[x]</span> <span class="dir-d-on">纯看</span>&nbsp;&nbsp;&nbsp;<span class="dir-d-mark dir-d-off">[ ]</span> <span class="dir-d-off">交互</span></span>
+      </div>
+      <div class="dir-d-row">
+        <span class="dir-d-label">内容安全</span>
+        <span class="dir-d-val dir-d-choice"><span class="dir-d-mark dir-d-on">[x]</span> <span class="dir-d-on">仅安全</span>&nbsp;&nbsp;&nbsp;<span class="dir-d-mark dir-d-off">[ ]</span> <span class="dir-d-off">包含 R-18</span></span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source ranking</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">内容源</span>
+        <span class="dir-d-val"><span class="dir-d-select">插画日榜 <span class="dir-d-amber">▾</span></span></span>
+      </div>
+      <div class="dir-d-menu">
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-amber">●</span><span class="dir-d-cur">插画日榜</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">漫画日榜</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">动图</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">原创</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">最新</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">人气</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">发现(需登录)</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">初音ミク(自定义)</span></span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source tags</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">自定义标签</span>
+      </div>
+      <div class="dir-d-chips">
+        <span class="dir-d-chip">初音ミク<span class="dir-d-x">×</span></span>
+        <span class="dir-d-chip">可爱<span class="dir-d-x">×</span></span>
+        <span class="dir-d-input">添加标签…</span>
+      </div>
+      <div class="dir-d-row">
+        <span class="dir-d-label">标签热度</span>
+        <span class="dir-d-val dir-d-dim" style="font-size:1.9cqw">全部 · 500+ · 1000+ · 5000+ · 10000+ · <span class="dir-d-amber" style="font-weight:700">混合</span></span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source auth</span>
+      <div class="dir-d-login">
+        <span><span class="dir-d-mark dir-d-amber">●</span> <span class="dir-d-val">已登录</span> <span class="dir-d-amber" style="font-weight:700">Yukino_821</span></span>
+        <span class="dir-d-refresh">[ 刷新 ]</span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source filter</span>
+      <div class="dir-d-row">
+        <span class="dir-d-val"><span class="dir-d-mark dir-d-on">[x]</span> 隐藏多图作品 <span class="dir-d-dim">(多为漫画)</span></span>
+      </div>
+      <div class="dir-d-row">
+        <span class="dir-d-val"><span class="dir-d-mark dir-d-off">[ ]</span> <span class="dir-d-off">隐藏 AI 生成作品</span></span>
+      </div>
+      <div class="dir-d-row">
+        <span class="dir-d-val">收藏数不低于 <span class="dir-d-num">1000</span></span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source block-artist</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">屏蔽画师</span>
+      </div>
+      <div class="dir-d-chips">
+        <span class="dir-d-chip">画师A<span class="dir-d-x">×</span></span>
+        <span class="dir-d-input">添加画师名…</span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source block-tag</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">屏蔽标签</span>
+      </div>
+      <div class="dir-d-chips">
+        <span class="dir-d-chip">R-18G<span class="dir-d-x">×</span></span>
+        <span class="dir-d-chip">AI 生成<span class="dir-d-x">×</span></span>
+        <span class="dir-d-input">添加标签…</span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source aspect</span>
+      <div class="dir-d-row">
+        <span class="dir-d-val"><span class="dir-d-mark dir-d-on">[x]</span> 排除竖长图,高/宽不超过 <span class="dir-d-num">3</span></span>
+      </div>
+      <span class="dir-d-sub">// 超出比例的插画不进入拼图墙</span>
+    </div>
+
+    <div class="dir-d-fade"></div>
+  </div>
+</div>
+</div>
+          <p class="kny-tagline">等宽字体 + 1px 分隔线 + [x] 记号:设置即配置文件,终端气质。</p>
+        </article>
+      </main>
+
+      <section class="kny-notes" aria-label="方向说明">
+        <div class="kny-note">
+          <h3>A · 暗房延伸(推荐)</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>沿用主页面的暗房 token:暖黑底、烟熏玻璃卡片、琥珀只给开态与焦点——popup 是画廊的调光台。</dd>
+            <dt>材质</dt>
+            <dd>rgba(19,17,16) 面板 + 琥珀 #e0a45e;分组卡片带「片夹缺口」;登录状态一枚琥珀呼吸点。</dd>
+            <dt>记忆点</dt>
+            <dd>底片片夹式分组——设置页第一次看起来像这个产品自己的东西。</dd>
+            <dt>代价</dt>
+            <dd>保守:它是「正确的默认」,惊喜感不如 C/D;深色 popup 在白底浏览器工具栏下对比强。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>B · 分类工作台</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>左侧分类导航(内容源 / 过滤 / 账户)+ 右栏内容,设置按任务归类而不是一列到底。</dd>
+            <dt>材质</dt>
+            <dd>偏冷的蓝灰 + 琥珀选中竖条;Linear / macOS 设置式密度。</dd>
+            <dt>记忆点</dt>
+            <dd>左栏琥珀竖条——一眼知道自己在改哪类东西。</dd>
+            <dt>代价</dt>
+            <dd>400px 宽塞双栏,每栏都变窄;导航在 10 个区块的规模下略重。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>C · 印刷目录</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>浅暖纸面 + 深墨字 + Georgia 衬线大编号,控件做成表单线——popup 像展览图录的清单页。</dd>
+            <dt>材质</dt>
+            <dd>纸色 #f5f1ea + 墨 #241f1a + 印刷琥珀 #b4762e;唯一的亮色方向。</dd>
+            <dt>记忆点</dt>
+            <dd>衬线 01–10 大编号目录节奏,设置页有了「出版物」的气质。</dd>
+            <dt>代价</dt>
+            <dd>与暗房主界面是两种气质(这可以是优点也可以是断裂);实现时要小心与主页面 token 的关系。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>D · 控制台</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>等宽字体 + 1px 分隔线 + [x]/[ ] 记号,设置即一份可读的配置文件。</dd>
+            <dt>材质</dt>
+            <dd>暗底 + 等宽栈 + 字符状态记号;无圆角、无投影、无卡片。</dd>
+            <dt>记忆点</dt>
+            <dd>`# source mode` 注释行区块标题——terminal 用户会会心一笑。</dd>
+            <dt>代价</dt>
+            <dd>等宽 + 中文混排天然局促;对非技术用户最不友好,扫读门槛最高。</dd>
+          </dl>
+        </div>
+      </section>
+
+      <p class="kny-mix">
+        也可以只取某个细节混搭:比如「A 的暗房材质 + B 的分类导航」「C 的衬线标题用到 A 上」,在确认弹层的建议框里写一句即可。
+      </p>
+    </div>
+
+    <script>
+      // Static-preview fallback only. When the local preview server serves this
+      // page it owns selection entirely (buttons, confirm dialog, POST),
+      // so this must stay dormant there to avoid duplicate controls.
+      if (location.protocol === 'file:') {
+        var bar = document.createElement('p')
+        bar.className = 'kny-fallback'
+        bar.textContent = '静态打开:当前不会自动回传,请点下面按钮复制选择后回到对话发送。'
+        document.querySelector('.kny-mix').after(bar)
+
+        document.querySelectorAll('[data-design-option]').forEach(function (card) {
+          var button = document.createElement('button')
+          button.type = 'button'
+          button.textContent = '复制「选 ' + card.dataset.dir + ':' + card.dataset.name + '」'
+          button.addEventListener('click', function () {
+            var text = '选 ' + card.dataset.dir + ':' + card.dataset.name + ';拨盘:视觉冒险度 / 动效强度 / 信息密度 = '
+            text += Array.prototype.map
+              .call(document.querySelectorAll('[data-qmdp-dial]'), function (input) {
+                return input.value
+              })
+              .join(' / ')
+            navigator.clipboard.writeText(text).then(
+              function () {
+                button.textContent = '已复制,请回到对话发送'
+              },
+              function () {
+                button.textContent = text
+              },
+            )
+          })
+          card.appendChild(button)
+        })
+      }
+    </script>
+  </body>
+</html>
+

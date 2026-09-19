@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // as "settings don't persist", because the old worker silently drops every
   // setter message it doesn't recognise. Check the newest option key; any
   // worker that knows it knows the rest.
-  if (!('isExcludingMultiPage' in options)) {
+  if (!('isExcludingAI' in options)) {
     const banner = document.createElement('p')
     banner.className = 'stale-worker'
     banner.textContent =

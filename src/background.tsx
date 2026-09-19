@@ -69,6 +69,27 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           )
           sendResponse({ data: 'setExcludeMultiPage' })
           break
+        case 'setExcludeAI':
+          await storageUtil.setBoolean(
+            'is_excluding_ai',
+            request.params.is_excluding_ai,
+          )
+          sendResponse({ data: 'setExcludeAI' })
+          break
+        case 'setMinBookmarks':
+          await storageUtil.setValue(
+            'min_bookmarks',
+            request.params.min_bookmarks,
+          )
+          sendResponse({ data: 'setMinBookmarks' })
+          break
+        case 'setExcludedAuthors':
+          await storageUtil.setJSON(
+            'excluding_authors',
+            request.params.excluding_authors,
+          )
+          sendResponse({ data: 'setExcludedAuthors' })
+          break
         case 'setSafe':
           await storageUtil.setBoolean('is_safe', request.params.is_safe)
           sendResponse({ data: 'setSafe', isSafe: request.params.is_safe })

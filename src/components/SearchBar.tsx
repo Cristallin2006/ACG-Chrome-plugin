@@ -101,6 +101,17 @@ export default class SearchBar extends Component<Props, State> {
     const target = event.target as HTMLElement | null
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) return
 
+    // ⇧R is the wall's reload chord and App owns it; it must reach the page
+    // instead of being swallowed as the start of a query.
+    if (
+      event.shiftKey &&
+      event.key === 'R' &&
+      !event.ctrlKey &&
+      !event.metaKey &&
+      !event.altKey
+    ) {
+      return
+    }
     if (event.key === '/' && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault()
       this.focusInput()
@@ -261,7 +272,7 @@ export default class SearchBar extends Component<Props, State> {
             </span>
           </button>
           <span class="kunya-search__hint" aria-hidden="true">
-            ↵ 搜索 · esc 收起
+            ↵ 搜索 · ⇧R 换一批 · esc 收起
           </span>
         </div>
       </div>

@@ -37,26 +37,32 @@ export default class TagInput extends Component<Props, State> {
     this.setState({ value: '' })
   }
 
+  handleKeyDown = (ev: KeyboardEvent) => {
+    if (ev.key === 'Enter') this.handleAddClick()
+  }
+
   render() {
     const {
       props: { label, placeholder },
       state: { value },
       handleInput,
       handleAddClick,
+      handleKeyDown,
     } = this
 
     return (
-      <span>
-        <label>
-          {label}
-          <input
-            type="text"
-            value={value}
-            onInput={handleInput}
-            placeholder={placeholder}
-          />
-        </label>
-        <button onClick={handleAddClick}>Add</button>
+      <span className="knp-addrow">
+        <input
+          type="text"
+          aria-label={label}
+          value={value}
+          onInput={handleInput}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+        />
+        <button type="button" className="knp-btn" onClick={handleAddClick}>
+          添加
+        </button>
       </span>
     )
   }

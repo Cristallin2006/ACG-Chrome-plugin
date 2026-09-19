@@ -27,11 +27,34 @@ export interface IllustEntry {
    * didn't say, and null is never filtered out.
    */
   pageCount: number | null
+  /**
+   * pixiv marks AI-generated works with aiType 2 (1 = not AI). Sources that
+   * don't report it yield null, and null is never filtered out.
+   */
+  aiType: number | null
+  /**
+   * Bookmark count where the source reports one (search listing, ranking
+   * JSON); null means the source didn't say, and null is never filtered out.
+   */
+  bookmarkCount: number | null
 }
 
 /** Page counts arrive as `pageCount` or `illust_page_count`, or not at all. */
 const toPageCount = (value: any): number | null =>
   typeof value === 'number' ? value : null
+
+/** AI flag: aiType 2 marks AI-generated works; absent means the source didn't say. */
+const toAiType = (value: any): number | null =>
+  typeof value === 'number' ? value : null
+
+/** Bookmark counts arrive as `bookmarkCount` or `illust_book_count`, or not at all. */
+const toBookmarkCount = (content: any): number | null => {
+  const value =
+    typeof content.bookmarkCount === 'number'
+      ? content.bookmarkCount
+      : content.illust_book_count
+  return typeof value === 'number' ? value : null
+}
 
 const imageResolution = '600x1200_90'
 
@@ -76,6 +99,8 @@ export const getNewIllusts = async (): Promise<IllustEntry[]> => {
           authorName: content.user_name,
           sl: content.illust_sanity_level,
           pageCount: toPageCount(content.illust_page_count),
+          aiType: toAiType(content.aiType),
+          bookmarkCount: toBookmarkCount(content),
         }),
       ),
     )
@@ -109,6 +134,8 @@ export const getPopularIllusts = async (): Promise<IllustEntry[]> => {
           authorName: content.user_name,
           sl: content.illust_sanity_level,
           pageCount: toPageCount(content.illust_page_count),
+          aiType: toAiType(content.aiType),
+          bookmarkCount: toBookmarkCount(content),
         }),
       ),
     )
@@ -153,6 +180,8 @@ export const getDiscovery = async (): Promise<IllustEntry[]> => {
         authorName: content.userName,
         sl: typeof content.sl === 'number' ? content.sl : null,
         pageCount: toPageCount(content.pageCount),
+        aiType: toAiType(content.aiType),
+        bookmarkCount: toBookmarkCount(content),
       }),
     )
 }
@@ -179,6 +208,8 @@ export const getOriginalRanking = async (): Promise<IllustEntry[]> => {
           authorName: content.user_name,
           sl: null,
           pageCount: toPageCount(content.illust_page_count),
+          aiType: toAiType(content.aiType),
+          bookmarkCount: toBookmarkCount(content),
         }),
       ),
     )
@@ -255,6 +286,8 @@ const searchTag = async (
             authorName: content.userName,
             sl: typeof content.sl === 'number' ? content.sl : null,
             pageCount: toPageCount(content.pageCount),
+            aiType: toAiType(content.aiType),
+            bookmarkCount: toBookmarkCount(content),
           }),
         ),
     )
@@ -405,6 +438,8 @@ const getIllustsDetail = async (ids: Array<number>): Promise<IllustEntry[]> => {
           authorName: content.user_name,
           sl: content.sl,
           pageCount: toPageCount(content.pageCount),
+          aiType: toAiType(content.aiType),
+          bookmarkCount: toBookmarkCount(content),
         })
       }
       return entities

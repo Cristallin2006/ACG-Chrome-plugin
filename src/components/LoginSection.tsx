@@ -1,5 +1,6 @@
 import { h, Component } from 'preact'
 import SettingSection from './SettingSection'
+import Check from './Check'
 import { getLoginStatus } from '../lib/api'
 
 interface Props {
@@ -49,11 +50,10 @@ export default class LoginSection extends Component<Props, State> {
     })
   }
 
-  handleCheckboxClick = (ev: Event) => {
+  handleToggle = (checked: boolean) => {
     const { update } = this.props
-    const target = ev.target as HTMLInputElement
-    this.setState({ enabled: target.checked })
-    update(target.checked)
+    this.setState({ enabled: checked })
+    update(checked)
   }
 
   handleLoginClick = () => {
@@ -68,46 +68,65 @@ export default class LoginSection extends Component<Props, State> {
     } = this
     switch (status) {
       case 'checking':
-        return 'Checking the session… 检测登录状态…'
+        return { name: '检测登录状态…', sub: '', tone: 'pending' }
       case 'logged-in':
-        return `Logged in as ${userName || 'a pixiv user'} 已登录`
+        return {
+          name: userName || 'pixiv 用户',
+          sub: '已登录',
+          tone: 'on',
+        }
       case 'logged-out':
-        return 'Not logged in 未登录'
+        return { name: '未登录', sub: '登录后可解锁「发现」与完整搜索', tone: 'off' }
       default:
-        return 'Probe failed (network error) 检测失败，请检查网络'
+        return { name: '检测失败', sub: '请检查网络后重试', tone: 'off' }
     }
   }
 
   render() {
     const {
-      handleCheckboxClick,
+      handleToggle,
       handleLoginClick,
       probe,
       state: { enabled, status },
     } = this
+    const statusView = this.renderStatus()
 
     return (
-      <SettingSection title="pixiv Login(登录)">
-        <input
-          type="checkbox"
-          id={this.checkboxId}
-          onClick={handleCheckboxClick}
-          checked={enabled}
-        />
-        {h('label', {
-          htmlFor: this.checkboxId,
-          children: ['send the pixiv login session with requests 请求携带登录状态'],
-        })}
-        <p className="login-status">
-          {this.renderStatus()}
-          <button className="login-refresh" onClick={probe}>
-            re-check
+      <div>
+        <SettingSection title="携带登录状态" note="pixiv 请求带上浏览器会话">
+          <Check
+            id={this.checkboxId}
+            checked={enabled}
+            onChange={handleToggle}
+            label="携带登录状态"
+          />
+        </SettingSection>
+        <div className="knp-row">
+          <div className="knp-login">
+            <span className={`knp-dot knp-dot--${statusView.tone}`} />
+            <div className="knp-login__text">
+              <div className="knp-login__name">{statusView.name}</div>
+              {statusView.sub ? (
+                <div className="knp-login__sub">{statusView.sub}</div>
+              ) : null}
+            </div>
+          </div>
+          <button type="button" className="knp-btn" onClick={probe}>
+            刷新
           </button>
-        </p>
+        </div>
         {status === 'logged-out' && (
-          <button onClick={handleLoginClick}>Open pixiv login 去登录</button>
+          <div className="knp-row">
+            <button
+              type="button"
+              className="knp-btn knp-btn--primary"
+              onClick={handleLoginClick}
+            >
+              去 pixiv 登录
+            </button>
+          </div>
         )}
-      </SettingSection>
+      </div>
     )
   }
 }

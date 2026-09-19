@@ -1,0 +1,464 @@
+<style>
+  .dir-b-stage {
+    container-type: inline-size;
+    width: 100%;
+    aspect-ratio: 5 / 7.4;
+    overflow: hidden;
+    isolation: isolate;
+    position: relative;
+    background: #171a1f;
+    color: rgba(238, 242, 248, 0.92);
+    font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.35;
+  }
+  .dir-b-stage *, .dir-b-stage *::before, .dir-b-stage *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── 标题栏 ── */
+  .dir-b-titlebar {
+    display: flex;
+    align-items: baseline;
+    gap: 1.6cqw;
+    padding: 3.2cqw 4cqw 2.6cqw;
+    border-bottom: 0.14cqw solid rgba(255, 255, 255, 0.08);
+    background: #1a1e24;
+  }
+  .dir-b-title {
+    font-size: 2.7cqw;
+    font-weight: 650;
+    letter-spacing: 0.04em;
+  }
+  .dir-b-version {
+    font-size: 1.55cqw;
+    color: rgba(238, 242, 248, 0.42);
+    font-weight: 500;
+  }
+  .dir-b-titlebar-spacer { flex: 1; }
+  .dir-b-titlebar-hint {
+    font-size: 1.55cqw;
+    color: rgba(238, 242, 248, 0.42);
+  }
+
+  /* ── 双栏骨架 ── */
+  .dir-b-body {
+    display: flex;
+    height: calc(100% - 8.6cqw);
+  }
+
+  /* ── 左侧分类导航 ── */
+  .dir-b-nav {
+    flex: 0 0 24%;
+    background: #14171c;
+    border-right: 0.14cqw solid rgba(255, 255, 255, 0.07);
+    padding: 2.2cqw 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3cqw;
+  }
+  .dir-b-nav-label {
+    font-size: 1.5cqw;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: rgba(238, 242, 248, 0.38);
+    padding: 0 3cqw 1.2cqw;
+  }
+  .dir-b-nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1.6cqw;
+    padding: 1.5cqw 3cqw;
+    font-size: 1.95cqw;
+    font-weight: 500;
+    color: rgba(238, 242, 248, 0.62);
+  }
+  .dir-b-nav-item .dir-b-nav-dot {
+    width: 1.1cqw;
+    height: 1.1cqw;
+    border-radius: 50%;
+    background: rgba(238, 242, 248, 0.22);
+    flex: none;
+  }
+  .dir-b-nav-item-active {
+    color: rgba(238, 242, 248, 0.95);
+    font-weight: 650;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .dir-b-nav-item-active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 18%;
+    bottom: 18%;
+    width: 0.55cqw;
+    border-radius: 0 0.4cqw 0.4cqw 0;
+    background: #e0a45e;
+  }
+  .dir-b-nav-item-active .dir-b-nav-dot { background: #e0a45e; }
+  .dir-b-nav-count {
+    margin-left: auto;
+    font-size: 1.45cqw;
+    color: rgba(238, 242, 248, 0.38);
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 1cqw;
+    padding: 0.15cqw 1cqw;
+  }
+  .dir-b-nav-foot {
+    margin-top: auto;
+    padding: 2cqw 3cqw 0;
+    font-size: 1.5cqw;
+    color: rgba(238, 242, 248, 0.36);
+    border-top: 0.14cqw solid rgba(255, 255, 255, 0.07);
+    padding-top: 1.8cqw;
+  }
+
+  /* ── 右侧内容区 ── */
+  .dir-b-content {
+    flex: 1;
+    min-width: 0;
+    padding: 2.4cqw 3.4cqw 4cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 2.1cqw;
+  }
+  .dir-b-group {
+    background: rgba(255, 255, 255, 0.035);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.07);
+    border-radius: 1.6cqw;
+    overflow: hidden;
+  }
+  .dir-b-group-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5cqw 2.4cqw;
+    font-size: 1.7cqw;
+    font-weight: 650;
+    letter-spacing: 0.06em;
+    color: rgba(238, 242, 248, 0.5);
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 0.14cqw solid rgba(255, 255, 255, 0.06);
+  }
+  .dir-b-group-head .dir-b-group-meta {
+    font-size: 1.45cqw;
+    font-weight: 500;
+    color: rgba(238, 242, 248, 0.34);
+    letter-spacing: 0;
+  }
+  .dir-b-row {
+    display: flex;
+    align-items: center;
+    gap: 2cqw;
+    padding: 1.45cqw 2.4cqw;
+    font-size: 1.95cqw;
+  }
+  .dir-b-row + .dir-b-row { border-top: 0.14cqw solid rgba(255, 255, 255, 0.05); }
+  .dir-b-row-label { flex: none; color: rgba(238, 242, 248, 0.85); font-weight: 550; }
+  .dir-b-row-sub {
+    display: block;
+    font-size: 1.55cqw;
+    font-weight: 400;
+    color: rgba(238, 242, 248, 0.44);
+    margin-top: 0.3cqw;
+  }
+  .dir-b-row-control { margin-left: auto; display: flex; align-items: center; gap: 1.2cqw; flex: none; }
+
+  /* 分段控件 */
+  .dir-b-seg {
+    display: flex;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 1.1cqw;
+    padding: 0.3cqw;
+    gap: 0.3cqw;
+  }
+  .dir-b-seg-item {
+    font-size: 1.7cqw;
+    font-weight: 550;
+    padding: 0.55cqw 1.7cqw;
+    border-radius: 0.85cqw;
+    color: rgba(238, 242, 248, 0.55);
+  }
+  .dir-b-seg-item-on {
+    background: #2a2f37;
+    color: #e0a45e;
+    box-shadow: inset 0 0 0 0.14cqw rgba(224, 164, 94, 0.45);
+  }
+
+  /* 下拉 */
+  .dir-b-select {
+    display: flex;
+    align-items: center;
+    gap: 1.4cqw;
+    background: rgba(255, 255, 255, 0.06);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.09);
+    border-radius: 1.1cqw;
+    padding: 0.8cqw 1.6cqw;
+    font-size: 1.85cqw;
+    font-weight: 550;
+    color: rgba(238, 242, 248, 0.9);
+  }
+  .dir-b-select-caret { color: rgba(238, 242, 248, 0.45); font-size: 1.6cqw; }
+
+  /* chips */
+  .dir-b-chips { display: flex; flex-wrap: wrap; gap: 0.9cqw; align-items: center; }
+  .dir-b-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.8cqw;
+    background: rgba(224, 164, 94, 0.12);
+    border: 0.14cqw solid rgba(224, 164, 94, 0.35);
+    color: #e6bd85;
+    border-radius: 3cqw;
+    padding: 0.4cqw 1.3cqw;
+    font-size: 1.7cqw;
+    font-weight: 550;
+  }
+  .dir-b-chip-x { color: rgba(230, 189, 133, 0.7); font-weight: 700; }
+  .dir-b-chip-muted {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+    color: rgba(238, 242, 248, 0.72);
+  }
+  .dir-b-chip-muted .dir-b-chip-x { color: rgba(238, 242, 248, 0.4); }
+
+  /* 输入框 */
+  .dir-b-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 0.14cqw solid rgba(255, 255, 255, 0.09);
+    border-radius: 1cqw;
+    padding: 0.7cqw 1.4cqw;
+    font-size: 1.75cqw;
+    color: rgba(238, 242, 248, 0.42);
+    min-width: 16cqw;
+  }
+  .dir-b-input-num {
+    min-width: 0;
+    width: 9cqw;
+    text-align: center;
+    color: rgba(238, 242, 248, 0.9);
+    font-weight: 600;
+  }
+
+  /* 热度行小按钮 */
+  .dir-b-heat { display: flex; flex-wrap: wrap; gap: 0.7cqw; }
+  .dir-b-heat-item {
+    font-size: 1.65cqw;
+    font-weight: 550;
+    padding: 0.45cqw 1.3cqw;
+    border-radius: 0.9cqw;
+    color: rgba(238, 242, 248, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .dir-b-heat-item-on {
+    color: #e0a45e;
+    background: rgba(224, 164, 94, 0.13);
+    box-shadow: inset 0 0 0 0.14cqw rgba(224, 164, 94, 0.45);
+  }
+
+  /* 登录态 */
+  .dir-b-dot-on {
+    width: 1.2cqw;
+    height: 1.2cqw;
+    border-radius: 50%;
+    background: #7fc78f;
+    flex: none;
+  }
+  .dir-b-account { display: flex; align-items: center; gap: 1.2cqw; font-size: 1.95cqw; font-weight: 600; }
+  .dir-b-account-name { color: rgba(238, 242, 248, 0.92); }
+  .dir-b-btn-ghost {
+    font-size: 1.65cqw;
+    font-weight: 600;
+    color: #e0a45e;
+    border: 0.14cqw solid rgba(224, 164, 94, 0.4);
+    border-radius: 1cqw;
+    padding: 0.5cqw 1.6cqw;
+  }
+
+  /* 复选行 */
+  .dir-b-check {
+    width: 2.1cqw;
+    height: 2.1cqw;
+    border-radius: 0.6cqw;
+    border: 0.16cqw solid rgba(255, 255, 255, 0.25);
+    flex: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5cqw;
+    color: #14171c;
+  }
+  .dir-b-check-on { background: #e0a45e; border-color: #e0a45e; font-weight: 800; }
+  .dir-b-check-text { font-size: 1.9cqw; color: rgba(238, 242, 248, 0.85); }
+  .dir-b-check-text .dir-b-row-sub { margin-top: 0.2cqw; }
+
+  /* 底部渐隐 */
+  .dir-b-fade {
+    position: absolute;
+    left: 24%;
+    right: 0;
+    bottom: 0;
+    height: 12cqw;
+    background: linear-gradient(to bottom, rgba(23, 26, 31, 0), #171a1f 82%);
+    pointer-events: none;
+  }
+  .dir-b-fade-hint {
+    position: absolute;
+    right: 3.4cqw;
+    bottom: 2cqw;
+    font-size: 1.5cqw;
+    color: rgba(238, 242, 248, 0.38);
+  }
+</style>
+
+<div class="dir-b-stage">
+  <div class="dir-b-titlebar">
+    <span class="dir-b-title">Ku-nya 设置</span>
+    <span class="dir-b-version">v2.14.0</span>
+    <span class="dir-b-titlebar-spacer"></span>
+    <span class="dir-b-titlebar-hint">更改即时生效</span>
+  </div>
+
+  <div class="dir-b-body">
+    <nav class="dir-b-nav">
+      <div class="dir-b-nav-label">设置</div>
+      <div class="dir-b-nav-item dir-b-nav-item-active">
+        <span class="dir-b-nav-dot"></span>全部
+      </div>
+      <div class="dir-b-nav-item">
+        <span class="dir-b-nav-dot"></span>内容源
+        <span class="dir-b-nav-count">4</span>
+      </div>
+      <div class="dir-b-nav-item">
+        <span class="dir-b-nav-dot"></span>过滤
+        <span class="dir-b-nav-count">4</span>
+      </div>
+      <div class="dir-b-nav-item">
+        <span class="dir-b-nav-dot"></span>账户
+      </div>
+      <div class="dir-b-nav-foot">已登录 · Yukino_821</div>
+    </nav>
+
+    <div class="dir-b-content">
+      <!-- 通用 -->
+      <section class="dir-b-group">
+        <div class="dir-b-group-head">通用<span class="dir-b-group-meta">2 项</span></div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">浏览模式
+            <span class="dir-b-row-sub">纯看模式隐藏页面上的一切交互按钮</span>
+          </span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-seg">
+              <span class="dir-b-seg-item dir-b-seg-item-on">纯看</span>
+              <span class="dir-b-seg-item">交互</span>
+            </span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">内容安全</span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-seg">
+              <span class="dir-b-seg-item dir-b-seg-item-on">仅安全</span>
+              <span class="dir-b-seg-item">包含 R-18</span>
+            </span>
+          </span>
+        </div>
+      </section>
+
+      <!-- 内容源 -->
+      <section class="dir-b-group">
+        <div class="dir-b-group-head">内容源<span class="dir-b-group-meta">4 项</span></div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">排行榜来源</span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-select">插画日榜<span class="dir-b-select-caret">▾</span></span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">自定义标签
+            <span class="dir-b-row-sub">选择「自定义」来源时生效</span>
+          </span>
+          <span class="dir-b-row-control dir-b-chips">
+            <span class="dir-b-chip">初音ミク <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-chip">可爱 <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-input">添加标签…</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">标签热度</span>
+          <span class="dir-b-row-control dir-b-heat">
+            <span class="dir-b-heat-item">全部</span>
+            <span class="dir-b-heat-item">500+</span>
+            <span class="dir-b-heat-item">1000+</span>
+            <span class="dir-b-heat-item">5000+</span>
+            <span class="dir-b-heat-item">10000+</span>
+            <span class="dir-b-heat-item dir-b-heat-item-on">混合</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">可选来源
+            <span class="dir-b-row-sub">漫画日榜 · 动图 · 原创 · 最新 · 人气 · 发现(需登录)· 初音ミク(自定义)</span>
+          </span>
+        </div>
+      </section>
+
+      <!-- 账户 -->
+      <section class="dir-b-group">
+        <div class="dir-b-group-head">账户</div>
+        <div class="dir-b-row">
+          <span class="dir-b-account">
+            <span class="dir-b-dot-on"></span>pixiv 已登录&nbsp;<span class="dir-b-account-name">Yukino_821</span>
+          </span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-btn-ghost">刷新</span>
+          </span>
+        </div>
+      </section>
+
+      <!-- 过滤 -->
+      <section class="dir-b-group">
+        <div class="dir-b-group-head">过滤<span class="dir-b-group-meta">4 项</span></div>
+        <div class="dir-b-row">
+          <span class="dir-b-check dir-b-check-on">✓</span>
+          <span class="dir-b-check-text">隐藏多图作品
+            <span class="dir-b-row-sub">多图作品多为漫画</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-check"></span>
+          <span class="dir-b-check-text">隐藏 AI 生成作品</span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">收藏数不低于</span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-input dir-b-input-num">1000</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">屏蔽画师</span>
+          <span class="dir-b-row-control dir-b-chips">
+            <span class="dir-b-chip dir-b-chip-muted">画师A <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-input">添加画师名…</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-row-label">屏蔽标签</span>
+          <span class="dir-b-row-control dir-b-chips">
+            <span class="dir-b-chip dir-b-chip-muted">R-18G <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-chip dir-b-chip-muted">AI 生成 <span class="dir-b-chip-x">×</span></span>
+            <span class="dir-b-input">添加标签…</span>
+          </span>
+        </div>
+        <div class="dir-b-row">
+          <span class="dir-b-check dir-b-check-on">✓</span>
+          <span class="dir-b-check-text">排除竖长图,高/宽不超过</span>
+          <span class="dir-b-row-control">
+            <span class="dir-b-input dir-b-input-num">3</span>
+          </span>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="dir-b-fade"></div>
+  <div class="dir-b-fade-hint">向下滚动查看全部</div>
+</div>

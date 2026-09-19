@@ -35,6 +35,12 @@ export interface Options {
   usePixivLogin: boolean
   /** Hide multi-page works (usually manga) from the wall. */
   isExcludingMultiPage: boolean
+  /** Hide AI-generated works (pixiv aiType 2) from the wall. */
+  isExcludingAI: boolean
+  /** Bookmark floor; 0 = unfiltered. Sources without counts are never filtered. */
+  minBookmarks: number
+  /** Author names to hide, matched case-insensitively against the entry's author. */
+  excludedAuthors: string[]
   excludingTags: string[]
   isExcludingHighAspectRatio: boolean
   smallestIncludableAspectRatio: number
@@ -51,6 +57,9 @@ export const defaultOptions: Options = {
   // pixiv; until then requests are anonymous either way.
   usePixivLogin: true,
   isExcludingMultiPage: false,
+  isExcludingAI: false,
+  minBookmarks: 0,
+  excludedAuthors: [],
   excludingTags: [],
   isExcludingHighAspectRatio: false,
   smallestIncludableAspectRatio: 3,
@@ -75,6 +84,10 @@ export const getOptions = async (): Promise<Options> => {
   const tier = Number(
     storedTier === undefined ? defaultOptions.tagBookmarkTier : storedTier,
   )
+  const storedFloor = await storageUtil.getValue('min_bookmarks')
+  const minBookmarks = Number(
+    storedFloor === undefined ? defaultOptions.minBookmarks : storedFloor,
+  )
 
   return {
     mode: await storageUtil.getValue('content', defaultOptions.mode),
@@ -90,6 +103,17 @@ export const getOptions = async (): Promise<Options> => {
     isExcludingMultiPage: await storageUtil.getBoolean(
       'is_excluding_multi_page',
       defaultOptions.isExcludingMultiPage,
+    ),
+    isExcludingAI: await storageUtil.getBoolean(
+      'is_excluding_ai',
+      defaultOptions.isExcludingAI,
+    ),
+    minBookmarks: Number.isFinite(minBookmarks)
+      ? minBookmarks
+      : defaultOptions.minBookmarks,
+    excludedAuthors: await storageUtil.getJSON(
+      'excluding_authors',
+      defaultOptions.excludedAuthors,
     ),
     excludingTags: await storageUtil.getJSON(
       'excluding_tags',
@@ -156,6 +180,42 @@ export const setExcludeMultiPage = (isExcluding: boolean) => {
       method: 'setExcludeMultiPage',
       params: {
         is_excluding_multi_page: isExcluding,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setExcludeAI = (isExcluding: boolean) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setExcludeAI',
+      params: {
+        is_excluding_ai: isExcluding,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setMinBookmarks = (minBookmarks: number) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setMinBookmarks',
+      params: {
+        min_bookmarks: minBookmarks,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setExcludedAuthors = (authors: string[]) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setExcludedAuthors',
+      params: {
+        excluding_authors: authors,
       },
     },
     () => {},

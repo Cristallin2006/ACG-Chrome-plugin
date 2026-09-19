@@ -12,13 +12,11 @@ interface State {
 }
 
 /**
- * Multi-page works are usually manga (or photo-set style compilations): the
- * wall can only show the first page, which is a cover more often than an
- * illustration. Every content source carries the page count, so this filter
- * costs no extra requests (see api.IllustEntry.pageCount).
+ * pixiv marks AI-generated works with aiType 2. Sources that don't report the
+ * flag are never filtered (see api.IllustEntry.aiType).
  */
-export default class MultiPageSection extends Component<Props, State> {
-  private checkboxId = 'checkbox_for_multi_page'
+export default class AISection extends Component<Props, State> {
+  private checkboxId = 'checkbox_for_ai'
 
   constructor(props: Props) {
     super(props)
@@ -34,12 +32,12 @@ export default class MultiPageSection extends Component<Props, State> {
 
   render() {
     return (
-      <SettingSection title="隐藏多图作品" note="多为漫画;图墙只能展示封面">
+      <SettingSection title="隐藏 AI 生成作品" note="按 pixiv 的 AI 标记过滤">
         <Check
           id={this.checkboxId}
           checked={this.state.is_excluding}
           onChange={this.handleChange}
-          label="隐藏多图作品"
+          label="隐藏 AI 生成作品"
         />
       </SettingSection>
     )

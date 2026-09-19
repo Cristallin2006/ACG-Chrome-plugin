@@ -1,5 +1,6 @@
 import { h, Component } from 'preact'
 import SettingSection from './SettingSection'
+import Check from './Check'
 
 interface Props {
   initial_smallest_includable_aspect_ratio: number
@@ -25,16 +26,13 @@ export default class AspectRatioSettingSection extends Component<Props, State> {
     }
   }
 
-  handleCheckboxClick = (ev: Event) => {
+  handleToggle = (checked: boolean) => {
     const {
       state: { smallest_includable_aspect_ratio },
       props: { update },
     } = this
-    const target = ev.target as HTMLInputElement
-    this.setState({
-      is_excluding_high_aspect_ratio: target.checked,
-    })
-    update(target.checked, smallest_includable_aspect_ratio)
+    this.setState({ is_excluding_high_aspect_ratio: checked })
+    update(checked, smallest_includable_aspect_ratio)
   }
 
   handleNumberChange = (ev: Event) => {
@@ -44,16 +42,14 @@ export default class AspectRatioSettingSection extends Component<Props, State> {
     } = this
     const target = ev.target as HTMLInputElement
     const value = parseInt(target.value, 10)
-    this.setState({
-      smallest_includable_aspect_ratio: value,
-    })
+    this.setState({ smallest_includable_aspect_ratio: value })
     update(is_excluding_high_aspect_ratio, value)
   }
 
   render() {
     const {
       aspectRatioSettingsId,
-      handleCheckboxClick,
+      handleToggle,
       handleNumberChange,
       state: {
         smallest_includable_aspect_ratio,
@@ -62,27 +58,24 @@ export default class AspectRatioSettingSection extends Component<Props, State> {
     } = this
 
     return (
-      <SettingSection title="Mute Setting(Aspect Ratio)">
-        <input
-          type="checkbox"
-          id={aspectRatioSettingsId}
-          onClick={handleCheckboxClick}
-          checked={is_excluding_high_aspect_ratio}
-        />
-        {h('label', {
-          htmlFor: aspectRatioSettingsId,
-          children: [
-            'Excluding images with over ',
-            <input
-              type="number"
-              style="width: 3em;"
-              value={smallest_includable_aspect_ratio}
-              onChange={handleNumberChange}
-              disabled={!is_excluding_high_aspect_ratio}
-            />,
-            ' times aspect ratio(The narrow side as 1.0).',
-          ],
-        })}
+      <SettingSection title="排除竖长图" note="高 / 宽不超过右侧倍数">
+        <span className="knp-cluster">
+          <input
+            type="number"
+            className="knp-num"
+            aria-label="高宽比上限"
+            min={1}
+            value={smallest_includable_aspect_ratio}
+            onChange={handleNumberChange}
+            disabled={!is_excluding_high_aspect_ratio}
+          />
+          <Check
+            id={aspectRatioSettingsId}
+            checked={is_excluding_high_aspect_ratio}
+            onChange={handleToggle}
+            label="排除竖长图"
+          />
+        </span>
       </SettingSection>
     )
   }

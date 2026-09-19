@@ -1,5 +1,6 @@
 import { h, Component } from 'preact'
 import SettingSection from './SettingSection'
+import Toggle from './Toggle'
 
 interface Props {
   initial_is_safe: boolean
@@ -20,30 +21,23 @@ export default class SafeSection extends Component<Props, State> {
     }
   }
 
-  handleCheckboxClick = (ev: Event) => {
-    const {
-      props: { update },
-    } = this
-    const target = ev.target as HTMLInputElement
-    this.setState({
-      is_safe: target.checked,
-    })
-    update(target.checked)
+  handleChange = (checked: boolean) => {
+    this.setState({ is_safe: checked })
+    this.props.update(checked)
   }
 
   render() {
     return (
-      <SettingSection title="[beta] Safe Setting(only apply to daily ranking)">
-        <input
-          type="checkbox"
+      <SettingSection
+        title="内容安全"
+        note="开启后不显示敏感作品(作用于日榜类来源)"
+      >
+        <Toggle
           id={this.safeSettingsId}
-          onClick={this.handleCheckboxClick}
           checked={this.state.is_safe}
+          onChange={this.handleChange}
+          label="仅显示安全内容"
         />
-        {h('label', {
-          htmlFor: this.safeSettingsId,
-          children: ['not display sensitive illustrations'],
-        })}
       </SettingSection>
     )
   }

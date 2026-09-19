@@ -1,6 +1,7 @@
-import { h, Component, FunctionalComponent } from 'preact'
+import { h, Component } from 'preact'
 import SettingSection from './SettingSection'
 import TagInput from './TagInput'
+import ChipList from './ChipList'
 
 interface Props {
   initialTags: string[]
@@ -13,8 +14,8 @@ interface State {
 
 /**
  * User-defined tag categories. Each entry becomes a `tag:<keyword>` choice in
- * the Ranking Mode dropdown and turns the new tab wall into that tag's latest
- * search results (see api.getIllustsByTag).
+ * the content-source dropdown and turns the new tab wall into that tag's
+ * latest search results.
  */
 export default class CustomTagSection extends Component<Props, State> {
   handleTagAdd = (value: string) => {
@@ -52,37 +53,22 @@ export default class CustomTagSection extends Component<Props, State> {
       state: { tags },
     } = this
     return (
-      <SettingSection title="Custom Category(Tag)">
+      <SettingSection
+        title="自定义标签"
+        note="添加后出现在「内容源」列表"
+        stack
+      >
+        <ChipList
+          values={tags}
+          onDelete={handleTagDelete}
+          empty="还没有自定义标签"
+        />
         <TagInput
-          label="Category tag"
-          placeholder="初音ミク"
+          label="添加自定义标签"
+          placeholder="添加标签,如 初音ミク…"
           add={handleTagAdd}
         />
-        <ul>
-          {tags.map(tag => (
-            <Tag key={tag} name={tag} onDelete={handleTagDelete} />
-          ))}
-        </ul>
-        {tags.length > 0 && (
-          <p>Added tags appear in the Ranking Mode dropdown above.</p>
-        )}
       </SettingSection>
     )
   }
-}
-
-const Tag: FunctionalComponent<{
-  name: string
-  onDelete(name: string): void
-}> = ({ name, onDelete }) => {
-  const handleTagDelete = () => onDelete(name)
-
-  return (
-    <li className="tag">
-      {name}
-      <button value="tag.name" onClick={handleTagDelete}>
-        x
-      </button>
-    </li>
-  )
 }

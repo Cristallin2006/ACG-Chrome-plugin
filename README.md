@@ -45,7 +45,12 @@ wall** that reveals itself screen by screen as you scroll.
 >   内容源，无需 Premium
 > - **pixiv 登录会话**：可开关请求携带登录状态（按账号浏览设置返回，含 R-18 开关），
 >   弹窗实时探测并显示登录态
-> - **多图过滤**：一键剔除多页作品（多为漫画，墙上只能展示封面）
+> - **过滤三件套**：一键剔除多页作品（多为漫画，墙上只能展示封面）、按 pixiv 标记
+>   剔除 AI 生成作品、按收藏数下限筛图（来源未报告收藏数时不过滤）；另可按画师名
+>   屏蔽——四者与屏蔽标签、安全级、宽高比一样，对所有内容源生效
+> - **设置面板「暗房延伸」**：popup 与新标签页同一套暗房材质——底片片夹式分组卡片、
+>   琥珀只给开态开关与焦点、登录态琥珀呼吸点
+> - 键盘流：`/`、`Ctrl/Cmd+K` 聚焦搜索，任意字符直接开搜，`⇧R` 换一批，`Esc` 收起
 > - 图源修复：统一归一化为等比 `master` 图（修复 `_custom` 方图缩略图导致的
 >   拉伸），分辨率提升至 `600x1200_90`
 > - 插画均来自 pixiv 公开榜单与公开搜索/推荐接口，版权归原作者及 pixiv 所有；
@@ -93,9 +98,12 @@ why.
   **bookmark-tier filter** (`Nusers入り`, a single tier or a layered mix) so only
   works above a popularity floor reach the wall, and matching is exact: plain tag
   searches use pixiv's exact mode, tiered searches re-check every entry's tags
-  client-side, so unrelated fuzzy matches never make it onto the wall. A popup
-  toggle also hides **multi-page works** (usually manga, whose wall tile could
-  only show the cover)
+  client-side, so unrelated fuzzy matches never make it onto the wall. Popup
+  filters hide **multi-page works** (usually manga, whose wall tile could only
+  show the cover), **AI-generated works** (pixiv's own aiType flag), anything
+  below a **bookmark floor** (sources that don't report counts pass through),
+  and any **muted author** — on top of the muted-tag, safety and aspect-ratio
+  filters, across every source
 - A frosted search capsule sits at the bottom centre and searches **the web** with
   your default search engine (what the address bar does); anything that looks like
   an address is opened directly. Focusing it makes the capsule **rise to the
@@ -106,9 +114,12 @@ why.
   clickable at all, so the page can be scrolled without opening anything by accident
   — and **交互 / interactive**, where they link to the artwork page. The choice is
   remembered, and the popup exposes it too
+- The settings popup wears the same darkroom as the wall: film-sleeve group
+  cards, the amber reserved for the on-switch, focus rings and the login pulse
 - `/` or `Ctrl/Cmd+K` focuses the search field, any printable character starts a
-  query, `Esc` clears and steps out; in watch mode the capsule steps back to a ghost
-  while the pointer is still and returns the moment you move
+  query, `Shift+R` deals a fresh wall, `Esc` clears and steps out; in watch mode
+  the capsule steps back to a ghost while the pointer is still and returns the
+  moment you move
 
 See [DESIGN.md](DESIGN.md) for the visual system it implements.
 

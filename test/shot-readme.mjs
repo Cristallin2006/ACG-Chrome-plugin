@@ -208,7 +208,20 @@ async function main() {
       'popup controls',
     )
     await sleep(600)
+    // The panel is taller than the window: pin the viewport to the content's
+    // full height so the shot shows every group, at 2x for the README.
+    const panelHeight = await popup.evaluate(
+      `document.documentElement.scrollHeight`,
+    )
+    await popup.send('Emulation.setDeviceMetricsOverride', {
+      width: 400,
+      height: Math.min(Math.ceil(panelHeight), 2000),
+      deviceScaleFactor: 2,
+      mobile: false,
+    })
+    await sleep(300)
     await shot(popup, 'popup.png')
+    await popup.send('Emulation.clearDeviceMetricsOverride')
   } finally {
     spawnSync('taskkill', ['/PID', String(child.pid), '/T', '/F'], { stdio: 'ignore' })
   }

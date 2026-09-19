@@ -1,5 +1,6 @@
 import { h, Component } from 'preact'
 import SettingSection from './SettingSection'
+import Segmented from './Segmented'
 import { TAG_TIER_MIXED } from '../lib/api'
 
 interface Props {
@@ -14,16 +15,16 @@ interface State {
 const TIERS = [0, 100, 500, 1000, 5000, 10000, TAG_TIER_MIXED]
 
 const tierLabel = (tier: number): string => {
-  if (tier === 0) return 'No filter 不限'
-  if (tier === TAG_TIER_MIXED) return 'Layered mix 分层混合 (500 → 10000)'
-  return `${tier}+ bookmarks ${tier}users入り`
+  if (tier === 0) return '全部'
+  if (tier === TAG_TIER_MIXED) return '混合'
+  return `${tier}+`
 }
 
 /**
  * Popularity filter for the custom tag categories. pixiv keeps the popular
  * sort order behind premium, so the free workaround is the `Nusers入り`
  * bookmark-floor keyword — or the layered mix, which queries every tier and
- * merges them high-first (see api.getIllustsByTag).
+ * merges them high-first.
  */
 export default class TagHeatSection extends Component<Props, State> {
   constructor(props: Props) {
@@ -33,11 +34,11 @@ export default class TagHeatSection extends Component<Props, State> {
     }
   }
 
-  handleTierChange = (ev: Event) => {
+  handleTierChange = (value: string) => {
     const { update } = this.props
-    const value = Number((ev.target as HTMLSelectElement).value)
-    this.setState({ value })
-    update(value)
+    const tier = Number(value)
+    this.setState({ value: tier })
+    update(tier)
   }
 
   render() {
@@ -47,20 +48,16 @@ export default class TagHeatSection extends Component<Props, State> {
     } = this
 
     return (
-      <SettingSection title="Tag Heat Filter(users入り)">
-        <label for="tag-tier-selector">Bookmark floor:</label>
-        <select
-          id="tag-tier-selector"
+      <SettingSection title="标签热度" note="仅作用于自定义标签" stack>
+        <Segmented
+          name="knp-tag-tier"
           value={String(value)}
+          options={TIERS.map(tier => ({
+            value: String(tier),
+            label: tierLabel(tier),
+          }))}
           onChange={handleTierChange}
-        >
-          {TIERS.map(tier => (
-            <option key={tier} value={String(tier)}>
-              {tierLabel(tier)}
-            </option>
-          ))}
-        </select>
-        <p>Only applies to custom tag categories. 仅作用于自定义标签分类。</p>
+        />
       </SettingSection>
     )
   }

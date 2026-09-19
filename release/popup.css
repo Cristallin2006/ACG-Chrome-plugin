@@ -1,24 +1,555 @@
-#setting {
+/*
+ * Ku-nya 设置 popup — Direction A「暗房延伸」. See DESIGN.md: the panel is the
+ * gallery's dimmer console — same warm near-black, same smoked surfaces, and
+ * the amber accent reserved for the switch's on state, focus rings, and the
+ * login pulse.
+ */
+
+:root {
+  --void: #131110;
+  --surface: rgba(255, 255, 255, 0.028);
+  --well: rgba(0, 0, 0, 0.32);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --ink: rgba(255, 255, 255, 0.92);
+  --ink-soft: rgba(255, 255, 255, 0.68);
+  --ink-faint: rgba(255, 255, 255, 0.42);
+  --accent: #e0a45e;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--void);
+}
+
+body {
   width: 400px;
-  padding: 12px;
+  color: var(--ink);
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system,
+    "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  font-size: 13.5px;
+  letter-spacing: 0.3px;
+  -webkit-font-smoothing: antialiased;
 }
 
-.stale-worker {
-  margin: 0 0 12px;
-  padding: 8px 10px;
-  border: 1px solid #c53929;
-  border-radius: 6px;
-  background: #fdeceb;
-  color: #8c1d18;
-  font-size: 12px;
+::selection {
+  background: var(--accent);
+  color: #1a1512;
 }
 
-.login-status {
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 5px;
+  border: 3px solid var(--void);
+}
+
+/* A hint of the darkroom's warmth, like the safelight's afterglow. */
+.knp {
+  padding: 18px 14px 20px;
+  background: radial-gradient(
+    360px 200px at 50% -60px,
+    rgba(224, 164, 94, 0.05),
+    transparent 70%
+  );
+}
+
+.knp-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 4px 14px;
+}
+
+.knp-head__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.knp-head__ver {
+  font-size: 11px;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- group cards: film-clip sleeves ---- */
+.knp-card {
+  position: relative;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+/* The notch on the sleeve's top edge — the grouping's memory point. */
+.knp-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 28px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.knp-card > * + *,
+.knp-card .knp-row + .knp-row {
+  border-top: 1px solid var(--line-soft);
+}
+
+/* ---- rows ---- */
+.knp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+}
+
+.knp-row--stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.knp-row__text {
+  min-width: 0;
+}
+
+.knp-row__title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 550;
+}
+
+.knp-row__note {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  font-weight: 400;
+}
+
+.knp-row__control {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-.login-refresh {
-  margin-left: auto;
+.knp-row--stack .knp-row__control {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.knp-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---- segmented control (neutral: the selected segment is lit, not amber) ---- */
+.knp-seg {
+  display: flex;
+  padding: 2px;
+  gap: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 8px;
+  background: var(--well);
+}
+
+.knp-row--stack .knp-seg {
+  align-self: stretch;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+
+.knp-row--stack .knp-seg__item span {
+  text-align: center;
+  padding: 5px 4px;
+}
+
+.knp-seg__item input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.knp-seg__item span {
+  display: block;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+
+.knp-seg__item input:checked + span {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.knp-seg__item input:focus-visible + span {
+  box-shadow: 0 0 0 2px rgba(224, 164, 94, 0.55);
+}
+
+/* ---- switch: the amber's home ---- */
+.knp-switch {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  cursor: pointer;
+}
+
+.knp-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.knp-switch__track {
+  display: flex;
+  align-items: center;
+  width: 38px;
+  height: 22px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.1);
+  transition: background 200ms var(--ease-out),
+    border-color 200ms var(--ease-out);
+}
+
+.knp-switch__knob {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  transition: transform 200ms var(--ease-out),
+    background 200ms var(--ease-out);
+}
+
+.knp-switch input:checked ~ .knp-switch__track {
+  background: var(--accent);
+  border-color: transparent;
+}
+
+.knp-switch input:checked ~ .knp-switch__track .knp-switch__knob {
+  transform: translateX(16px);
+  background: rgba(255, 252, 248, 0.96);
+}
+
+.knp-switch input:focus-visible ~ .knp-switch__track {
+  box-shadow: 0 0 0 2px rgba(224, 164, 94, 0.55);
+}
+
+/* ---- neutral square checkbox for filter rows ---- */
+.knp-check {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  cursor: pointer;
+}
+
+.knp-check input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.knp-check__box {
+  position: relative;
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.04);
+  transition: background 140ms var(--ease-out),
+    border-color 140ms var(--ease-out);
+}
+
+.knp-check__box::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border-right: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  transform: rotate(42deg) scale(0);
+  transition: transform 140ms var(--ease-out);
+}
+
+.knp-check input:checked ~ .knp-check__box {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.knp-check input:checked ~ .knp-check__box::after {
+  transform: rotate(42deg) scale(1);
+}
+
+.knp-check input:focus-visible ~ .knp-check__box {
+  box-shadow: 0 0 0 2px rgba(224, 164, 94, 0.55);
+}
+
+/* ---- select / inputs / buttons ---- */
+.knp-select {
+  max-width: 190px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 7px;
+  background: var(--well);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.knp-select option {
+  background: #1c1917;
+  color: var(--ink);
+}
+
+.knp-num {
+  width: 64px;
+  padding: 6px 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  background: var(--well);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.knp-num:disabled {
+  opacity: 0.4;
+}
+
+.knp-addrow {
+  display: flex;
+  gap: 8px;
+}
+
+.knp-addrow input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 7px;
+  background: var(--well);
+  color: var(--ink);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+.knp-addrow input::placeholder {
+  color: rgba(255, 255, 255, 0.36);
+}
+
+.knp-select:focus-visible,
+.knp-num:focus-visible,
+.knp-addrow input:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(224, 164, 94, 0.18);
+}
+
+.knp-btn {
+  flex: none;
+  padding: 6px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: background 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+
+.knp-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--ink);
+}
+
+.knp-btn:active {
+  transform: scale(0.97);
+}
+
+.knp-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(224, 164, 94, 0.55);
+}
+
+.knp-btn--primary {
+  width: 100%;
+  border-color: rgba(224, 164, 94, 0.45);
+  background: rgba(224, 164, 94, 0.14);
+  color: var(--accent);
+}
+
+.knp-btn--primary:hover {
+  background: rgba(224, 164, 94, 0.22);
+  color: var(--accent);
+}
+
+/* ---- chips ---- */
+.knp-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.knp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.88);
+  white-space: nowrap;
+}
+
+.knp-chip__x {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-faint);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 140ms var(--ease-out), color 140ms var(--ease-out);
+}
+
+.knp-chip__x:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--ink);
+}
+
+.knp-chips__empty {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* ---- login row: the breathing dot ---- */
+.knp-login {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.knp-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.knp-dot--on {
+  background: var(--accent);
+  animation: knp-breathe 2.6s var(--ease-out) infinite;
+}
+
+.knp-dot--pending {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+@keyframes knp-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.knp-login__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.knp-login__sub {
+  margin-top: 1px;
+  font-size: 11.5px;
+  color: var(--ink-faint);
+}
+
+.knp-foot {
+  margin: 4px 4px 0;
+  font-size: 11px;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+/* ---- stale service worker warning ---- */
+.stale-worker {
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  border: 1px solid rgba(224, 164, 94, 0.5);
+  border-radius: 8px;
+  background: rgba(224, 164, 94, 0.1);
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .knp-dot--on {
+    animation: none;
+  }
+  .knp-switch__track,
+  .knp-switch__knob,
+  .knp-check__box,
+  .knp-check__box::after,
+  .knp-seg__item span,
+  .knp-btn,
+  .knp-chip__x {
+    transition: none;
+  }
 }

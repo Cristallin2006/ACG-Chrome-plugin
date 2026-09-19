@@ -1,0 +1,212 @@
+<!-- 方向 C · 印刷目录：浅暖纸面 + 深墨字 + 衬线大编号 + 表单线控件 -->
+<style>
+  .dir-c-stage{
+    container-type:inline-size;
+    width:100%;
+    aspect-ratio:5/7;
+    overflow:hidden;
+    isolation:isolate;
+    position:relative;
+    box-sizing:border-box;
+    background:linear-gradient(175deg,#f7f3ec 0%,#f5f1ea 55%,#f2ede3 100%);
+    color:#241f1a;
+    font-family:"Segoe UI","PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+    font-variant-numeric:tabular-nums;
+    padding:5cqw 6cqw 0;
+  }
+  .dir-c-stage *,.dir-c-stage *::before,.dir-c-stage *::after{box-sizing:border-box;margin:0;padding:0;font-style:normal;}
+
+  /* ── 标题栏 ── */
+  .dir-c-head{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:2.6cqw;border-bottom:0.3cqw solid #241f1a;}
+  .dir-c-brand{font-family:Georgia,"Iowan Old Style",serif;font-size:4.6cqw;line-height:1;letter-spacing:0.02em;color:#241f1a;}
+  .dir-c-brand-cn{font-family:"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:2.9cqw;font-weight:600;margin-left:1.4cqw;letter-spacing:0.28em;}
+  .dir-c-sub{margin-top:1.5cqw;font-size:1.9cqw;color:rgba(36,31,26,.62);letter-spacing:0.12em;}
+  .dir-c-ver{font-family:Georgia,"Iowan Old Style",serif;font-size:2cqw;color:#b4762e;padding-bottom:0.4cqw;}
+
+  /* ── 章节：目录节奏 ── */
+  .dir-c-sec{display:grid;grid-template-columns:8cqw 1fr;column-gap:1.6cqw;padding:2.3cqw 0 2.1cqw;border-bottom:0.14cqw solid rgba(36,31,26,.2);}
+  .dir-c-num{font-family:Georgia,"Iowan Old Style",serif;font-size:3.8cqw;line-height:1.05;color:#b4762e;font-variant-numeric:tabular-nums;}
+  .dir-c-body{min-width:0;}
+  .dir-c-row{display:flex;align-items:baseline;justify-content:space-between;gap:2cqw;}
+  .dir-c-title{font-size:2.1cqw;font-weight:600;letter-spacing:0.1em;color:#241f1a;white-space:nowrap;}
+  .dir-c-note{margin-top:1.2cqw;font-size:1.9cqw;line-height:1.5;color:rgba(36,31,26,.55);}
+
+  /* ── 表单线控件：下划线而非填充卡片 ── */
+  .dir-c-opts{display:flex;align-items:baseline;gap:2.6cqw;flex-wrap:wrap;justify-content:flex-end;}
+  .dir-c-opt{font-size:1.95cqw;color:rgba(36,31,26,.55);padding-bottom:0.5cqw;border-bottom:0.16cqw solid transparent;white-space:nowrap;}
+  .dir-c-opt-on{color:#b4762e;font-weight:600;border-bottom-color:#b4762e;}
+
+  .dir-c-select{display:flex;align-items:baseline;gap:1.4cqw;font-size:1.95cqw;font-weight:600;color:#241f1a;border-bottom:0.16cqw solid rgba(36,31,26,.5);padding-bottom:0.5cqw;white-space:nowrap;}
+  .dir-c-caret{font-size:1.7cqw;color:#b4762e;}
+
+  .dir-c-chips{display:flex;align-items:center;gap:1.4cqw;flex-wrap:wrap;margin-top:1.6cqw;}
+  .dir-c-chip{display:inline-flex;align-items:baseline;gap:0.8cqw;font-size:1.9cqw;color:#241f1a;border:0.14cqw solid rgba(36,31,26,.4);border-radius:0.7cqw;padding:0.5cqw 1.2cqw;background:transparent;}
+  .dir-c-chip-x{color:#b4762e;font-weight:600;}
+  .dir-c-input{font-size:1.9cqw;color:rgba(36,31,26,.45);border-bottom:0.16cqw solid rgba(36,31,26,.35);padding:0.5cqw 0.2cqw;min-width:16cqw;}
+
+  /* ── 登录行 ── */
+  .dir-c-login{display:flex;align-items:baseline;gap:1.2cqw;font-size:1.95cqw;}
+  .dir-c-dot{color:#b4762e;font-size:1.6cqw;transform:translateY(-0.1cqw);}
+  .dir-c-user{font-weight:600;font-family:Georgia,"Iowan Old Style",serif;letter-spacing:0.02em;}
+  .dir-c-action{font-size:1.9cqw;color:#b4762e;font-weight:600;border-bottom:0.16cqw solid #b4762e;padding-bottom:0.3cqw;white-space:nowrap;}
+
+  /* ── 勾选项 ── */
+  .dir-c-checks{display:flex;flex-direction:column;gap:1.3cqw;margin-top:1.5cqw;}
+  .dir-c-checkline{display:flex;align-items:baseline;gap:1.3cqw;font-size:1.9cqw;color:#241f1a;}
+  .dir-c-box{display:inline-flex;align-items:center;justify-content:center;width:2cqw;height:2cqw;border:0.16cqw solid rgba(36,31,26,.55);border-radius:0.3cqw;transform:translateY(0.25cqw);flex:none;}
+  .dir-c-box-on{border-color:#b4762e;color:#b4762e;}
+  .dir-c-tick{font-size:1.7cqw;line-height:1;font-weight:700;}
+  .dir-c-dim{color:rgba(36,31,26,.55);}
+  .dir-c-field{display:inline-block;min-width:7cqw;text-align:center;font-size:1.95cqw;font-weight:600;color:#b4762e;border-bottom:0.16cqw solid #b4762e;padding:0 0.8cqw 0.3cqw;font-variant-numeric:tabular-nums;}
+
+  /* ── 底部渐隐：暗示滚动 ── */
+  .dir-c-fade{position:absolute;left:0;right:0;bottom:0;height:9cqw;background:linear-gradient(to bottom,rgba(245,241,234,0),#f5f1ea 78%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:1.6cqw;}
+  .dir-c-fade-note{font-family:Georgia,"Iowan Old Style",serif;font-size:1.7cqw;letter-spacing:0.3em;color:rgba(36,31,26,.45);}
+</style>
+
+<div class="dir-c-stage">
+  <header class="dir-c-head">
+    <div>
+      <div class="dir-c-brand">Ku-nya<span class="dir-c-brand-cn">设置</span></div>
+      <div class="dir-c-sub">pixiv 新标签页拼图墙 · 设置目录</div>
+    </div>
+    <div class="dir-c-ver">v2.14.0</div>
+  </header>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">01</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">浏览模式</h3>
+        <div class="dir-c-opts">
+          <span class="dir-c-opt dir-c-opt-on">纯看</span>
+          <span class="dir-c-opt">交互</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">02</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">内容安全</h3>
+        <div class="dir-c-opts">
+          <span class="dir-c-opt dir-c-opt-on">仅安全</span>
+          <span class="dir-c-opt">包含 R-18</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">03</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">内容源</h3>
+        <div class="dir-c-select">插画日榜<span class="dir-c-caret">▾</span></div>
+      </div>
+      <div class="dir-c-note">漫画日榜 · 动图 · 原创 · 最新 · 人气 · 发现（需登录）· ―― · 初音ミク（自定义）</div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">04</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">自定义标签</h3></div>
+      <div class="dir-c-chips">
+        <span class="dir-c-chip">初音ミク<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-chip">可爱<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-input">添加标签…</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">05</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">标签热度</h3>
+        <div class="dir-c-opts">
+          <span class="dir-c-opt">全部</span>
+          <span class="dir-c-opt">500+</span>
+          <span class="dir-c-opt">1000+</span>
+          <span class="dir-c-opt">5000+</span>
+          <span class="dir-c-opt">10000+</span>
+          <span class="dir-c-opt dir-c-opt-on">混合</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">06</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row">
+        <h3 class="dir-c-title">pixiv 登录</h3>
+        <div class="dir-c-login">
+          <span class="dir-c-dot">●</span><span>已登录&nbsp;<span class="dir-c-user">Yukino_821</span></span>
+        </div>
+        <span class="dir-c-action">刷新</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">07</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">过滤</h3></div>
+      <div class="dir-c-checks">
+        <div class="dir-c-checkline">
+          <span class="dir-c-box dir-c-box-on"><span class="dir-c-tick">✓</span></span>
+          <span>隐藏多图作品<span class="dir-c-dim">（多为漫画）</span></span>
+        </div>
+        <div class="dir-c-checkline">
+          <span class="dir-c-box"></span>
+          <span class="dir-c-dim">隐藏 AI 生成作品</span>
+        </div>
+        <div class="dir-c-checkline">
+          <span>收藏数不低于</span><span class="dir-c-field">1000</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">08</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">屏蔽画师</h3></div>
+      <div class="dir-c-chips">
+        <span class="dir-c-chip">画师A<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-input">添加画师名…</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">09</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">屏蔽标签</h3></div>
+      <div class="dir-c-chips">
+        <span class="dir-c-chip">R-18G<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-chip">AI 生成<span class="dir-c-chip-x">×</span></span>
+        <span class="dir-c-input">添加标签…</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="dir-c-sec">
+    <div class="dir-c-num">10</div>
+    <div class="dir-c-body">
+      <div class="dir-c-row"><h3 class="dir-c-title">宽高比</h3></div>
+      <div class="dir-c-checks">
+        <div class="dir-c-checkline">
+          <span class="dir-c-box dir-c-box-on"><span class="dir-c-tick">✓</span></span>
+          <span>排除竖长图，高/宽不超过</span><span class="dir-c-field">3</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="dir-c-fade"><span class="dir-c-fade-note">· SCROLL ·</span></div>
+</div>

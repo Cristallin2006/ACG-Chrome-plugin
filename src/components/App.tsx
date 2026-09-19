@@ -77,7 +77,29 @@ export default class App extends Component<Props, State> {
     // Not passive: paging the wall means swallowing the native scroll.
     window.addEventListener('wheel', this.handleWheel, { passive: false })
     window.addEventListener('scroll', this.handleScroll, { passive: true })
+    window.addEventListener('keydown', this.handleKeyDown)
 
+    this.loadWall(0)
+  }
+
+  /**
+   * ⇧R deals a fresh wall: the ranking is re-fetched and the puzzle re-laid
+   * from the first screen. Plain typing belongs to the search field (see
+   * SearchBar's global keydown), so the chord needs the shift modifier.
+   */
+  private handleKeyDown = (e: KeyboardEvent) => {
+    if (!e.shiftKey || e.key !== 'R' || e.ctrlKey || e.metaKey || e.altKey) return
+    const target = e.target as HTMLElement | null
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'))
+      return
+    e.preventDefault()
+    this.reloadWall()
+  }
+
+  private reloadWall = () => {
+    window.clearTimeout(this.retryTimer)
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
     this.loadWall(0)
   }
 
@@ -157,6 +179,28 @@ export default class App extends Component<Props, State> {
         // Unknown page count is kept — never filter on missing data.
         return illust.pageCount === null || illust.pageCount <= 1
       })
+      .filter(illust => {
+        // pixiv marks AI-generated works with aiType 2.
+        if (!options.isExcludingAI) return true
+        // Unknown is kept — never filter on missing data.
+        return illust.aiType !== 2
+      })
+      .filter(illust => {
+        if (options.minBookmarks <= 0) return true
+        // Sources that don't report counts are kept — never filter on
+        // missing data, or those sources would empty the wall entirely.
+        return (
+          illust.bookmarkCount === null ||
+          illust.bookmarkCount >= options.minBookmarks
+        )
+      })
+      .filter(illust => {
+        if (options.excludedAuthors.length === 0) return true
+        const author = illust.authorName.toLowerCase().trim()
+        return !options.excludedAuthors.some(
+          name => name.toLowerCase().trim() === author,
+        )
+      })
   }
 
   /**
@@ -191,6 +235,7 @@ export default class App extends Component<Props, State> {
     window.removeEventListener('resize', this.handleResize)
     window.removeEventListener('wheel', this.handleWheel)
     window.removeEventListener('scroll', this.handleScroll)
+    window.removeEventListener('keydown', this.handleKeyDown)
     window.clearTimeout(this.resizeTimer)
     window.clearTimeout(this.wheelResetTimer)
     window.clearTimeout(this.pageLockTimer)

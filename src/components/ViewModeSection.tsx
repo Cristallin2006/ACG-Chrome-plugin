@@ -1,5 +1,6 @@
 import { h, Component } from 'preact'
 import SettingSection from './SettingSection'
+import Segmented from './Segmented'
 import { ViewModes } from '../lib/options'
 
 interface Props {
@@ -13,27 +14,29 @@ interface State {
 
 /** Popup twin of the switch on the new tab page. */
 export default class ViewModeSection extends Component<Props, State> {
-  private selectId = 'view-mode-selector'
-
   constructor(props: Props) {
     super(props)
     this.state = { value: props.initialValue }
   }
 
-  handleChange = (ev: Event) => {
-    const value = (ev.target as HTMLSelectElement).value as ViewModes
-    this.setState({ value })
-    this.props.update(value)
+  handleChange = (value: string) => {
+    const mode = value as ViewModes
+    this.setState({ value: mode })
+    this.props.update(mode)
   }
 
   render() {
     return (
-      <SettingSection title="View Mode">
-        <label for={this.selectId}>New tab gallery:</label>
-        <select id={this.selectId} value={this.state.value} onChange={this.handleChange}>
-          <option value={ViewModes.Watch}>watch only (no mis-taps)</option>
-          <option value={ViewModes.Interactive}>interactive (opens illust)</option>
-        </select>
+      <SettingSection title="浏览模式" note="纯看只保留拼图画廊,防止误触">
+        <Segmented
+          name="knp-view-mode"
+          value={this.state.value}
+          options={[
+            { value: ViewModes.Watch, label: '纯看' },
+            { value: ViewModes.Interactive, label: '交互' },
+          ]}
+          onChange={this.handleChange}
+        />
       </SettingSection>
     )
   }

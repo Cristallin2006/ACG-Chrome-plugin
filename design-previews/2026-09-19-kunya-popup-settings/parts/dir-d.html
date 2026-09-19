@@ -1,0 +1,265 @@
+<!-- 方向 D · 控制台:设置即配置文件 -->
+<style>
+.dir-d-stage {
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 5/7;
+  overflow: hidden;
+  isolation: isolate;
+  position: relative;
+  background: #131110;
+  color: rgba(255,255,255,.92);
+  font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  flex-direction: column;
+}
+.dir-d-stage * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── 标题栏 ── */
+.dir-d-titlebar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 4.2cqw 5cqw 3.2cqw;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.dir-d-title {
+  font-size: 3.1cqw;
+  font-weight: 700;
+  letter-spacing: .18cqw;
+}
+.dir-d-title::before { content: "❯ "; color: #e0a45e; font-weight: 400; }
+.dir-d-ver {
+  font-size: 1.8cqw;
+  color: rgba(255,255,255,.40);
+}
+
+.dir-d-scroll { flex: 1; min-height: 0; position: relative; }
+
+.dir-d-section {
+  display: block;
+  padding: 3cqw 5cqw 3.2cqw;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+.dir-d-section:last-child { border-bottom: none; }
+
+/* `# key` 注释行式区块标题 */
+.dir-d-head {
+  display: block;
+  font-size: 1.9cqw;
+  color: rgba(255,255,255,.42);
+  letter-spacing: .08cqw;
+  margin-bottom: 1.6cqw;
+}
+.dir-d-head::before { content: "# "; color: rgba(224,164,94,.55); }
+
+.dir-d-row {
+  display: flex;
+  align-items: baseline;
+  gap: 2.4cqw;
+  font-size: 2.15cqw;
+  line-height: 1.75;
+  font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace,
+              "PingFang SC", "Microsoft YaHei", "Noto Sans SC";
+}
+.dir-d-label {
+  flex: 0 0 24cqw;
+  color: rgba(255,255,255,.68);
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+              ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace;
+}
+.dir-d-val { color: rgba(255,255,255,.92); }
+.dir-d-dim  { color: rgba(255,255,255,.45); }
+.dir-d-amber { color: #e0a45e; }
+.dir-d-mark { font-family: ui-monospace, "Cascadia Mono", "JetBrains Mono", monospace; }
+
+/* 开态 [x] 琥珀,关态 [ ] 暗 */
+.dir-d-on  { color: #e0a45e; }
+.dir-d-off { color: rgba(255,255,255,.45); }
+
+.dir-d-choice { white-space: nowrap; }
+.dir-d-choice .dir-d-on { font-weight: 700; }
+
+/* 下拉形态 */
+.dir-d-select {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1.4cqw;
+  border-bottom: 1px dashed rgba(255,255,255,.35);
+  padding-bottom: .4cqw;
+}
+.dir-d-menu {
+  margin: 1.4cqw 0 0 2.6cqw;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6cqw 2.4cqw;
+  font-size: 2cqw;
+}
+.dir-d-menu .dir-d-item { display: flex; gap: 1cqw; align-items: baseline; }
+.dir-d-menu .dir-d-item .dir-d-mark { width: 2.4cqw; flex: none; }
+.dir-d-menu .dir-d-cur { color: #e0a45e; font-weight: 700; }
+
+/* chips */
+.dir-d-chips { display: flex; flex-wrap: wrap; gap: 1.2cqw; margin-bottom: 1.4cqw; }
+.dir-d-chip {
+  font-size: 1.95cqw;
+  padding: .5cqw 1.4cqw;
+  border: 1px solid rgba(255,255,255,.22);
+  color: rgba(255,255,255,.85);
+}
+.dir-d-chip .dir-d-x { color: #e0a45e; margin-left: .8cqw; }
+.dir-d-input {
+  font-size: 1.95cqw;
+  color: rgba(255,255,255,.42);
+  border: 1px dashed rgba(255,255,255,.22);
+  padding: .6cqw 1.4cqw;
+}
+.dir-d-input::before { content: "+ "; color: rgba(224,164,94,.6); }
+
+.dir-d-login {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 2.15cqw;
+}
+.dir-d-refresh {
+  color: #e0a45e;
+  font-size: 1.95cqw;
+  border: 1px solid rgba(224,164,94,.45);
+  padding: .4cqw 1.6cqw;
+}
+
+.dir-d-num {
+  border: 1px solid rgba(255,255,255,.25);
+  padding: .2cqw 1.2cqw;
+  color: #e0a45e;
+  font-variant-numeric: tabular-nums;
+}
+
+.dir-d-sub {
+  display: block;
+  font-size: 1.7cqw;
+  color: rgba(255,255,255,.38);
+  margin-top: 1cqw;
+}
+
+/* 底部渐隐:暗示以下滚动 */
+.dir-d-fade {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 12cqw;
+  background: linear-gradient(to bottom, rgba(19,17,16,0), #131110 82%);
+  pointer-events: none;
+}
+</style>
+
+<div class="dir-d-stage">
+  <div class="dir-d-titlebar">
+    <div class="dir-d-title">Ku-nya 设置</div>
+    <div class="dir-d-ver">v2.14.0</div>
+  </div>
+
+  <div class="dir-d-scroll">
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source mode</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">浏览模式</span>
+        <span class="dir-d-val dir-d-choice"><span class="dir-d-mark dir-d-on">[x]</span> <span class="dir-d-on">纯看</span>&nbsp;&nbsp;&nbsp;<span class="dir-d-mark dir-d-off">[ ]</span> <span class="dir-d-off">交互</span></span>
+      </div>
+      <div class="dir-d-row">
+        <span class="dir-d-label">内容安全</span>
+        <span class="dir-d-val dir-d-choice"><span class="dir-d-mark dir-d-on">[x]</span> <span class="dir-d-on">仅安全</span>&nbsp;&nbsp;&nbsp;<span class="dir-d-mark dir-d-off">[ ]</span> <span class="dir-d-off">包含 R-18</span></span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source ranking</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">内容源</span>
+        <span class="dir-d-val"><span class="dir-d-select">插画日榜 <span class="dir-d-amber">▾</span></span></span>
+      </div>
+      <div class="dir-d-menu">
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-amber">●</span><span class="dir-d-cur">插画日榜</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">漫画日榜</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">动图</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">原创</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">最新</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">人气</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">发现(需登录)</span></span>
+        <span class="dir-d-item"><span class="dir-d-mark dir-d-dim">·</span><span class="dir-d-dim">初音ミク(自定义)</span></span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source tags</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">自定义标签</span>
+      </div>
+      <div class="dir-d-chips">
+        <span class="dir-d-chip">初音ミク<span class="dir-d-x">×</span></span>
+        <span class="dir-d-chip">可爱<span class="dir-d-x">×</span></span>
+        <span class="dir-d-input">添加标签…</span>
+      </div>
+      <div class="dir-d-row">
+        <span class="dir-d-label">标签热度</span>
+        <span class="dir-d-val dir-d-dim" style="font-size:1.9cqw">全部 · 500+ · 1000+ · 5000+ · 10000+ · <span class="dir-d-amber" style="font-weight:700">混合</span></span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source auth</span>
+      <div class="dir-d-login">
+        <span><span class="dir-d-mark dir-d-amber">●</span> <span class="dir-d-val">已登录</span> <span class="dir-d-amber" style="font-weight:700">Yukino_821</span></span>
+        <span class="dir-d-refresh">[ 刷新 ]</span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source filter</span>
+      <div class="dir-d-row">
+        <span class="dir-d-val"><span class="dir-d-mark dir-d-on">[x]</span> 隐藏多图作品 <span class="dir-d-dim">(多为漫画)</span></span>
+      </div>
+      <div class="dir-d-row">
+        <span class="dir-d-val"><span class="dir-d-mark dir-d-off">[ ]</span> <span class="dir-d-off">隐藏 AI 生成作品</span></span>
+      </div>
+      <div class="dir-d-row">
+        <span class="dir-d-val">收藏数不低于 <span class="dir-d-num">1000</span></span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source block-artist</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">屏蔽画师</span>
+      </div>
+      <div class="dir-d-chips">
+        <span class="dir-d-chip">画师A<span class="dir-d-x">×</span></span>
+        <span class="dir-d-input">添加画师名…</span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source block-tag</span>
+      <div class="dir-d-row">
+        <span class="dir-d-label">屏蔽标签</span>
+      </div>
+      <div class="dir-d-chips">
+        <span class="dir-d-chip">R-18G<span class="dir-d-x">×</span></span>
+        <span class="dir-d-chip">AI 生成<span class="dir-d-x">×</span></span>
+        <span class="dir-d-input">添加标签…</span>
+      </div>
+    </div>
+
+    <div class="dir-d-section">
+      <span class="dir-d-head">source aspect</span>
+      <div class="dir-d-row">
+        <span class="dir-d-val"><span class="dir-d-mark dir-d-on">[x]</span> 排除竖长图,高/宽不超过 <span class="dir-d-num">3</span></span>
+      </div>
+      <span class="dir-d-sub">// 超出比例的插画不进入拼图墙</span>
+    </div>
+
+    <div class="dir-d-fade"></div>
+  </div>
+</div>

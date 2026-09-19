@@ -1,6 +1,7 @@
-import { h, Component, FunctionalComponent } from 'preact'
+import { h, Component } from 'preact'
 import SettingSection from './SettingSection'
 import TagInput from './TagInput'
+import ChipList from './ChipList'
 
 interface Props {
   initialTags: string[]
@@ -47,34 +48,18 @@ export default class TagSettingSection extends Component<Props, State> {
       state: { tags },
     } = this
     return (
-      <SettingSection title="Mute Setting(Tag)">
+      <SettingSection title="屏蔽标签" note="含任一标签的作品不上墙" stack>
+        <ChipList
+          values={tags}
+          onDelete={handleTagDelete}
+          empty="没有屏蔽的标签"
+        />
         <TagInput
-          label="Excluding tag"
-          placeholder="Fate/Grand_Order"
+          label="添加屏蔽标签"
+          placeholder="添加标签…"
           add={handleTagAdd}
         />
-        <ul>
-          {tags.map(tag => (
-            <Tag key={tag} name={tag} onDelete={handleTagDelete} />
-          ))}
-        </ul>
       </SettingSection>
     )
   }
-}
-
-const Tag: FunctionalComponent<{
-  name: string
-  onDelete(name: string): void
-}> = ({ name, onDelete }) => {
-  const handleTagDelete = () => onDelete(name)
-
-  return (
-    <li className="tag">
-      {name}
-      <button value="tag.name" onClick={handleTagDelete}>
-        x
-      </button>
-    </li>
-  )
 }
