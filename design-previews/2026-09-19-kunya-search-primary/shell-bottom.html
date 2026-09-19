@@ -1,0 +1,97 @@
+
+      <section class="kny-notes" aria-label="方向说明">
+        <div class="kny-note">
+          <h3>A · Spotlight 升起（推荐）</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>静止时胶囊退守底部，图墙是唯一主角；聚焦瞬间胶囊升到视口 38%、暖色暗场压下，搜索夺权。</dd>
+            <dt>材质</dt>
+            <dd>烟熏玻璃胶囊 + 琥珀焦点环 + 暖调径向 scrim；暗场只压画，不压字。</dd>
+            <dt>记忆点</dt>
+            <dd>「升起 + 暗场」的一气呵成——Apple Spotlight 式的夺权动画。</dd>
+            <dt>代价</dt>
+            <dd>多一组位移动画与 scrim 状态机；静止截图看不出它的好，必须看动起来的样子。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>B · 中央舞台常驻</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>搜索永久钉在画面中央偏上，加大加重，是打开新标签页的第一眼。</dd>
+            <dt>材质</dt>
+            <dd>更厚的烟熏玻璃 + 常驻琥珀描边环 + 键盘提示 chips；图墙保持原亮度。</dd>
+            <dt>记忆点</dt>
+            <dd>第一眼就是搜索——最直白的「以搜索为主」。</dd>
+            <dt>代价</dt>
+            <dd>永久遮挡拼图墙正中心，「一眼是画」的现有契约被削弱，DESIGN.md §0 需改写。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>C · 底部加冕舞台</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>胶囊不离开底部安全带，底部暗渐变把它托成舞台，上方补微标签与键盘提示。</dd>
+            <dt>材质</dt>
+            <dd>底部暖黑渐变 + 加宽加高的胶囊 + 微标签 / kbd chips。</dd>
+            <dt>记忆点</dt>
+            <dd>底边的一条「剧场沿」——画廊与搜索区的分割线。</dd>
+            <dt>代价</dt>
+            <dd>提升最保守：搜索仍不在视线中心，只是更重要的配角。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>D · 顶部命令栏</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>搜索变成顶置全宽命令栏：直角化、等宽字体、kbd 提示，像浏览器 UI 的一部分。</dd>
+            <dt>材质</dt>
+            <dd>直角命令栏 + 等宽 kbd chips + 更密的排版；唯一的圆角留给开关。</dd>
+            <dt>记忆点</dt>
+            <dd>工具感——新标签页即工作台，搜索是一条命令。</dd>
+            <dt>代价</dt>
+            <dd>效率工具气质与暗房画廊的观赏气质有张力，画面「性格」会变。</dd>
+          </dl>
+        </div>
+      </section>
+
+      <p class="kny-mix">
+        也可以只取某个细节混搭：比如「A 的升起 + C 的底部舞台渐变」「D 的等宽 kbd 提示加到 A 上」，在确认弹层的建议框里写一句即可。
+      </p>
+    </div>
+
+    <script>
+      // Static-preview fallback only. When the local preview server serves this
+      // page it owns selection entirely (buttons, dials, confirm dialog, POST),
+      // so this must stay dormant there to avoid duplicate controls.
+      if (location.protocol === 'file:') {
+        var bar = document.createElement('p')
+        bar.className = 'kny-fallback'
+        bar.textContent = '静态打开：当前不会自动回传，请点下面按钮复制选择后回到对话发送。'
+        document.querySelector('.kny-mix').after(bar)
+
+        document.querySelectorAll('[data-design-option]').forEach(function (card) {
+          var button = document.createElement('button')
+          button.type = 'button'
+          button.textContent = '复制「选 ' + card.dataset.dir + '：' + card.dataset.name + '」'
+          button.addEventListener('click', function () {
+            var text = '选 ' + card.dataset.dir + '：' + card.dataset.name + '；拨盘：视觉冒险度 / 动效强度 / 信息密度 = '
+            text += Array.prototype.map
+              .call(document.querySelectorAll('[data-qmdp-dial]'), function (input) {
+                return input.value
+              })
+              .join(' / ')
+            navigator.clipboard.writeText(text).then(
+              function () {
+                button.textContent = '已复制，请回到对话发送'
+              },
+              function () {
+                button.textContent = text
+              },
+            )
+          })
+          card.appendChild(button)
+        })
+      }
+    </script>
+  </body>
+</html>

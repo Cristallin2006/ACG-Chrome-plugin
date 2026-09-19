@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ku-nya 新标签页 · 搜索升格 · 方向样机</title>
+    <style>
+      /* Neutral shell only: it must not compete with the four mockups.
+         Selection chrome (buttons, dials, confirm dialog, toast) is injected
+         by the local preview server. */
+      :root {
+        --kny-bg: #eef0f2;
+        --kny-card: #ffffff;
+        --kny-line: #dfe3e8;
+        --kny-line-soft: #e9edf1;
+        --kny-ink: #1c2024;
+        --kny-ink-soft: #5b636c;
+        --kny-ink-faint: #8b939c;
+        --kny-rec: #14624a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 28px 24px 64px;
+        background: var(--kny-bg);
+        color: var(--kny-ink);
+        font: 400 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text",
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .kny-wrap {
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+
+      .kny-head {
+        max-width: 70ch;
+        margin: 0 0 22px;
+      }
+
+      .kny-head h1 {
+        margin: 0 0 6px;
+        font-size: 21px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+      }
+
+      .kny-head p {
+        margin: 0;
+        color: var(--kny-ink-soft);
+        font-size: 13.5px;
+      }
+
+      .kny-contract {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        border: 1px solid var(--kny-line);
+        border-radius: 8px;
+        background: #f7f8f9;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+      }
+
+      .kny-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .kny-card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--kny-line);
+        border-radius: 12px;
+        background: var(--kny-card);
+      }
+
+      .kny-card-head {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        min-width: 0;
+      }
+
+      .kny-key-cap {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--kny-line);
+        border-radius: 6px;
+        background: #f6f7f9;
+        color: var(--kny-ink-soft);
+        font-size: 12px;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .kny-card h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+
+      .kny-latin {
+        color: var(--kny-ink-faint);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+      }
+
+      .kny-rec {
+        margin-left: auto;
+        flex: none;
+        padding: 2px 8px;
+        border: 1px solid #bfe0d3;
+        border-radius: 999px;
+        background: #eef8f3;
+        color: var(--kny-rec);
+        font-size: 11.5px;
+        font-weight: 650;
+      }
+
+      .kny-tagline {
+        margin: 0;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .kny-stage {
+        border: 1px solid var(--kny-line-soft);
+        border-radius: 9px;
+        overflow: hidden;
+        background: #131110;
+      }
+
+      .kny-notes {
+        margin: 30px 0 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .kny-note {
+        padding: 14px 16px;
+        border: 1px solid var(--kny-line);
+        border-radius: 10px;
+        background: var(--kny-card);
+      }
+
+      .kny-note h3 {
+        margin: 0 0 8px;
+        font-size: 14.5px;
+        font-weight: 650;
+      }
+
+      .kny-note dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 4.2em minmax(0, 1fr);
+        gap: 4px 10px;
+        font-size: 13px;
+      }
+
+      .kny-note dt {
+        color: var(--kny-ink-faint);
+      }
+
+      .kny-note dd {
+        margin: 0;
+        color: var(--kny-ink-soft);
+      }
+
+      .kny-mix {
+        margin: 18px 0 0;
+        padding: 12px 16px;
+        border: 1px dashed var(--kny-line);
+        border-radius: 10px;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+      }
+
+      .kny-fallback {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        border: 1px solid #f0d9a8;
+        border-radius: 8px;
+        background: #fdf6e7;
+        color: #6b4e12;
+        font-size: 13px;
+      }
+
+      .kny-fallback button {
+        margin-left: 8px;
+        padding: 4px 10px;
+        border: 1px solid #d9bf85;
+        border-radius: 6px;
+        background: #fff;
+        color: inherit;
+        font: inherit;
+      }
+
+      @media (max-width: 900px) {
+        body {
+          padding: 20px 14px 48px;
+        }
+        .kny-grid,
+        .kny-notes {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="kny-wrap">
+      <header class="kny-head">
+        <h1>Ku-nya 新标签页：搜索升格——让搜索成为主页的第一公民</h1>
+        <p>
+          四个方向都是<strong>设计方向样机</strong>，只看视觉与交互气质，不是最终页面。点选或按 1–4
+          后确认，才进入正式实现。
+        </p>
+        <p class="kny-contract">
+          功能契约：搜索是新标签页的第一公民（一眼可见、键盘直达、回车即搜）·
+          无搜索意图时拼图墙仍是画面的主角 · 回车用 Chrome 默认引擎搜网页 ·
+          纯看 / 交互开关保留在搜索组件内。
+        </p>
+      </header>
+
+      <main class="kny-grid">
+        <article class="kny-card" data-design-option data-direction="A" data-dir="A" data-name="Spotlight 升起">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">A</span>
+            <h2>Spotlight 升起</h2>
+            <span class="kny-latin">SPOTLIGHT RISE</span>
+            <span class="kny-rec">推荐</span>
+          </div>
+          <div class="kny-stage"><style>
+.dir-a-stage{
+  container-type:inline-size;
+  width:100%;
+  aspect-ratio:16/10;
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  background:#131110;
+  font-family:"Segoe UI Variable Text","Segoe UI",system-ui,"PingFang SC","Microsoft YaHei",sans-serif;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---- pixiv wall (shared) ---- */
+.dir-a-wall{
+  position:absolute; inset:0;
+  padding:1cqw;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  grid-template-rows:repeat(4,1fr);
+  gap:1cqw;
+  filter:brightness(.72) saturate(.85);
+}
+.dir-a-t{
+  display:block;
+  border-radius:1.5cqw;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14);
+  filter:brightness(.94);
+}
+.dir-a-t1{grid-area:1/1/3/3;background:linear-gradient(150deg,#a8d8d2,#3f8f8a 55%,#1e4550);}
+.dir-a-t2{grid-area:1/3/2/5;background:linear-gradient(120deg,#f2c98a,#e07856 55%,#8a3a4e);}
+.dir-a-t3{grid-area:1/5/3/7;background:linear-gradient(150deg,#8aa8c8,#40618e 55%,#1d2c46);}
+.dir-a-t4{grid-area:2/3/4/4;background:linear-gradient(160deg,#e89aa2,#b23a48 60%,#4e1f2c);}
+.dir-a-t5{grid-area:2/4/3/5;background:linear-gradient(140deg,#f2e6c8,#d4b483);}
+.dir-a-t6{grid-area:3/5/4/7;background:linear-gradient(120deg,#f4c9d4,#de84a6 60%,#7e4060);}
+.dir-a-t7{grid-area:3/1/5/2;background:linear-gradient(160deg,#eed49a,#c08a3e 60%,#5e421e);}
+.dir-a-t8{grid-area:4/2/5/4;background:linear-gradient(120deg,#cbe4be,#78a874 60%,#33503a);}
+.dir-a-t9{grid-area:4/4/5/7;background:linear-gradient(120deg,#6a6058,#3a332c 60%,#211d19);}
+.dir-a-t10{grid-area:3/2/4/3;background:linear-gradient(140deg,#f6cfa8,#e08a5e);}
+.dir-a-t11{grid-area:3/4/4/5;background:linear-gradient(140deg,#c9c2b6,#8d8375);}
+.dir-a-vignette{
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(20,14,8,.5));
+  opacity:.12;
+  pointer-events:none;
+}
+
+/* ---- focus scrim ---- */
+.dir-a-scrim{
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 38%, rgba(19,17,16,.30), rgba(19,17,16,.62) 78%);
+  pointer-events:none;
+}
+
+/* ---- micro label + hint ---- */
+.dir-a-label{
+  position:absolute;
+  left:50%; top:19.9cqw;
+  transform:translateX(-50%);
+  font-size:.7cqw;
+  font-weight:600;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+  white-space:nowrap;
+}
+.dir-a-hint{
+  position:absolute;
+  left:50%; top:26.6cqw;
+  transform:translateX(-50%);
+  font-size:.8cqw;
+  color:rgba(255,255,255,.55);
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+
+/* ---- main capsule (focused) ---- */
+.dir-a-capsule{
+  position:absolute;
+  left:50%; top:23.75cqw;
+  transform:translate(-50%,-50%);
+  width:44cqw; height:3.9cqw;
+  padding:0 .6cqw 0 1.2cqw;
+  display:flex;
+  align-items:center;
+  gap:.9cqw;
+  border-radius:999px;
+  background:rgba(19,17,16,.86);
+  backdrop-filter:blur(18px) saturate(120%);
+  -webkit-backdrop-filter:blur(18px) saturate(120%);
+  border:1px solid rgba(224,164,94,.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 1px 2px rgba(0,0,0,.35),
+    0 8px 24px rgba(0,0,0,.45),
+    0 0 0 2px rgba(224,164,94,.55);
+}
+.dir-a-icon{
+  width:1.1cqw; height:1.1cqw;
+  flex:none;
+  color:rgba(255,255,255,.68);
+}
+.dir-a-query{
+  flex:1;
+  display:flex;
+  align-items:center;
+  min-width:0;
+  font-size:1.05cqw;
+  color:rgba(255,255,255,.92);
+  white-space:nowrap;
+}
+.dir-a-caret{
+  width:.07cqw; height:1.6cqw;
+  flex:none;
+  margin-left:.12cqw;
+  background:#E0A45E;
+}
+.dir-a-toggle{
+  display:flex;
+  align-items:center;
+  gap:.6cqw;
+  flex:none;
+}
+.dir-a-toggle-label{
+  font-size:.73cqw;
+  letter-spacing:.1em;
+  color:rgba(255,255,255,.68);
+}
+.dir-a-track{
+  width:3.1cqw; height:1.7cqw;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  padding-left:.2cqw;
+}
+.dir-a-knob{
+  width:1.15cqw; height:1.15cqw;
+  border-radius:50%;
+  background:rgba(255,255,255,.72);
+}
+
+/* ---- resting-state footnote ---- */
+.dir-a-footnote{
+  position:absolute;
+  left:50%; top:56.1cqw;
+  transform:translateX(-50%);
+  font-size:.7cqw;
+  color:rgba(255,255,255,.45);
+  letter-spacing:.05em;
+  white-space:nowrap;
+}
+.dir-a-mini{
+  position:absolute;
+  left:50%; bottom:2.2cqw;
+  transform:translateX(-50%);
+  width:30cqw; height:2.6cqw;
+  padding:0 .45cqw 0 .85cqw;
+  display:flex;
+  align-items:center;
+  gap:.65cqw;
+  border-radius:999px;
+  background:rgba(19,17,16,.86);
+  backdrop-filter:blur(18px) saturate(120%);
+  -webkit-backdrop-filter:blur(18px) saturate(120%);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 1px 2px rgba(0,0,0,.35),
+    0 8px 24px rgba(0,0,0,.45);
+  opacity:.55;
+}
+.dir-a-mini-icon{
+  width:.73cqw; height:.73cqw;
+  flex:none;
+  color:rgba(255,255,255,.68);
+}
+.dir-a-mini-placeholder{
+  flex:1;
+  min-width:0;
+  font-size:.72cqw;
+  color:rgba(255,255,255,.68);
+  white-space:nowrap;
+  overflow:hidden;
+}
+.dir-a-mini-toggle{
+  display:flex;
+  align-items:center;
+  gap:.42cqw;
+  flex:none;
+}
+.dir-a-mini-toggle-label{
+  font-size:.5cqw;
+  letter-spacing:.1em;
+  color:rgba(255,255,255,.68);
+}
+.dir-a-mini-track{
+  width:2.05cqw; height:1.13cqw;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  padding-left:.14cqw;
+}
+.dir-a-mini-knob{
+  width:.77cqw; height:.77cqw;
+  border-radius:50%;
+  background:rgba(255,255,255,.72);
+}
+</style>
+
+<div class="dir-a-stage">
+  <div class="dir-a-wall">
+    <i class="dir-a-t dir-a-t1"></i>
+    <i class="dir-a-t dir-a-t2"></i>
+    <i class="dir-a-t dir-a-t3"></i>
+    <i class="dir-a-t dir-a-t4"></i>
+    <i class="dir-a-t dir-a-t5"></i>
+    <i class="dir-a-t dir-a-t6"></i>
+    <i class="dir-a-t dir-a-t7"></i>
+    <i class="dir-a-t dir-a-t8"></i>
+    <i class="dir-a-t dir-a-t9"></i>
+    <i class="dir-a-t dir-a-t10"></i>
+    <i class="dir-a-t dir-a-t11"></i>
+  </div>
+  <div class="dir-a-vignette"></div>
+  <div class="dir-a-scrim"></div>
+
+  <div class="dir-a-label">WEB SEARCH</div>
+
+  <div class="dir-a-capsule">
+    <svg class="dir-a-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <div class="dir-a-query">pixiv 排行榜<span class="dir-a-caret"></span></div>
+    <div class="dir-a-toggle">
+      <span class="dir-a-toggle-label">纯看</span>
+      <span class="dir-a-track"><span class="dir-a-knob"></span></span>
+    </div>
+  </div>
+
+  <div class="dir-a-hint">↵ 搜索 · esc 收起</div>
+
+  <div class="dir-a-footnote">静止时退回底部，让位给画</div>
+  <div class="dir-a-mini">
+    <svg class="dir-a-mini-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <div class="dir-a-mini-placeholder">搜索网页或输入网址</div>
+    <div class="dir-a-mini-toggle">
+      <span class="dir-a-mini-toggle-label">纯看</span>
+      <span class="dir-a-mini-track"><span class="dir-a-mini-knob"></span></span>
+    </div>
+  </div>
+</div>
+</div>
+          <p class="kny-tagline">静止时退守底部角落，聚焦瞬间升到视口中央、图墙压暗让位——搜索的仪式感只在需要时出现。</p>
+        </article>
+
+        <article class="kny-card" data-design-option data-direction="B" data-dir="B" data-name="中央舞台常驻">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">B</span>
+            <h2>中央舞台常驻</h2>
+            <span class="kny-latin">CENTER STAGE</span>
+          </div>
+          <div class="kny-stage"><style>
+.dir-b-stage {
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 16/10;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: #131110;
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 拼图墙 ---- */
+.dir-b-wall {
+  position: absolute;
+  inset: 0;
+  padding: 1cqw;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 1cqw;
+}
+.dir-b-t {
+  display: block;
+  border-radius: 1.5cqw;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+  filter: brightness(.94);
+}
+.dir-b-t1  { grid-area: 1/1/3/3; background: linear-gradient(150deg,#a8d8d2,#3f8f8a 55%,#1e4550); }
+.dir-b-t2  { grid-area: 1/3/2/5; background: linear-gradient(120deg,#f2c98a,#e07856 55%,#8a3a4e); }
+.dir-b-t3  { grid-area: 1/5/3/7; background: linear-gradient(150deg,#8aa8c8,#40618e 55%,#1d2c46); }
+.dir-b-t4  { grid-area: 2/3/4/4; background: linear-gradient(160deg,#e89aa2,#b23a48 60%,#4e1f2c); }
+.dir-b-t5  { grid-area: 2/4/3/5; background: linear-gradient(140deg,#f2e6c8,#d4b483); }
+.dir-b-t6  { grid-area: 3/5/4/7; background: linear-gradient(120deg,#f4c9d4,#de84a6 60%,#7e4060); }
+.dir-b-t7  { grid-area: 3/1/5/2; background: linear-gradient(160deg,#eed49a,#c08a3e 60%,#5e421e); }
+.dir-b-t8  { grid-area: 4/2/5/4; background: linear-gradient(120deg,#cbe4be,#78a874 60%,#33503a); }
+.dir-b-t9  { grid-area: 4/4/5/7; background: linear-gradient(120deg,#6a6058,#3a332c 60%,#211d19); }
+.dir-b-t10 { grid-area: 3/2/4/3; background: linear-gradient(140deg,#f6cfa8,#e08a5e); }
+.dir-b-t11 { grid-area: 3/4/4/5; background: linear-gradient(140deg,#c9c2b6,#8d8375); }
+
+.dir-b-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(20,14,8,.5));
+  opacity: .12;
+  pointer-events: none;
+}
+
+/* ---- 胶囊背后极淡暖光 ---- */
+.dir-b-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 42%, rgba(224,164,94,.06), transparent 60%);
+  pointer-events: none;
+}
+
+/* ---- 微标签 ---- */
+.dir-b-eyebrow {
+  position: absolute;
+  left: 50%;
+  top: 22.2cqw;
+  transform: translateX(-50%);
+  font-size: .7cqw;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ---- 搜索胶囊 ---- */
+.dir-b-capsule {
+  position: absolute;
+  left: 50%;
+  top: 26.25cqw;
+  transform: translate(-50%,-50%);
+  width: 48cqw;
+  height: 4.6cqw;
+  padding: 0 .7cqw 0 1.4cqw;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: rgba(19,17,16,.86);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 1px 2px rgba(0,0,0,.35),
+    0 18px 50px rgba(0,0,0,.55),
+    0 0 0 2px rgba(224,164,94,.35);
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+}
+.dir-b-icon {
+  width: 1.1cqw;
+  height: 1.1cqw;
+  flex: none;
+  color: rgba(255,255,255,.68);
+}
+.dir-b-placeholder {
+  flex: 1;
+  font-size: 1.05cqw;
+  color: rgba(255,255,255,.68);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.dir-b-mode {
+  display: flex;
+  align-items: center;
+  gap: .6cqw;
+  flex: none;
+}
+.dir-b-mode-label {
+  font-size: .73cqw;
+  letter-spacing: .1em;
+  color: rgba(255,255,255,.68);
+  white-space: nowrap;
+}
+.dir-b-track {
+  position: relative;
+  width: 3.1cqw;
+  height: 1.7cqw;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.10);
+  flex: none;
+}
+.dir-b-knob {
+  position: absolute;
+  left: .2cqw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.15cqw;
+  height: 1.15cqw;
+  border-radius: 50%;
+  background: rgba(255,255,255,.72);
+}
+
+/* ---- kbd chips ---- */
+.dir-b-keys {
+  position: absolute;
+  left: 50%;
+  top: 29.65cqw;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: .6cqw;
+  white-space: nowrap;
+}
+.dir-b-keys-hint {
+  font-size: .7cqw;
+  color: rgba(255,255,255,.45);
+  margin-right: .3cqw;
+}
+.dir-b-kbd {
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: .5cqw;
+  padding: .28cqw .6cqw;
+  background: rgba(19,17,16,.6);
+  color: rgba(255,255,255,.68);
+  font-size: .75cqw;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+</style>
+
+<div class="dir-b-stage">
+  <div class="dir-b-wall">
+    <i class="dir-b-t dir-b-t1"></i>
+    <i class="dir-b-t dir-b-t2"></i>
+    <i class="dir-b-t dir-b-t3"></i>
+    <i class="dir-b-t dir-b-t4"></i>
+    <i class="dir-b-t dir-b-t5"></i>
+    <i class="dir-b-t dir-b-t6"></i>
+    <i class="dir-b-t dir-b-t7"></i>
+    <i class="dir-b-t dir-b-t8"></i>
+    <i class="dir-b-t dir-b-t9"></i>
+    <i class="dir-b-t dir-b-t10"></i>
+    <i class="dir-b-t dir-b-t11"></i>
+  </div>
+  <div class="dir-b-vignette"></div>
+  <div class="dir-b-glow"></div>
+
+  <div class="dir-b-eyebrow">Web Search</div>
+
+  <div class="dir-b-capsule">
+    <svg class="dir-b-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <div class="dir-b-placeholder">搜索网页或输入网址</div>
+    <div class="dir-b-mode">
+      <span class="dir-b-mode-label">纯看</span>
+      <span class="dir-b-track"><span class="dir-b-knob"></span></span>
+    </div>
+  </div>
+
+  <div class="dir-b-keys">
+    <span class="dir-b-keys-hint">按键即搜</span>
+    <kbd class="dir-b-kbd">/</kbd>
+    <kbd class="dir-b-kbd">Ctrl K</kbd>
+  </div>
+</div>
+</div>
+          <p class="kny-tagline">搜索永久居中放大，是打开新标签页的第一眼；图墙退为明亮的背景。</p>
+        </article>
+
+        <article class="kny-card" data-design-option data-direction="C" data-dir="C" data-name="底部加冕舞台">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">C</span>
+            <h2>底部加冕舞台</h2>
+            <span class="kny-latin">CROWNED DOCK</span>
+          </div>
+          <div class="kny-stage"><style>
+.dir-c-stage {
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 16/10;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: #131110;
+  font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: rgba(255,255,255,.92);
+}
+.dir-c-wall {
+  position: absolute;
+  inset: 0;
+  padding: 1cqw;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 1cqw;
+}
+.dir-c-t {
+  display: block;
+  border-radius: 1.5cqw;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+  filter: brightness(.94);
+}
+.dir-c-t1 { grid-area: 1/1/3/3; background: linear-gradient(150deg,#a8d8d2,#3f8f8a 55%,#1e4550); }
+.dir-c-t2 { grid-area: 1/3/2/5; background: linear-gradient(120deg,#f2c98a,#e07856 55%,#8a3a4e); }
+.dir-c-t3 { grid-area: 1/5/3/7; background: linear-gradient(150deg,#8aa8c8,#40618e 55%,#1d2c46); }
+.dir-c-t4 { grid-area: 2/3/4/4; background: linear-gradient(160deg,#e89aa2,#b23a48 60%,#4e1f2c); }
+.dir-c-t5 { grid-area: 2/4/3/5; background: linear-gradient(140deg,#f2e6c8,#d4b483); }
+.dir-c-t6 { grid-area: 3/5/4/7; background: linear-gradient(120deg,#f4c9d4,#de84a6 60%,#7e4060); }
+.dir-c-t7 { grid-area: 3/1/5/2; background: linear-gradient(160deg,#eed49a,#c08a3e 60%,#5e421e); }
+.dir-c-t8 { grid-area: 4/2/5/4; background: linear-gradient(120deg,#cbe4be,#78a874 60%,#33503a); }
+.dir-c-t9 { grid-area: 4/4/5/7; background: linear-gradient(120deg,#6a6058,#3a332c 60%,#211d19); }
+.dir-c-t10 { grid-area: 3/2/4/3; background: linear-gradient(140deg,#f6cfa8,#e08a5e); }
+.dir-c-t11 { grid-area: 3/4/4/5; background: linear-gradient(140deg,#c9c2b6,#8d8375); }
+.dir-c-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(20,14,8,.5));
+  opacity: .12;
+  pointer-events: none;
+}
+.dir-c-crown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26cqw;
+  background: linear-gradient(to top, rgba(19,17,16,.78), rgba(19,17,16,.28) 55%, transparent);
+  pointer-events: none;
+}
+.dir-c-pill {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 2.4cqw;
+  width: 46cqw;
+  height: 4.2cqw;
+  padding: 0 .7cqw 0 1.3cqw;
+  border-radius: 999px;
+  background: rgba(19,17,16,.86);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+}
+.dir-c-icon {
+  width: 1.1cqw;
+  height: 1.1cqw;
+  flex: none;
+  color: rgba(255,255,255,.68);
+}
+.dir-c-input {
+  flex: 1;
+  font-size: 1.05cqw;
+  color: rgba(255,255,255,.68);
+  letter-spacing: .01em;
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.dir-c-switch {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: .6cqw;
+}
+.dir-c-switch-label {
+  font-size: .73cqw;
+  letter-spacing: .1em;
+  color: rgba(255,255,255,.68);
+  font-variant-numeric: tabular-nums;
+}
+.dir-c-track {
+  position: relative;
+  width: 3.1cqw;
+  height: 1.7cqw;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.10);
+}
+.dir-c-knob {
+  position: absolute;
+  left: .2cqw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.15cqw;
+  height: 1.15cqw;
+  border-radius: 50%;
+  background: rgba(255,255,255,.72);
+}
+.dir-c-caption {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 7.5cqw;
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+}
+.dir-c-micro {
+  font-size: .7cqw;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  font-variant-numeric: tabular-nums;
+}
+.dir-c-sep {
+  width: .07cqw;
+  height: 1.1cqw;
+  background: rgba(255,255,255,.14);
+}
+.dir-c-kbds {
+  display: flex;
+  align-items: center;
+  gap: .45cqw;
+}
+.dir-c-kbd {
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: .45cqw;
+  padding: .2cqw .5cqw;
+  font-size: .7cqw;
+  color: rgba(255,255,255,.6);
+  background: rgba(19,17,16,.5);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .04em;
+}
+</style>
+<div class="dir-c-stage">
+  <div class="dir-c-wall">
+    <i class="dir-c-t dir-c-t1"></i>
+    <i class="dir-c-t dir-c-t2"></i>
+    <i class="dir-c-t dir-c-t3"></i>
+    <i class="dir-c-t dir-c-t4"></i>
+    <i class="dir-c-t dir-c-t5"></i>
+    <i class="dir-c-t dir-c-t6"></i>
+    <i class="dir-c-t dir-c-t7"></i>
+    <i class="dir-c-t dir-c-t8"></i>
+    <i class="dir-c-t dir-c-t9"></i>
+    <i class="dir-c-t dir-c-t10"></i>
+    <i class="dir-c-t dir-c-t11"></i>
+  </div>
+  <div class="dir-c-vignette"></div>
+  <div class="dir-c-crown"></div>
+  <div class="dir-c-caption">
+    <span class="dir-c-micro">Web Search</span>
+    <span class="dir-c-sep"></span>
+    <span class="dir-c-kbds">
+      <span class="dir-c-kbd">/</span>
+      <span class="dir-c-kbd">Ctrl K</span>
+    </span>
+  </div>
+  <div class="dir-c-pill">
+    <svg class="dir-c-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <span class="dir-c-input">搜索网页或输入网址</span>
+    <span class="dir-c-switch">
+      <span class="dir-c-switch-label">纯看</span>
+      <span class="dir-c-track"><span class="dir-c-knob"></span></span>
+    </span>
+  </div>
+</div>
+</div>
+          <p class="kny-tagline">位置不变，底部暗渐变把胶囊托成一条「剧场沿」，加宽加高并补上键盘提示。</p>
+        </article>
+
+        <article class="kny-card" data-design-option data-direction="D" data-dir="D" data-name="顶部命令栏">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">D</span>
+            <h2>顶部命令栏</h2>
+            <span class="kny-latin">COMMAND BAR</span>
+          </div>
+          <div class="kny-stage"><style>
+  .dir-d-stage {
+    container-type: inline-size;
+    width: 100%;
+    aspect-ratio: 16/10;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background: #131110;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .dir-d-wall {
+    position: absolute;
+    inset: 0;
+    padding: 1cqw;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 1cqw;
+  }
+  .dir-d-t {
+    display: block;
+    border-radius: 1.5cqw;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+    filter: brightness(.94);
+  }
+  .dir-d-t1  { grid-area: 1/1/3/3; background: linear-gradient(150deg,#a8d8d2,#3f8f8a 55%,#1e4550); }
+  .dir-d-t2  { grid-area: 1/3/2/5; background: linear-gradient(120deg,#f2c98a,#e07856 55%,#8a3a4e); }
+  .dir-d-t3  { grid-area: 1/5/3/7; background: linear-gradient(150deg,#8aa8c8,#40618e 55%,#1d2c46); }
+  .dir-d-t4  { grid-area: 2/3/4/4; background: linear-gradient(160deg,#e89aa2,#b23a48 60%,#4e1f2c); }
+  .dir-d-t5  { grid-area: 2/4/3/5; background: linear-gradient(140deg,#f2e6c8,#d4b483); }
+  .dir-d-t6  { grid-area: 3/5/4/7; background: linear-gradient(120deg,#f4c9d4,#de84a6 60%,#7e4060); }
+  .dir-d-t7  { grid-area: 3/1/5/2; background: linear-gradient(160deg,#eed49a,#c08a3e 60%,#5e421e); }
+  .dir-d-t8  { grid-area: 4/2/5/4; background: linear-gradient(120deg,#cbe4be,#78a874 60%,#33503a); }
+  .dir-d-t9  { grid-area: 4/4/5/7; background: linear-gradient(120deg,#6a6058,#3a332c 60%,#211d19); }
+  .dir-d-t10 { grid-area: 3/2/4/3; background: linear-gradient(140deg,#f6cfa8,#e08a5e); }
+  .dir-d-t11 { grid-area: 3/4/4/5; background: linear-gradient(140deg,#c9c2b6,#8d8375); }
+
+  .dir-d-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(20,14,8,.5));
+    opacity: .12;
+    pointer-events: none;
+  }
+
+  .dir-d-bar {
+    position: absolute;
+    top: 1.5cqw;
+    left: 1.5cqw;
+    right: 1.5cqw;
+    height: 4.4cqw;
+    border-radius: 1.1cqw;
+    background: rgba(19,17,16,.88);
+    backdrop-filter: blur(18px) saturate(120%);
+    -webkit-backdrop-filter: blur(18px) saturate(120%);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    padding: 0 1.2cqw;
+    gap: 1cqw;
+    box-sizing: border-box;
+  }
+
+  .dir-d-logo {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-weight: 600;
+    letter-spacing: .18em;
+    font-size: .75cqw;
+    color: rgba(255,255,255,.5);
+    white-space: nowrap;
+  }
+
+  .dir-d-divider {
+    width: .07cqw;
+    height: 2cqw;
+    background: rgba(255,255,255,.10);
+    flex: none;
+  }
+
+  .dir-d-icon {
+    width: 1.1cqw;
+    height: 1.1cqw;
+    color: rgba(255,255,255,.68);
+    flex: none;
+  }
+
+  .dir-d-input {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .95cqw;
+    color: rgba(255,255,255,.68);
+    white-space: nowrap;
+    flex: none;
+  }
+
+  .dir-d-spacer { flex: 1; }
+
+  .dir-d-kbd {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .7cqw;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: .4cqw;
+    padding: .22cqw .5cqw;
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.68);
+    white-space: nowrap;
+    flex: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dir-d-switch {
+    display: flex;
+    align-items: center;
+    gap: .5cqw;
+    flex: none;
+  }
+  .dir-d-switch-label {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .73cqw;
+    letter-spacing: .1em;
+    color: rgba(255,255,255,.68);
+    white-space: nowrap;
+  }
+  .dir-d-track {
+    width: 3.1cqw;
+    height: 1.7cqw;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.10);
+    position: relative;
+    box-sizing: border-box;
+  }
+  .dir-d-thumb {
+    position: absolute;
+    top: 50%;
+    left: .2cqw;
+    transform: translateY(-50%);
+    width: 1.15cqw;
+    height: 1.15cqw;
+    border-radius: 999px;
+    background: rgba(255,255,255,.72);
+  }
+</style>
+
+<div class="dir-d-stage">
+  <div class="dir-d-wall">
+    <i class="dir-d-t dir-d-t1"></i>
+    <i class="dir-d-t dir-d-t2"></i>
+    <i class="dir-d-t dir-d-t3"></i>
+    <i class="dir-d-t dir-d-t4"></i>
+    <i class="dir-d-t dir-d-t5"></i>
+    <i class="dir-d-t dir-d-t6"></i>
+    <i class="dir-d-t dir-d-t7"></i>
+    <i class="dir-d-t dir-d-t8"></i>
+    <i class="dir-d-t dir-d-t9"></i>
+    <i class="dir-d-t dir-d-t10"></i>
+    <i class="dir-d-t dir-d-t11"></i>
+  </div>
+  <div class="dir-d-vignette"></div>
+
+  <div class="dir-d-bar">
+    <span class="dir-d-logo">KU-NYA</span>
+    <span class="dir-d-divider"></span>
+    <svg class="dir-d-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <span class="dir-d-input">搜索网页或输入网址</span>
+    <span class="dir-d-spacer"></span>
+    <span class="dir-d-kbd">/</span>
+    <span class="dir-d-kbd">Ctrl K</span>
+    <span class="dir-d-switch">
+      <span class="dir-d-switch-label">纯看</span>
+      <span class="dir-d-track"><span class="dir-d-thumb"></span></span>
+    </span>
+  </div>
+</div>
+</div>
+          <p class="kny-tagline">搜索变成顶置全宽工具栏：直角、等宽字体、kbd 提示——新标签页即工作台。</p>
+        </article>
+      </main>
+
+      <section class="kny-notes" aria-label="方向说明">
+        <div class="kny-note">
+          <h3>A · Spotlight 升起（推荐）</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>静止时胶囊退守底部，图墙是唯一主角；聚焦瞬间胶囊升到视口 38%、暖色暗场压下，搜索夺权。</dd>
+            <dt>材质</dt>
+            <dd>烟熏玻璃胶囊 + 琥珀焦点环 + 暖调径向 scrim；暗场只压画，不压字。</dd>
+            <dt>记忆点</dt>
+            <dd>「升起 + 暗场」的一气呵成——Apple Spotlight 式的夺权动画。</dd>
+            <dt>代价</dt>
+            <dd>多一组位移动画与 scrim 状态机；静止截图看不出它的好，必须看动起来的样子。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>B · 中央舞台常驻</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>搜索永久钉在画面中央偏上，加大加重，是打开新标签页的第一眼。</dd>
+            <dt>材质</dt>
+            <dd>更厚的烟熏玻璃 + 常驻琥珀描边环 + 键盘提示 chips；图墙保持原亮度。</dd>
+            <dt>记忆点</dt>
+            <dd>第一眼就是搜索——最直白的「以搜索为主」。</dd>
+            <dt>代价</dt>
+            <dd>永久遮挡拼图墙正中心，「一眼是画」的现有契约被削弱，DESIGN.md §0 需改写。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>C · 底部加冕舞台</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>胶囊不离开底部安全带，底部暗渐变把它托成舞台，上方补微标签与键盘提示。</dd>
+            <dt>材质</dt>
+            <dd>底部暖黑渐变 + 加宽加高的胶囊 + 微标签 / kbd chips。</dd>
+            <dt>记忆点</dt>
+            <dd>底边的一条「剧场沿」——画廊与搜索区的分割线。</dd>
+            <dt>代价</dt>
+            <dd>提升最保守：搜索仍不在视线中心，只是更重要的配角。</dd>
+          </dl>
+        </div>
+        <div class="kny-note">
+          <h3>D · 顶部命令栏</h3>
+          <dl>
+            <dt>一句话</dt>
+            <dd>搜索变成顶置全宽命令栏：直角化、等宽字体、kbd 提示，像浏览器 UI 的一部分。</dd>
+            <dt>材质</dt>
+            <dd>直角命令栏 + 等宽 kbd chips + 更密的排版；唯一的圆角留给开关。</dd>
+            <dt>记忆点</dt>
+            <dd>工具感——新标签页即工作台，搜索是一条命令。</dd>
+            <dt>代价</dt>
+            <dd>效率工具气质与暗房画廊的观赏气质有张力，画面「性格」会变。</dd>
+          </dl>
+        </div>
+      </section>
+
+      <p class="kny-mix">
+        也可以只取某个细节混搭：比如「A 的升起 + C 的底部舞台渐变」「D 的等宽 kbd 提示加到 A 上」，在确认弹层的建议框里写一句即可。
+      </p>
+    </div>
+
+    <script>
+      // Static-preview fallback only. When the local preview server serves this
+      // page it owns selection entirely (buttons, dials, confirm dialog, POST),
+      // so this must stay dormant there to avoid duplicate controls.
+      if (location.protocol === 'file:') {
+        var bar = document.createElement('p')
+        bar.className = 'kny-fallback'
+        bar.textContent = '静态打开：当前不会自动回传，请点下面按钮复制选择后回到对话发送。'
+        document.querySelector('.kny-mix').after(bar)
+
+        document.querySelectorAll('[data-design-option]').forEach(function (card) {
+          var button = document.createElement('button')
+          button.type = 'button'
+          button.textContent = '复制「选 ' + card.dataset.dir + '：' + card.dataset.name + '」'
+          button.addEventListener('click', function () {
+            var text = '选 ' + card.dataset.dir + '：' + card.dataset.name + '；拨盘：视觉冒险度 / 动效强度 / 信息密度 = '
+            text += Array.prototype.map
+              .call(document.querySelectorAll('[data-qmdp-dial]'), function (input) {
+                return input.value
+              })
+              .join(' / ')
+            navigator.clipboard.writeText(text).then(
+              function () {
+                button.textContent = '已复制，请回到对话发送'
+              },
+              function () {
+                button.textContent = text
+              },
+            )
+          })
+          card.appendChild(button)
+        })
+      }
+    </script>
+  </body>
+</html>
+

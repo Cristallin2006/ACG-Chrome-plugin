@@ -1,0 +1,181 @@
+<style>
+  .dir-d-stage {
+    container-type: inline-size;
+    width: 100%;
+    aspect-ratio: 16/10;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    background: #131110;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .dir-d-wall {
+    position: absolute;
+    inset: 0;
+    padding: 1cqw;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 1cqw;
+  }
+  .dir-d-t {
+    display: block;
+    border-radius: 1.5cqw;
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+    filter: brightness(.94);
+  }
+  .dir-d-t1  { grid-area: 1/1/3/3; background: linear-gradient(150deg,#a8d8d2,#3f8f8a 55%,#1e4550); }
+  .dir-d-t2  { grid-area: 1/3/2/5; background: linear-gradient(120deg,#f2c98a,#e07856 55%,#8a3a4e); }
+  .dir-d-t3  { grid-area: 1/5/3/7; background: linear-gradient(150deg,#8aa8c8,#40618e 55%,#1d2c46); }
+  .dir-d-t4  { grid-area: 2/3/4/4; background: linear-gradient(160deg,#e89aa2,#b23a48 60%,#4e1f2c); }
+  .dir-d-t5  { grid-area: 2/4/3/5; background: linear-gradient(140deg,#f2e6c8,#d4b483); }
+  .dir-d-t6  { grid-area: 3/5/4/7; background: linear-gradient(120deg,#f4c9d4,#de84a6 60%,#7e4060); }
+  .dir-d-t7  { grid-area: 3/1/5/2; background: linear-gradient(160deg,#eed49a,#c08a3e 60%,#5e421e); }
+  .dir-d-t8  { grid-area: 4/2/5/4; background: linear-gradient(120deg,#cbe4be,#78a874 60%,#33503a); }
+  .dir-d-t9  { grid-area: 4/4/5/7; background: linear-gradient(120deg,#6a6058,#3a332c 60%,#211d19); }
+  .dir-d-t10 { grid-area: 3/2/4/3; background: linear-gradient(140deg,#f6cfa8,#e08a5e); }
+  .dir-d-t11 { grid-area: 3/4/4/5; background: linear-gradient(140deg,#c9c2b6,#8d8375); }
+
+  .dir-d-vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(20,14,8,.5));
+    opacity: .12;
+    pointer-events: none;
+  }
+
+  .dir-d-bar {
+    position: absolute;
+    top: 1.5cqw;
+    left: 1.5cqw;
+    right: 1.5cqw;
+    height: 4.4cqw;
+    border-radius: 1.1cqw;
+    background: rgba(19,17,16,.88);
+    backdrop-filter: blur(18px) saturate(120%);
+    -webkit-backdrop-filter: blur(18px) saturate(120%);
+    border: 1px solid rgba(255,255,255,.12);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.45);
+    display: flex;
+    align-items: center;
+    padding: 0 1.2cqw;
+    gap: 1cqw;
+    box-sizing: border-box;
+  }
+
+  .dir-d-logo {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-weight: 600;
+    letter-spacing: .18em;
+    font-size: .75cqw;
+    color: rgba(255,255,255,.5);
+    white-space: nowrap;
+  }
+
+  .dir-d-divider {
+    width: .07cqw;
+    height: 2cqw;
+    background: rgba(255,255,255,.10);
+    flex: none;
+  }
+
+  .dir-d-icon {
+    width: 1.1cqw;
+    height: 1.1cqw;
+    color: rgba(255,255,255,.68);
+    flex: none;
+  }
+
+  .dir-d-input {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .95cqw;
+    color: rgba(255,255,255,.68);
+    white-space: nowrap;
+    flex: none;
+  }
+
+  .dir-d-spacer { flex: 1; }
+
+  .dir-d-kbd {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .7cqw;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: .4cqw;
+    padding: .22cqw .5cqw;
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.68);
+    white-space: nowrap;
+    flex: none;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dir-d-switch {
+    display: flex;
+    align-items: center;
+    gap: .5cqw;
+    flex: none;
+  }
+  .dir-d-switch-label {
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: .73cqw;
+    letter-spacing: .1em;
+    color: rgba(255,255,255,.68);
+    white-space: nowrap;
+  }
+  .dir-d-track {
+    width: 3.1cqw;
+    height: 1.7cqw;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(255,255,255,.10);
+    position: relative;
+    box-sizing: border-box;
+  }
+  .dir-d-thumb {
+    position: absolute;
+    top: 50%;
+    left: .2cqw;
+    transform: translateY(-50%);
+    width: 1.15cqw;
+    height: 1.15cqw;
+    border-radius: 999px;
+    background: rgba(255,255,255,.72);
+  }
+</style>
+
+<div class="dir-d-stage">
+  <div class="dir-d-wall">
+    <i class="dir-d-t dir-d-t1"></i>
+    <i class="dir-d-t dir-d-t2"></i>
+    <i class="dir-d-t dir-d-t3"></i>
+    <i class="dir-d-t dir-d-t4"></i>
+    <i class="dir-d-t dir-d-t5"></i>
+    <i class="dir-d-t dir-d-t6"></i>
+    <i class="dir-d-t dir-d-t7"></i>
+    <i class="dir-d-t dir-d-t8"></i>
+    <i class="dir-d-t dir-d-t9"></i>
+    <i class="dir-d-t dir-d-t10"></i>
+    <i class="dir-d-t dir-d-t11"></i>
+  </div>
+  <div class="dir-d-vignette"></div>
+
+  <div class="dir-d-bar">
+    <span class="dir-d-logo">KU-NYA</span>
+    <span class="dir-d-divider"></span>
+    <svg class="dir-d-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <span class="dir-d-input">搜索网页或输入网址</span>
+    <span class="dir-d-spacer"></span>
+    <span class="dir-d-kbd">/</span>
+    <span class="dir-d-kbd">Ctrl K</span>
+    <span class="dir-d-switch">
+      <span class="dir-d-switch-label">纯看</span>
+      <span class="dir-d-track"><span class="dir-d-thumb"></span></span>
+    </span>
+  </div>
+</div>

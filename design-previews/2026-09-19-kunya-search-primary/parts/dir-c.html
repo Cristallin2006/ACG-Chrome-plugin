@@ -1,0 +1,193 @@
+<style>
+.dir-c-stage {
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 16/10;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: #131110;
+  font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: rgba(255,255,255,.92);
+}
+.dir-c-wall {
+  position: absolute;
+  inset: 0;
+  padding: 1cqw;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 1cqw;
+}
+.dir-c-t {
+  display: block;
+  border-radius: 1.5cqw;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+  filter: brightness(.94);
+}
+.dir-c-t1 { grid-area: 1/1/3/3; background: linear-gradient(150deg,#a8d8d2,#3f8f8a 55%,#1e4550); }
+.dir-c-t2 { grid-area: 1/3/2/5; background: linear-gradient(120deg,#f2c98a,#e07856 55%,#8a3a4e); }
+.dir-c-t3 { grid-area: 1/5/3/7; background: linear-gradient(150deg,#8aa8c8,#40618e 55%,#1d2c46); }
+.dir-c-t4 { grid-area: 2/3/4/4; background: linear-gradient(160deg,#e89aa2,#b23a48 60%,#4e1f2c); }
+.dir-c-t5 { grid-area: 2/4/3/5; background: linear-gradient(140deg,#f2e6c8,#d4b483); }
+.dir-c-t6 { grid-area: 3/5/4/7; background: linear-gradient(120deg,#f4c9d4,#de84a6 60%,#7e4060); }
+.dir-c-t7 { grid-area: 3/1/5/2; background: linear-gradient(160deg,#eed49a,#c08a3e 60%,#5e421e); }
+.dir-c-t8 { grid-area: 4/2/5/4; background: linear-gradient(120deg,#cbe4be,#78a874 60%,#33503a); }
+.dir-c-t9 { grid-area: 4/4/5/7; background: linear-gradient(120deg,#6a6058,#3a332c 60%,#211d19); }
+.dir-c-t10 { grid-area: 3/2/4/3; background: linear-gradient(140deg,#f6cfa8,#e08a5e); }
+.dir-c-t11 { grid-area: 3/4/4/5; background: linear-gradient(140deg,#c9c2b6,#8d8375); }
+.dir-c-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(20,14,8,.5));
+  opacity: .12;
+  pointer-events: none;
+}
+.dir-c-crown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 26cqw;
+  background: linear-gradient(to top, rgba(19,17,16,.78), rgba(19,17,16,.28) 55%, transparent);
+  pointer-events: none;
+}
+.dir-c-pill {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 2.4cqw;
+  width: 46cqw;
+  height: 4.2cqw;
+  padding: 0 .7cqw 0 1.3cqw;
+  border-radius: 999px;
+  background: rgba(19,17,16,.86);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 1px 2px rgba(0,0,0,.35), 0 8px 24px rgba(0,0,0,.45);
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+}
+.dir-c-icon {
+  width: 1.1cqw;
+  height: 1.1cqw;
+  flex: none;
+  color: rgba(255,255,255,.68);
+}
+.dir-c-input {
+  flex: 1;
+  font-size: 1.05cqw;
+  color: rgba(255,255,255,.68);
+  letter-spacing: .01em;
+  white-space: nowrap;
+  overflow: hidden;
+  font-variant-numeric: tabular-nums;
+}
+.dir-c-switch {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: .6cqw;
+}
+.dir-c-switch-label {
+  font-size: .73cqw;
+  letter-spacing: .1em;
+  color: rgba(255,255,255,.68);
+  font-variant-numeric: tabular-nums;
+}
+.dir-c-track {
+  position: relative;
+  width: 3.1cqw;
+  height: 1.7cqw;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.10);
+}
+.dir-c-knob {
+  position: absolute;
+  left: .2cqw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.15cqw;
+  height: 1.15cqw;
+  border-radius: 50%;
+  background: rgba(255,255,255,.72);
+}
+.dir-c-caption {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 7.5cqw;
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+}
+.dir-c-micro {
+  font-size: .7cqw;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  font-variant-numeric: tabular-nums;
+}
+.dir-c-sep {
+  width: .07cqw;
+  height: 1.1cqw;
+  background: rgba(255,255,255,.14);
+}
+.dir-c-kbds {
+  display: flex;
+  align-items: center;
+  gap: .45cqw;
+}
+.dir-c-kbd {
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: .45cqw;
+  padding: .2cqw .5cqw;
+  font-size: .7cqw;
+  color: rgba(255,255,255,.6);
+  background: rgba(19,17,16,.5);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .04em;
+}
+</style>
+<div class="dir-c-stage">
+  <div class="dir-c-wall">
+    <i class="dir-c-t dir-c-t1"></i>
+    <i class="dir-c-t dir-c-t2"></i>
+    <i class="dir-c-t dir-c-t3"></i>
+    <i class="dir-c-t dir-c-t4"></i>
+    <i class="dir-c-t dir-c-t5"></i>
+    <i class="dir-c-t dir-c-t6"></i>
+    <i class="dir-c-t dir-c-t7"></i>
+    <i class="dir-c-t dir-c-t8"></i>
+    <i class="dir-c-t dir-c-t9"></i>
+    <i class="dir-c-t dir-c-t10"></i>
+    <i class="dir-c-t dir-c-t11"></i>
+  </div>
+  <div class="dir-c-vignette"></div>
+  <div class="dir-c-crown"></div>
+  <div class="dir-c-caption">
+    <span class="dir-c-micro">Web Search</span>
+    <span class="dir-c-sep"></span>
+    <span class="dir-c-kbds">
+      <span class="dir-c-kbd">/</span>
+      <span class="dir-c-kbd">Ctrl K</span>
+    </span>
+  </div>
+  <div class="dir-c-pill">
+    <svg class="dir-c-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <span class="dir-c-input">搜索网页或输入网址</span>
+    <span class="dir-c-switch">
+      <span class="dir-c-switch-label">纯看</span>
+      <span class="dir-c-track"><span class="dir-c-knob"></span></span>
+    </span>
+  </div>
+</div>

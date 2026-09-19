@@ -1,0 +1,261 @@
+<style>
+.dir-a-stage{
+  container-type:inline-size;
+  width:100%;
+  aspect-ratio:16/10;
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+  background:#131110;
+  font-family:"Segoe UI Variable Text","Segoe UI",system-ui,"PingFang SC","Microsoft YaHei",sans-serif;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ---- pixiv wall (shared) ---- */
+.dir-a-wall{
+  position:absolute; inset:0;
+  padding:1cqw;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  grid-template-rows:repeat(4,1fr);
+  gap:1cqw;
+  filter:brightness(.72) saturate(.85);
+}
+.dir-a-t{
+  display:block;
+  border-radius:1.5cqw;
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.14);
+  filter:brightness(.94);
+}
+.dir-a-t1{grid-area:1/1/3/3;background:linear-gradient(150deg,#a8d8d2,#3f8f8a 55%,#1e4550);}
+.dir-a-t2{grid-area:1/3/2/5;background:linear-gradient(120deg,#f2c98a,#e07856 55%,#8a3a4e);}
+.dir-a-t3{grid-area:1/5/3/7;background:linear-gradient(150deg,#8aa8c8,#40618e 55%,#1d2c46);}
+.dir-a-t4{grid-area:2/3/4/4;background:linear-gradient(160deg,#e89aa2,#b23a48 60%,#4e1f2c);}
+.dir-a-t5{grid-area:2/4/3/5;background:linear-gradient(140deg,#f2e6c8,#d4b483);}
+.dir-a-t6{grid-area:3/5/4/7;background:linear-gradient(120deg,#f4c9d4,#de84a6 60%,#7e4060);}
+.dir-a-t7{grid-area:3/1/5/2;background:linear-gradient(160deg,#eed49a,#c08a3e 60%,#5e421e);}
+.dir-a-t8{grid-area:4/2/5/4;background:linear-gradient(120deg,#cbe4be,#78a874 60%,#33503a);}
+.dir-a-t9{grid-area:4/4/5/7;background:linear-gradient(120deg,#6a6058,#3a332c 60%,#211d19);}
+.dir-a-t10{grid-area:3/2/4/3;background:linear-gradient(140deg,#f6cfa8,#e08a5e);}
+.dir-a-t11{grid-area:3/4/4/5;background:linear-gradient(140deg,#c9c2b6,#8d8375);}
+.dir-a-vignette{
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(20,14,8,.5));
+  opacity:.12;
+  pointer-events:none;
+}
+
+/* ---- focus scrim ---- */
+.dir-a-scrim{
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 38%, rgba(19,17,16,.30), rgba(19,17,16,.62) 78%);
+  pointer-events:none;
+}
+
+/* ---- micro label + hint ---- */
+.dir-a-label{
+  position:absolute;
+  left:50%; top:19.9cqw;
+  transform:translateX(-50%);
+  font-size:.7cqw;
+  font-weight:600;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+  white-space:nowrap;
+}
+.dir-a-hint{
+  position:absolute;
+  left:50%; top:26.6cqw;
+  transform:translateX(-50%);
+  font-size:.8cqw;
+  color:rgba(255,255,255,.55);
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+
+/* ---- main capsule (focused) ---- */
+.dir-a-capsule{
+  position:absolute;
+  left:50%; top:23.75cqw;
+  transform:translate(-50%,-50%);
+  width:44cqw; height:3.9cqw;
+  padding:0 .6cqw 0 1.2cqw;
+  display:flex;
+  align-items:center;
+  gap:.9cqw;
+  border-radius:999px;
+  background:rgba(19,17,16,.86);
+  backdrop-filter:blur(18px) saturate(120%);
+  -webkit-backdrop-filter:blur(18px) saturate(120%);
+  border:1px solid rgba(224,164,94,.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 1px 2px rgba(0,0,0,.35),
+    0 8px 24px rgba(0,0,0,.45),
+    0 0 0 2px rgba(224,164,94,.55);
+}
+.dir-a-icon{
+  width:1.1cqw; height:1.1cqw;
+  flex:none;
+  color:rgba(255,255,255,.68);
+}
+.dir-a-query{
+  flex:1;
+  display:flex;
+  align-items:center;
+  min-width:0;
+  font-size:1.05cqw;
+  color:rgba(255,255,255,.92);
+  white-space:nowrap;
+}
+.dir-a-caret{
+  width:.07cqw; height:1.6cqw;
+  flex:none;
+  margin-left:.12cqw;
+  background:#E0A45E;
+}
+.dir-a-toggle{
+  display:flex;
+  align-items:center;
+  gap:.6cqw;
+  flex:none;
+}
+.dir-a-toggle-label{
+  font-size:.73cqw;
+  letter-spacing:.1em;
+  color:rgba(255,255,255,.68);
+}
+.dir-a-track{
+  width:3.1cqw; height:1.7cqw;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  padding-left:.2cqw;
+}
+.dir-a-knob{
+  width:1.15cqw; height:1.15cqw;
+  border-radius:50%;
+  background:rgba(255,255,255,.72);
+}
+
+/* ---- resting-state footnote ---- */
+.dir-a-footnote{
+  position:absolute;
+  left:50%; top:56.1cqw;
+  transform:translateX(-50%);
+  font-size:.7cqw;
+  color:rgba(255,255,255,.45);
+  letter-spacing:.05em;
+  white-space:nowrap;
+}
+.dir-a-mini{
+  position:absolute;
+  left:50%; bottom:2.2cqw;
+  transform:translateX(-50%);
+  width:30cqw; height:2.6cqw;
+  padding:0 .45cqw 0 .85cqw;
+  display:flex;
+  align-items:center;
+  gap:.65cqw;
+  border-radius:999px;
+  background:rgba(19,17,16,.86);
+  backdrop-filter:blur(18px) saturate(120%);
+  -webkit-backdrop-filter:blur(18px) saturate(120%);
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 1px 2px rgba(0,0,0,.35),
+    0 8px 24px rgba(0,0,0,.45);
+  opacity:.55;
+}
+.dir-a-mini-icon{
+  width:.73cqw; height:.73cqw;
+  flex:none;
+  color:rgba(255,255,255,.68);
+}
+.dir-a-mini-placeholder{
+  flex:1;
+  min-width:0;
+  font-size:.72cqw;
+  color:rgba(255,255,255,.68);
+  white-space:nowrap;
+  overflow:hidden;
+}
+.dir-a-mini-toggle{
+  display:flex;
+  align-items:center;
+  gap:.42cqw;
+  flex:none;
+}
+.dir-a-mini-toggle-label{
+  font-size:.5cqw;
+  letter-spacing:.1em;
+  color:rgba(255,255,255,.68);
+}
+.dir-a-mini-track{
+  width:2.05cqw; height:1.13cqw;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.10);
+  display:flex;
+  align-items:center;
+  padding-left:.14cqw;
+}
+.dir-a-mini-knob{
+  width:.77cqw; height:.77cqw;
+  border-radius:50%;
+  background:rgba(255,255,255,.72);
+}
+</style>
+
+<div class="dir-a-stage">
+  <div class="dir-a-wall">
+    <i class="dir-a-t dir-a-t1"></i>
+    <i class="dir-a-t dir-a-t2"></i>
+    <i class="dir-a-t dir-a-t3"></i>
+    <i class="dir-a-t dir-a-t4"></i>
+    <i class="dir-a-t dir-a-t5"></i>
+    <i class="dir-a-t dir-a-t6"></i>
+    <i class="dir-a-t dir-a-t7"></i>
+    <i class="dir-a-t dir-a-t8"></i>
+    <i class="dir-a-t dir-a-t9"></i>
+    <i class="dir-a-t dir-a-t10"></i>
+    <i class="dir-a-t dir-a-t11"></i>
+  </div>
+  <div class="dir-a-vignette"></div>
+  <div class="dir-a-scrim"></div>
+
+  <div class="dir-a-label">WEB SEARCH</div>
+
+  <div class="dir-a-capsule">
+    <svg class="dir-a-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <div class="dir-a-query">pixiv 排行榜<span class="dir-a-caret"></span></div>
+    <div class="dir-a-toggle">
+      <span class="dir-a-toggle-label">纯看</span>
+      <span class="dir-a-track"><span class="dir-a-knob"></span></span>
+    </div>
+  </div>
+
+  <div class="dir-a-hint">↵ 搜索 · esc 收起</div>
+
+  <div class="dir-a-footnote">静止时退回底部，让位给画</div>
+  <div class="dir-a-mini">
+    <svg class="dir-a-mini-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <div class="dir-a-mini-placeholder">搜索网页或输入网址</div>
+    <div class="dir-a-mini-toggle">
+      <span class="dir-a-mini-toggle-label">纯看</span>
+      <span class="dir-a-mini-track"><span class="dir-a-mini-knob"></span></span>
+    </div>
+  </div>
+</div>

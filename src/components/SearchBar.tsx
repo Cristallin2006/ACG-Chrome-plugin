@@ -11,6 +11,11 @@ interface State {
   value: string
   /** True while the capsule is dimmed back so the artwork reads as the subject. */
   isGhost: boolean
+  /**
+   * True while the field is focused: the capsule rises to the spotlight
+   * position (38dvh) over a dimming scrim. Blur or Esc lets it settle back.
+   */
+  isRisen: boolean
 }
 
 const GHOST_AFTER_MS = 2000
@@ -21,7 +26,7 @@ export default class SearchBar extends Component<Props, State> {
 
   constructor(props: Props) {
     super(props)
-    this.state = { value: '', isGhost: false }
+    this.state = { value: '', isGhost: false, isRisen: false }
   }
 
   componentDidMount() {
@@ -114,6 +119,16 @@ export default class SearchBar extends Component<Props, State> {
     }
   }
 
+  private handleFocus = () => {
+    this.handleActivity()
+    if (!this.state.isRisen) this.setState({ isRisen: true })
+  }
+
+  private handleBlur = () => {
+    if (this.state.isRisen) this.setState({ isRisen: false })
+    this.armGhost()
+  }
+
   private handleInput = (event: Event) => {
     this.setState({ value: (event.target as HTMLInputElement).value })
   }
@@ -153,64 +168,102 @@ export default class SearchBar extends Component<Props, State> {
   render() {
     const { viewMode } = this.props
     const isInteractive = viewMode === ViewModes.Interactive
-    const className = `kunya-search${this.state.isGhost ? ' is-ghost' : ''}`
+    const hasText = this.state.value.trim().length > 0
+    const className = `kunya-search${this.state.isGhost ? ' is-ghost' : ''}${
+      this.state.isRisen ? ' is-risen' : ''
+    }${hasText ? ' has-text' : ''}`
 
     return (
-      <div class={className} role="search">
-        <svg
-          class="kunya-search__icon"
-          viewBox="0 0 16 16"
-          width="15"
-          height="15"
+      <div class="kunya-search-root">
+        {/* Spotlight scrim: rises with the capsule, dims the wall, lets the
+            field take the room. Never intercepts the pointer. */}
+        <div
+          class={`kunya-scrim${this.state.isRisen ? ' is-risen' : ''}`}
           aria-hidden="true"
-        >
-          <circle
-            cx="7"
-            cy="7"
-            r="4.6"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-          />
-          <path
-            d="M10.5 10.5 L14 14"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.5"
-            stroke-linecap="round"
-          />
-        </svg>
-
-        <input
-          ref={element => {
-            this.input = element
-          }}
-          class="kunya-search__input"
-          type="text"
-          value={this.state.value}
-          placeholder="搜索网页或输入网址"
-          aria-label="搜索网页或输入网址"
-          autocomplete="off"
-          spellcheck={false}
-          onInput={this.handleInput}
-          onKeyDown={this.handleKeyDown}
-          onFocus={this.handleActivity}
         />
-
-        <button
-          type="button"
-          class="kunya-switch"
-          role="switch"
-          aria-checked={isInteractive ? 'true' : 'false'}
-          aria-label="交互模式：开启后插画可点击"
-          title={isInteractive ? '当前：可点击打开作品页' : '当前：只可浏览，防止误触'}
-          onClick={this.toggleViewMode}
-        >
-          <span class="kunya-switch__label">{isInteractive ? '交互' : '纯看'}</span>
-          <span class="kunya-switch__track">
-            <span class="kunya-switch__knob" />
+        <div class={className} role="search">
+          <span class="kunya-search__label" aria-hidden="true">
+            WEB SEARCH
           </span>
-        </button>
+          <svg
+            class="kunya-search__icon"
+            viewBox="0 0 16 16"
+            width="15"
+            height="15"
+            aria-hidden="true"
+          >
+            <circle
+              cx="7"
+              cy="7"
+              r="4.6"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            />
+            <path
+              d="M10.5 10.5 L14 14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+
+          <input
+            ref={element => {
+              this.input = element
+            }}
+            class="kunya-search__input"
+            type="text"
+            value={this.state.value}
+            placeholder="搜索网页或输入网址"
+            aria-label="搜索网页或输入网址"
+            autocomplete="off"
+            spellcheck={false}
+            onInput={this.handleInput}
+            onKeyDown={this.handleKeyDown}
+            onFocus={this.handleFocus}
+            onBlur={this.handleBlur}
+          />
+
+          <button
+            type="button"
+            class="kunya-search__go"
+            aria-label="搜索"
+            title="搜索（Enter）"
+            onMouseDown={event => event.preventDefault()}
+            onClick={() => void this.run()}
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <path
+                d="M2.5 8 H12 M8.5 4.5 L12 8 L8.5 11.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+
+          <button
+            type="button"
+            class="kunya-switch"
+            role="switch"
+            aria-checked={isInteractive ? 'true' : 'false'}
+            aria-label="交互模式：开启后插画可点击"
+            title={isInteractive ? '当前：可点击打开作品页' : '当前：只可浏览，防止误触'}
+            onClick={this.toggleViewMode}
+          >
+            <span class="kunya-switch__label">{isInteractive ? '交互' : '纯看'}</span>
+            <span class="kunya-switch__track">
+              <span class="kunya-switch__knob" />
+            </span>
+          </button>
+          <span class="kunya-search__hint" aria-hidden="true">
+            ↵ 搜索 · esc 收起
+          </span>
+        </div>
       </div>
     )
   }

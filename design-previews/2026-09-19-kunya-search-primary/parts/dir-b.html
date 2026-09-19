@@ -1,0 +1,208 @@
+<style>
+.dir-b-stage {
+  container-type: inline-size;
+  width: 100%;
+  aspect-ratio: 16/10;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: #131110;
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- 拼图墙 ---- */
+.dir-b-wall {
+  position: absolute;
+  inset: 0;
+  padding: 1cqw;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 1cqw;
+}
+.dir-b-t {
+  display: block;
+  border-radius: 1.5cqw;
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.14);
+  filter: brightness(.94);
+}
+.dir-b-t1  { grid-area: 1/1/3/3; background: linear-gradient(150deg,#a8d8d2,#3f8f8a 55%,#1e4550); }
+.dir-b-t2  { grid-area: 1/3/2/5; background: linear-gradient(120deg,#f2c98a,#e07856 55%,#8a3a4e); }
+.dir-b-t3  { grid-area: 1/5/3/7; background: linear-gradient(150deg,#8aa8c8,#40618e 55%,#1d2c46); }
+.dir-b-t4  { grid-area: 2/3/4/4; background: linear-gradient(160deg,#e89aa2,#b23a48 60%,#4e1f2c); }
+.dir-b-t5  { grid-area: 2/4/3/5; background: linear-gradient(140deg,#f2e6c8,#d4b483); }
+.dir-b-t6  { grid-area: 3/5/4/7; background: linear-gradient(120deg,#f4c9d4,#de84a6 60%,#7e4060); }
+.dir-b-t7  { grid-area: 3/1/5/2; background: linear-gradient(160deg,#eed49a,#c08a3e 60%,#5e421e); }
+.dir-b-t8  { grid-area: 4/2/5/4; background: linear-gradient(120deg,#cbe4be,#78a874 60%,#33503a); }
+.dir-b-t9  { grid-area: 4/4/5/7; background: linear-gradient(120deg,#6a6058,#3a332c 60%,#211d19); }
+.dir-b-t10 { grid-area: 3/2/4/3; background: linear-gradient(140deg,#f6cfa8,#e08a5e); }
+.dir-b-t11 { grid-area: 3/4/4/5; background: linear-gradient(140deg,#c9c2b6,#8d8375); }
+
+.dir-b-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(20,14,8,.5));
+  opacity: .12;
+  pointer-events: none;
+}
+
+/* ---- 胶囊背后极淡暖光 ---- */
+.dir-b-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 42%, rgba(224,164,94,.06), transparent 60%);
+  pointer-events: none;
+}
+
+/* ---- 微标签 ---- */
+.dir-b-eyebrow {
+  position: absolute;
+  left: 50%;
+  top: 22.2cqw;
+  transform: translateX(-50%);
+  font-size: .7cqw;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ---- 搜索胶囊 ---- */
+.dir-b-capsule {
+  position: absolute;
+  left: 50%;
+  top: 26.25cqw;
+  transform: translate(-50%,-50%);
+  width: 48cqw;
+  height: 4.6cqw;
+  padding: 0 .7cqw 0 1.4cqw;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: rgba(19,17,16,.86);
+  -webkit-backdrop-filter: blur(18px) saturate(120%);
+  backdrop-filter: blur(18px) saturate(120%);
+  border: 1px solid rgba(255,255,255,.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    0 1px 2px rgba(0,0,0,.35),
+    0 18px 50px rgba(0,0,0,.55),
+    0 0 0 2px rgba(224,164,94,.35);
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+}
+.dir-b-icon {
+  width: 1.1cqw;
+  height: 1.1cqw;
+  flex: none;
+  color: rgba(255,255,255,.68);
+}
+.dir-b-placeholder {
+  flex: 1;
+  font-size: 1.05cqw;
+  color: rgba(255,255,255,.68);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.dir-b-mode {
+  display: flex;
+  align-items: center;
+  gap: .6cqw;
+  flex: none;
+}
+.dir-b-mode-label {
+  font-size: .73cqw;
+  letter-spacing: .1em;
+  color: rgba(255,255,255,.68);
+  white-space: nowrap;
+}
+.dir-b-track {
+  position: relative;
+  width: 3.1cqw;
+  height: 1.7cqw;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.10);
+  flex: none;
+}
+.dir-b-knob {
+  position: absolute;
+  left: .2cqw;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1.15cqw;
+  height: 1.15cqw;
+  border-radius: 50%;
+  background: rgba(255,255,255,.72);
+}
+
+/* ---- kbd chips ---- */
+.dir-b-keys {
+  position: absolute;
+  left: 50%;
+  top: 29.65cqw;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: .6cqw;
+  white-space: nowrap;
+}
+.dir-b-keys-hint {
+  font-size: .7cqw;
+  color: rgba(255,255,255,.45);
+  margin-right: .3cqw;
+}
+.dir-b-kbd {
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: .5cqw;
+  padding: .28cqw .6cqw;
+  background: rgba(19,17,16,.6);
+  color: rgba(255,255,255,.68);
+  font-size: .75cqw;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+</style>
+
+<div class="dir-b-stage">
+  <div class="dir-b-wall">
+    <i class="dir-b-t dir-b-t1"></i>
+    <i class="dir-b-t dir-b-t2"></i>
+    <i class="dir-b-t dir-b-t3"></i>
+    <i class="dir-b-t dir-b-t4"></i>
+    <i class="dir-b-t dir-b-t5"></i>
+    <i class="dir-b-t dir-b-t6"></i>
+    <i class="dir-b-t dir-b-t7"></i>
+    <i class="dir-b-t dir-b-t8"></i>
+    <i class="dir-b-t dir-b-t9"></i>
+    <i class="dir-b-t dir-b-t10"></i>
+    <i class="dir-b-t dir-b-t11"></i>
+  </div>
+  <div class="dir-b-vignette"></div>
+  <div class="dir-b-glow"></div>
+
+  <div class="dir-b-eyebrow">Web Search</div>
+
+  <div class="dir-b-capsule">
+    <svg class="dir-b-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="7" cy="7" r="4.6"></circle>
+      <path d="M10.5 10.5 L14 14"></path>
+    </svg>
+    <div class="dir-b-placeholder">搜索网页或输入网址</div>
+    <div class="dir-b-mode">
+      <span class="dir-b-mode-label">纯看</span>
+      <span class="dir-b-track"><span class="dir-b-knob"></span></span>
+    </div>
+  </div>
+
+  <div class="dir-b-keys">
+    <span class="dir-b-keys-hint">按键即搜</span>
+    <kbd class="dir-b-kbd">/</kbd>
+    <kbd class="dir-b-kbd">Ctrl K</kbd>
+  </div>
+</div>

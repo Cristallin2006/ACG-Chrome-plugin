@@ -20,7 +20,7 @@ wall** that reveals itself screen by screen as you scroll.
 > 本衍生版的主要改动 / What this derivative adds:
 >
 > - **Manifest V3 迁移**（见 [MIGRATION-MV3.md](MIGRATION-MV3.md)）
-> - 「暗房」视觉系统：暖调近黑画布 + 底部磨砂搜索胶囊（见 [DESIGN.md](DESIGN.md)）
+> - 「暗房」视觉系统：暖调近黑画布 + 底部磨砂搜索胶囊，聚焦时胶囊升起、图墙压暗（见 [DESIGN.md](DESIGN.md)）
 > - **精确拼合拼图墙**：以二叉空间分割（BSP，i3/bspwm 式）为每张图分配与原图
 >   宽高比严格相等的格子，零裁切、零拉伸、灰缝均匀（`src/lib/tiling.ts`）
 > - **渐进式加载**：一视口一屏拼图，下滑逐屏追加、拼块入屏逐块渐入；首载遇网络
@@ -87,7 +87,10 @@ why.
   only show the cover)
 - A frosted search capsule sits at the bottom centre and searches **the web** with
   your default search engine (what the address bar does); anything that looks like
-  an address is opened directly
+  an address is opened directly. Focusing it makes the capsule **rise to the
+  spotlight position** (38% viewport height) while a warm scrim dims the wall —
+  search takes the room only while you are searching. A search button on the
+  capsule lights up in amber as soon as there is text to send
 - The switch on the capsule toggles between **纯看 / watch** — illustrations are not
   clickable at all, so the page can be scrolled without opening anything by accident
   — and **交互 / interactive**, where they link to the artwork page. The choice is

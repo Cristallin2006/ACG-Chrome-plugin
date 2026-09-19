@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Ku-nya 新标签页 · 搜索升格 · 方向样机</title>
+    <style>
+      /* Neutral shell only: it must not compete with the four mockups.
+         Selection chrome (buttons, dials, confirm dialog, toast) is injected
+         by the local preview server. */
+      :root {
+        --kny-bg: #eef0f2;
+        --kny-card: #ffffff;
+        --kny-line: #dfe3e8;
+        --kny-line-soft: #e9edf1;
+        --kny-ink: #1c2024;
+        --kny-ink-soft: #5b636c;
+        --kny-ink-faint: #8b939c;
+        --kny-rec: #14624a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 28px 24px 64px;
+        background: var(--kny-bg);
+        color: var(--kny-ink);
+        font: 400 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text",
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .kny-wrap {
+        max-width: 1440px;
+        margin: 0 auto;
+      }
+
+      .kny-head {
+        max-width: 70ch;
+        margin: 0 0 22px;
+      }
+
+      .kny-head h1 {
+        margin: 0 0 6px;
+        font-size: 21px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+      }
+
+      .kny-head p {
+        margin: 0;
+        color: var(--kny-ink-soft);
+        font-size: 13.5px;
+      }
+
+      .kny-contract {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        border: 1px solid var(--kny-line);
+        border-radius: 8px;
+        background: #f7f8f9;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+      }
+
+      .kny-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .kny-card {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 14px;
+        border: 1px solid var(--kny-line);
+        border-radius: 12px;
+        background: var(--kny-card);
+      }
+
+      .kny-card-head {
+        display: flex;
+        align-items: baseline;
+        gap: 9px;
+        min-width: 0;
+      }
+
+      .kny-key-cap {
+        flex: none;
+        display: inline-grid;
+        place-items: center;
+        width: 22px;
+        height: 22px;
+        border: 1px solid var(--kny-line);
+        border-radius: 6px;
+        background: #f6f7f9;
+        color: var(--kny-ink-soft);
+        font-size: 12px;
+        font-weight: 650;
+        font-variant-numeric: tabular-nums;
+      }
+
+      .kny-card h2 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+
+      .kny-latin {
+        color: var(--kny-ink-faint);
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 0.04em;
+      }
+
+      .kny-rec {
+        margin-left: auto;
+        flex: none;
+        padding: 2px 8px;
+        border: 1px solid #bfe0d3;
+        border-radius: 999px;
+        background: #eef8f3;
+        color: var(--kny-rec);
+        font-size: 11.5px;
+        font-weight: 650;
+      }
+
+      .kny-tagline {
+        margin: 0;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .kny-stage {
+        border: 1px solid var(--kny-line-soft);
+        border-radius: 9px;
+        overflow: hidden;
+        background: #131110;
+      }
+
+      .kny-notes {
+        margin: 30px 0 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .kny-note {
+        padding: 14px 16px;
+        border: 1px solid var(--kny-line);
+        border-radius: 10px;
+        background: var(--kny-card);
+      }
+
+      .kny-note h3 {
+        margin: 0 0 8px;
+        font-size: 14.5px;
+        font-weight: 650;
+      }
+
+      .kny-note dl {
+        margin: 0;
+        display: grid;
+        grid-template-columns: 4.2em minmax(0, 1fr);
+        gap: 4px 10px;
+        font-size: 13px;
+      }
+
+      .kny-note dt {
+        color: var(--kny-ink-faint);
+      }
+
+      .kny-note dd {
+        margin: 0;
+        color: var(--kny-ink-soft);
+      }
+
+      .kny-mix {
+        margin: 18px 0 0;
+        padding: 12px 16px;
+        border: 1px dashed var(--kny-line);
+        border-radius: 10px;
+        color: var(--kny-ink-soft);
+        font-size: 13px;
+      }
+
+      .kny-fallback {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        border: 1px solid #f0d9a8;
+        border-radius: 8px;
+        background: #fdf6e7;
+        color: #6b4e12;
+        font-size: 13px;
+      }
+
+      .kny-fallback button {
+        margin-left: 8px;
+        padding: 4px 10px;
+        border: 1px solid #d9bf85;
+        border-radius: 6px;
+        background: #fff;
+        color: inherit;
+        font: inherit;
+      }
+
+      @media (max-width: 900px) {
+        body {
+          padding: 20px 14px 48px;
+        }
+        .kny-grid,
+        .kny-notes {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="kny-wrap">
+      <header class="kny-head">
+        <h1>Ku-nya 新标签页：搜索升格——让搜索成为主页的第一公民</h1>
+        <p>
+          四个方向都是<strong>设计方向样机</strong>，只看视觉与交互气质，不是最终页面。点选或按 1–4
+          后确认，才进入正式实现。
+        </p>
+        <p class="kny-contract">
+          功能契约：搜索是新标签页的第一公民（一眼可见、键盘直达、回车即搜）·
+          无搜索意图时拼图墙仍是画面的主角 · 回车用 Chrome 默认引擎搜网页 ·
+          纯看 / 交互开关保留在搜索组件内。
+        </p>
+      </header>
+
+      <main class="kny-grid">
+        <article class="kny-card" data-design-option data-direction="A" data-dir="A" data-name="Spotlight 升起">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">A</span>
+            <h2>Spotlight 升起</h2>
+            <span class="kny-latin">SPOTLIGHT RISE</span>
+            <span class="kny-rec">推荐</span>
+          </div>
+          <div class="kny-stage"><!--DIR_A--></div>
+          <p class="kny-tagline">静止时退守底部角落，聚焦瞬间升到视口中央、图墙压暗让位——搜索的仪式感只在需要时出现。</p>
+        </article>
+
+        <article class="kny-card" data-design-option data-direction="B" data-dir="B" data-name="中央舞台常驻">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">B</span>
+            <h2>中央舞台常驻</h2>
+            <span class="kny-latin">CENTER STAGE</span>
+          </div>
+          <div class="kny-stage"><!--DIR_B--></div>
+          <p class="kny-tagline">搜索永久居中放大，是打开新标签页的第一眼；图墙退为明亮的背景。</p>
+        </article>
+
+        <article class="kny-card" data-design-option data-direction="C" data-dir="C" data-name="底部加冕舞台">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">C</span>
+            <h2>底部加冕舞台</h2>
+            <span class="kny-latin">CROWNED DOCK</span>
+          </div>
+          <div class="kny-stage"><!--DIR_C--></div>
+          <p class="kny-tagline">位置不变，底部暗渐变把胶囊托成一条「剧场沿」，加宽加高并补上键盘提示。</p>
+        </article>
+
+        <article class="kny-card" data-design-option data-direction="D" data-dir="D" data-name="顶部命令栏">
+          <div class="kny-card-head">
+            <span class="kny-key-cap">D</span>
+            <h2>顶部命令栏</h2>
+            <span class="kny-latin">COMMAND BAR</span>
+          </div>
+          <div class="kny-stage"><!--DIR_D--></div>
+          <p class="kny-tagline">搜索变成顶置全宽工具栏：直角、等宽字体、kbd 提示——新标签页即工作台。</p>
+        </article>
+      </main>
+<!--SHELL_BOTTOM-->

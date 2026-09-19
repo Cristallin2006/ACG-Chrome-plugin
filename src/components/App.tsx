@@ -232,7 +232,9 @@ export default class App extends Component<Props, State> {
    * e.g. the user grabs the scrollbar mid-flight.
    */
   private turnPage = (dir: number) => {
-    const h = window.innerHeight
+    // clientHeight matches the tiling's clientWidth: the stable scrollbar
+    // gutter keeps both constant whether or not the wall overflows.
+    const h = document.documentElement.clientHeight
     const current = Math.round(window.scrollY / h)
     const target = current + dir
     if (target < 0) return
@@ -292,8 +294,11 @@ export default class App extends Component<Props, State> {
    */
   private layOutScreens(count: number) {
     const { illusts } = this.state
-    const w = window.innerWidth
-    const h = window.innerHeight
+    // clientWidth, not innerWidth: once the wall grows past one viewport the
+    // vertical scrollbar takes 10px, and a wall laid to innerWidth would
+    // overflow sideways and summon a horizontal scrollbar.
+    const w = document.documentElement.clientWidth
+    const h = document.documentElement.clientHeight
     const perScreen = pickTileCount(w, h, illusts.length)
 
     let remaining = illusts.slice()

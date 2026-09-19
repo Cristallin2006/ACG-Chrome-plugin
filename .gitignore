@@ -7,3 +7,5 @@ test/artifacts/
 .DS_Store
 yarn-error.log
 **/.qa-profile/
+test/.profile-shot/
+test/shots/
