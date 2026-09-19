@@ -4,6 +4,17 @@ A Chrome extension for pixiv lovers: it picks up illustrations from the pixiv
 ranking and displays them on your new tab — as a gapless, zero-crop **puzzle
 wall** that reveals itself screen by screen as you scroll.
 
+![新标签页图墙（示意）](docs/screenshots/newtab-wall.png)
+![聚焦搜索时的 Spotlight 升起（示意）](docs/screenshots/newtab-spotlight.png)
+![扩展设置弹窗](docs/screenshots/popup.png)
+
+> 截图说明 / About these screenshots: 为保护画师版权，截图中的插画均以程序
+> 生成的渐变占位，实际使用中显示的是 pixiv 榜单/标签/推荐的真实插画。
+> To respect the artists' copyright, every illustration in these screenshots is
+> replaced with a generated gradient; in real use the wall shows actual artwork
+> from pixiv rankings, tags, and recommendations.（生成脚本 / generator:
+> `node test/shot-readme.mjs`）
+
 > **声明 / Credits**
 >
 > 本项目是 [tamanobi/Ku-nya](https://github.com/tamanobi/Ku-nya)（作者 Kohki
