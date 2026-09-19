@@ -9,3 +9,4 @@ yarn-error.log
 **/.qa-profile/
 test/.profile-shot/
 test/shots/
+test/.profile-shot-bookmarks/

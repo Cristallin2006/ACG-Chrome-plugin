@@ -46,6 +46,10 @@ export interface Options {
   smallestIncludableAspectRatio: number
   isSafe: boolean
   viewMode: ViewModes
+  /** The hover star on a puzzle piece files the artwork into Chrome bookmarks. */
+  isTileBookmarkEnabled: boolean
+  /** While typing, the risen capsule lists matching Chrome bookmarks. */
+  isBookmarkSearchEnabled: boolean
 }
 
 /** What a fresh install runs with, and what a page falls back to. */
@@ -66,6 +70,8 @@ export const defaultOptions: Options = {
   isSafe: true,
   // The gallery is the point of the page, so it starts out un-clickable.
   viewMode: ViewModes.Watch,
+  isTileBookmarkEnabled: true,
+  isBookmarkSearchEnabled: true,
 }
 
 export const getOptions = async (): Promise<Options> => {
@@ -128,6 +134,14 @@ export const getOptions = async (): Promise<Options> => {
       : defaultOptions.smallestIncludableAspectRatio,
     isSafe: await storageUtil.getBoolean('is_safe', defaultOptions.isSafe),
     viewMode: await storageUtil.getValue('view_mode', defaultOptions.viewMode),
+    isTileBookmarkEnabled: await storageUtil.getBoolean(
+      'tile_bookmark',
+      defaultOptions.isTileBookmarkEnabled,
+    ),
+    isBookmarkSearchEnabled: await storageUtil.getBoolean(
+      'bookmark_search',
+      defaultOptions.isBookmarkSearchEnabled,
+    ),
   }
 }
 
@@ -265,6 +279,30 @@ export const setViewMode = (viewMode: ViewModes) => {
       method: 'setViewMode',
       params: {
         view_mode: viewMode,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setTileBookmark = (isEnabled: boolean) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setTileBookmark',
+      params: {
+        tile_bookmark: isEnabled,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setBookmarkSearch = (isEnabled: boolean) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setBookmarkSearch',
+      params: {
+        bookmark_search: isEnabled,
       },
     },
     () => {},

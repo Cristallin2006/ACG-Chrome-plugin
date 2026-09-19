@@ -15,6 +15,11 @@ import {
 import { Options, Modes, ViewModes, setViewMode } from '../lib/options'
 import { Tile, computeTiling, pickTileCount } from '../lib/tiling'
 import { shuffle } from '../lib/util'
+import {
+  isAvailable as bookmarksAvailable,
+  listBookmarkedArtworkIds,
+  setBookmarked,
+} from '../lib/bookmarks'
 
 /** A laid-out tile plus its stagger slot in the screen's reveal ripple. */
 interface WallTile extends Tile {
@@ -40,6 +45,8 @@ interface State {
   viewMode: ViewModes
   /** Nothing to show: the ranking could not be fetched, or every entry was filtered out. */
   isUnavailable: boolean
+  /** Artwork ids already filed in Chrome bookmarks; the tile star reads this. */
+  bookmarkedIds: Set<number>
 }
 
 export default class App extends Component<Props, State> {
@@ -69,6 +76,7 @@ export default class App extends Component<Props, State> {
       wallHeight: 0,
       viewMode: props.options.viewMode,
       isUnavailable: false,
+      bookmarkedIds: new Set<number>(),
     }
   }
 
@@ -79,7 +87,46 @@ export default class App extends Component<Props, State> {
     window.addEventListener('scroll', this.handleScroll, { passive: true })
     window.addEventListener('keydown', this.handleKeyDown)
 
+    this.loadBookmarks()
     this.loadWall(0)
+  }
+
+  /**
+   * The stars light up from the bookmark folder, not from the wall: a piece
+   * the user filed last week shows lit the moment it is dealt again. The read
+   * is best-effort — a denied bookmarks API must never hold back the gallery.
+   */
+  private loadBookmarks = async () => {
+    if (!this.props.options.isTileBookmarkEnabled || !bookmarksAvailable()) {
+      return
+    }
+    try {
+      this.setState({ bookmarkedIds: new Set(await listBookmarkedArtworkIds()) })
+    } catch (error) {
+      console.error('Ku-nya: could not read bookmarks', error)
+    }
+  }
+
+  /**
+   * Optimistic: the star flips first, the bookmark manager catches up. A failed
+   * write flips the star back — pretending the file landed would be worse.
+   */
+  private handleToggleBookmark = async (illust: IllustEntry) => {
+    const previous = this.state.bookmarkedIds
+    const next = !previous.has(illust.id)
+    const flipped = new Set(previous)
+    if (next) {
+      flipped.add(illust.id)
+    } else {
+      flipped.delete(illust.id)
+    }
+    this.setState({ bookmarkedIds: flipped })
+    try {
+      await setBookmarked(illust, next)
+    } catch (error) {
+      console.error('Ku-nya: could not write the bookmark', error)
+      this.setState({ bookmarkedIds: new Set(previous) })
+    }
   }
 
   /**
@@ -100,6 +147,7 @@ export default class App extends Component<Props, State> {
     window.clearTimeout(this.retryTimer)
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
+    this.loadBookmarks()
     this.loadWall(0)
   }
 
@@ -471,6 +519,9 @@ export default class App extends Component<Props, State> {
               isInteractive={isInteractive}
               tile={tile}
               revealDelay={tile.revealDelay}
+              isBookmarkEnabled={this.props.options.isTileBookmarkEnabled}
+              isBookmarked={this.state.bookmarkedIds.has(tile.illust.id)}
+              onToggleBookmark={this.handleToggleBookmark}
             />
           ))}
         </div>
@@ -492,6 +543,7 @@ export default class App extends Component<Props, State> {
         <SearchBar
           viewMode={viewMode}
           onViewModeChange={this.handleViewModeChange}
+          isBookmarkSearchEnabled={this.props.options.isBookmarkSearchEnabled}
         />
       </div>
     )

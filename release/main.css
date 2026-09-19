@@ -127,6 +127,16 @@ body::after {
   transform: none;
 }
 
+/* 交互模式: the tile is a div; the link fills its content box so the artwork
+   and caption stay exactly where they were, and the bookmark star can sit
+   beside the link instead of inside it. */
+.kunya-tile__link {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+}
+
 .kunya-tile img {
   display: block;
   width: 100%;
@@ -176,8 +186,10 @@ body::after {
   .kunya.is-interactive .kunya-tile {
     cursor: pointer;
   }
+  /* The link lives inside the tile now, so keyboard focus arrives as
+     :focus-within — same hover lift, pointer and keyboard stay equals. */
   .kunya.is-interactive .kunya-tile:hover,
-  .kunya.is-interactive .kunya-tile:focus-visible {
+  .kunya.is-interactive .kunya-tile:focus-within {
     z-index: 1;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.4);
     transform: translateY(-4px) scale(1.015);
@@ -186,13 +198,13 @@ body::after {
     transition-delay: 0ms;
   }
   .kunya.is-interactive .kunya-tile:hover img,
-  .kunya.is-interactive .kunya-tile:focus-visible img {
+  .kunya.is-interactive .kunya-tile:focus-within img {
     transform: scale(1.045);
     filter: brightness(1.05) saturate(1.06);
   }
   /* The glass rim brightens to meet the light the picture is throwing. */
   .kunya.is-interactive .kunya-tile:hover::after,
-  .kunya.is-interactive .kunya-tile:focus-visible::after {
+  .kunya.is-interactive .kunya-tile:focus-within::after {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22),
       inset 0 0 0 1px rgba(255, 255, 255, 0.16);
   }
@@ -224,7 +236,7 @@ body::after {
 }
 
 .kunya.is-interactive .kunya-tile:hover .kunya-caption,
-.kunya.is-interactive .kunya-tile:focus-visible .kunya-caption {
+.kunya.is-interactive .kunya-tile:focus-within .kunya-caption {
   opacity: 1;
   transform: none;
 }
@@ -241,6 +253,62 @@ body::after {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* The bookmark star: same smoked glass as the caption, top-right corner.
+   Hidden until the tile is hovered or focused — except when the piece is
+   filed, where the amber star stays lit as a state mark (the accent only ever
+   means "interactive state", and this is one). */
+.kunya-tile__mark {
+  position: absolute;
+  top: 13px;
+  right: 13px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  background: rgba(19, 17, 16, 0.55);
+  backdrop-filter: blur(12px) saturate(140%);
+  color: var(--ink-soft);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 160ms var(--ease-out), transform 160ms var(--ease-out),
+    color 160ms var(--ease-out), background 160ms var(--ease-out);
+}
+
+.kunya-tile__mark svg path {
+  fill: none;
+}
+
+.kunya-tile:hover .kunya-tile__mark,
+.kunya-tile:focus-within .kunya-tile__mark,
+.kunya-tile__mark.is-on {
+  opacity: 1;
+  transform: none;
+}
+
+.kunya-tile__mark:hover {
+  background: rgba(19, 17, 16, 0.78);
+  color: var(--ink);
+}
+
+.kunya-tile__mark.is-on,
+.kunya-tile__mark.is-on:hover {
+  color: var(--accent);
+}
+
+.kunya-tile__mark.is-on svg path {
+  fill: currentColor;
+}
+
+.kunya-tile__mark:active {
+  transform: scale(0.92);
+  transition-duration: 100ms;
 }
 
 .kunya-empty {
@@ -363,6 +431,65 @@ body::after {
   opacity: 1;
   transform: none;
   transition-delay: 80ms;
+}
+
+/* Bookmark matches: a shelf sliding out under the risen capsule, one step
+   below the hint line. Same smoked-glass material as the capsule itself — it
+   is part of the capsule's risen state, not a new layer of chrome. */
+.kunya-bmarks {
+  position: absolute;
+  top: calc(100% + 34px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface);
+  backdrop-filter: blur(18px) saturate(120%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.kunya-bmarks__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 120ms var(--ease-out), color 120ms var(--ease-out);
+}
+
+.kunya-bmarks__row.is-active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+
+.kunya-bmarks__icon {
+  flex: none;
+}
+
+.kunya-bmarks__row.is-active .kunya-bmarks__icon {
+  color: var(--accent);
+}
+
+.kunya-bmarks__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-size: 12.5px;
+}
+
+.kunya-bmarks__host {
+  flex: none;
+  font-size: 11px;
+  color: var(--ink-soft);
 }
 
 /* The search button: quiet until there is something to send, then it takes
@@ -528,7 +655,9 @@ body::after {
   .kunya-tile,
   .kunya-tile img,
   .kunya-tile::after,
+  .kunya-tile__mark,
   .kunya-caption,
+  .kunya-bmarks__row,
   .kunya-switch,
   .kunya-switch__track,
   .kunya-switch__knob {
@@ -555,10 +684,13 @@ body::after {
     transform: translateX(-50%);
   }
   .kunya.is-interactive .kunya-tile:hover,
-  .kunya.is-interactive .kunya-tile:focus-visible,
+  .kunya.is-interactive .kunya-tile:focus-within,
   .kunya.is-interactive .kunya-tile:active,
   .kunya.is-interactive .kunya-tile:hover img,
-  .kunya.is-interactive .kunya-tile:focus-visible img {
+  .kunya.is-interactive .kunya-tile:focus-within img {
+    transform: none;
+  }
+  .kunya-tile__mark {
     transform: none;
   }
 }

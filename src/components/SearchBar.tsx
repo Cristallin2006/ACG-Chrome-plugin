@@ -1,10 +1,18 @@
 import { h, Component } from 'preact'
 import { ViewModes } from '../lib/options'
 import { submit } from '../lib/search'
+import {
+  BookmarkHit,
+  hostOf,
+  isAvailable as bookmarksAvailable,
+  queryBookmarks,
+} from '../lib/bookmarks'
 
 interface Props {
   viewMode: ViewModes
   onViewModeChange(mode: ViewModes): void
+  /** While typing, the risen capsule lists matching Chrome bookmarks. */
+  isBookmarkSearchEnabled: boolean
 }
 
 interface State {
@@ -16,17 +24,31 @@ interface State {
    * position (38dvh) over a dimming scrim. Blur or Esc lets it settle back.
    */
   isRisen: boolean
+  /** Chrome bookmarks matching the query, shown under the risen capsule. */
+  suggestions: BookmarkHit[]
+  /** -1 = nothing picked, so Enter stays a web search; ↑↓ move the pick. */
+  activeIndex: number
 }
 
 const GHOST_AFTER_MS = 2000
+/** Keystroke-to-suggestion delay: snappy, but not one Chrome query per key. */
+const SUGGEST_DEBOUNCE_MS = 160
+const SUGGEST_LIMIT = 5
 
 export default class SearchBar extends Component<Props, State> {
   private input: HTMLInputElement | null = null
   private ghostTimer: number | null = null
+  private suggestTimer: number | null = null
 
   constructor(props: Props) {
     super(props)
-    this.state = { value: '', isGhost: false, isRisen: false }
+    this.state = {
+      value: '',
+      isGhost: false,
+      isRisen: false,
+      suggestions: [],
+      activeIndex: -1,
+    }
   }
 
   componentDidMount() {
@@ -43,6 +65,7 @@ export default class SearchBar extends Component<Props, State> {
     document.removeEventListener('pointermove', this.handleActivity)
     document.removeEventListener('wheel', this.handleActivity)
     this.disarmGhost()
+    if (this.suggestTimer !== null) window.clearTimeout(this.suggestTimer)
   }
 
   componentDidUpdate(previous: Props) {
@@ -88,6 +111,9 @@ export default class SearchBar extends Component<Props, State> {
     if (initial !== undefined) {
       this.setState({ value: initial })
       input.value = initial
+      // The captured first character never passes through handleInput, so the
+      // bookmark panel would stay silent about it unless asked from here.
+      this.scheduleSuggest()
     }
     this.wake()
   }
@@ -142,14 +168,74 @@ export default class SearchBar extends Component<Props, State> {
 
   private handleInput = (event: Event) => {
     this.setState({ value: (event.target as HTMLInputElement).value })
+    this.scheduleSuggest()
+  }
+
+  /**
+   * The bookmark panel answers while the user types. Bookmarks are a local
+   * database — the debounce only exists so a fast typist fires one query per
+   * pause, not per keystroke.
+   */
+  private scheduleSuggest = () => {
+    if (this.suggestTimer !== null) window.clearTimeout(this.suggestTimer)
+    if (!this.props.isBookmarkSearchEnabled || !bookmarksAvailable()) return
+    this.suggestTimer = window.setTimeout(() => void this.runSuggest(), SUGGEST_DEBOUNCE_MS)
+  }
+
+  private async runSuggest() {
+    const query = this.state.value.trim()
+    if (query.length === 0) {
+      this.setState({ suggestions: [], activeIndex: -1 })
+      return
+    }
+    try {
+      const hits = await queryBookmarks(query, SUGGEST_LIMIT)
+      // The input may have moved on while the query was out; a stale panel is
+      // worse than a slow one.
+      if (this.state.value.trim() !== query) return
+      this.setState({ suggestions: hits, activeIndex: -1 })
+    } catch (error) {
+      console.error('Ku-nya: bookmark search failed', error)
+      this.setState({ suggestions: [], activeIndex: -1 })
+    }
+  }
+
+  private openBookmark = (hit: BookmarkHit) => {
+    this.disarmGhost()
+    this.setState({ suggestions: [], activeIndex: -1 })
+    location.assign(hit.url)
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
+    const { suggestions, activeIndex } = this.state
     if (event.key === 'Escape') {
-      this.setState({ value: '' })
+      this.setState({ value: '', suggestions: [], activeIndex: -1 })
       ;(event.target as HTMLInputElement).blur()
       this.armGhost()
       return
+    }
+    if (suggestions.length > 0) {
+      // ↑↓ walk the panel. Enter stays a web search until a row is picked —
+      // the capsule's first job (搜网页) never moves aside unasked.
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        this.setState({ activeIndex: (activeIndex + 1) % suggestions.length })
+        return
+      }
+      if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        this.setState({
+          activeIndex:
+            activeIndex <= 0 ? suggestions.length - 1 : activeIndex - 1,
+        })
+        return
+      }
+      if (event.key === 'Enter' && activeIndex >= 0) {
+        event.preventDefault()
+        const hit = suggestions[activeIndex]
+        if (hit) this.openBookmark(hit)
+        return
+      }
     }
     if (event.key !== 'Enter') return
     void this.run()
@@ -178,11 +264,13 @@ export default class SearchBar extends Component<Props, State> {
 
   render() {
     const { viewMode } = this.props
+    const { suggestions, activeIndex } = this.state
     const isInteractive = viewMode === ViewModes.Interactive
     const hasText = this.state.value.trim().length > 0
     const className = `kunya-search${this.state.isGhost ? ' is-ghost' : ''}${
       this.state.isRisen ? ' is-risen' : ''
     }${hasText ? ' has-text' : ''}`
+    const showSuggestions = this.state.isRisen && suggestions.length > 0
 
     return (
       <div class="kunya-search-root">
@@ -272,8 +360,48 @@ export default class SearchBar extends Component<Props, State> {
             </span>
           </button>
           <span class="kunya-search__hint" aria-hidden="true">
-            ↵ 搜索 · ⇧R 换一批 · esc 收起
+            {showSuggestions
+              ? '↑↓ 选书签 · ↵ 打开所选 · esc 收起'
+              : '↵ 搜索 · ⇧R 换一批 · esc 收起'}
           </span>
+
+          {/* Bookmark matches ride the risen capsule, one step below the hint
+              line. mousedown is swallowed so a click never blurs the field
+              before the row's own click can navigate. */}
+          {showSuggestions && (
+            <ul class="kunya-bmarks" role="listbox" aria-label="匹配的书签">
+              {suggestions.map((hit, index) => (
+                <li
+                  key={hit.id}
+                  role="option"
+                  aria-selected={index === activeIndex ? 'true' : 'false'}
+                  class={
+                    index === activeIndex
+                      ? 'kunya-bmarks__row is-active'
+                      : 'kunya-bmarks__row'
+                  }
+                  onMouseDown={event => event.preventDefault()}
+                  onMouseEnter={() => this.setState({ activeIndex: index })}
+                  onClick={() => this.openBookmark(hit)}
+                >
+                  <svg
+                    class="kunya-bmarks__icon"
+                    viewBox="0 0 16 16"
+                    width="13"
+                    height="13"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M8 2.6 L9.8 6 L13.6 6.5 L10.9 9.3 L11.5 13.2 L8 11.3 L4.5 13.2 L5.1 9.3 L2.4 6.5 L6.2 6 Z"
+                      fill="currentColor"
+                    />
+                  </svg>
+                  <span class="kunya-bmarks__title">{hit.title}</span>
+                  <span class="kunya-bmarks__host">{hostOf(hit.url)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
     )

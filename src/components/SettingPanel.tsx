@@ -14,6 +14,8 @@ import {
   setExcludeAI,
   setMinBookmarks,
   setExcludedAuthors,
+  setTileBookmark,
+  setBookmarkSearch,
 } from '../lib/options'
 import ModeSettingsSection from './ModeSettingSection'
 import AspectRatioSettingSection from './AspectRatioSettingSection'
@@ -26,6 +28,7 @@ import SafeSection from './SafeSection'
 import ViewModeSection from './ViewModeSection'
 import AISection from './AISection'
 import BookmarkFloorSection from './BookmarkFloorSection'
+import BookmarkSection from './BookmarkSection'
 import ExcludedAuthorsSection from './ExcludedAuthorsSection'
 
 interface Props {
@@ -86,6 +89,14 @@ export default class SettingPanel extends Component<Props, State> {
       this.props.initialOptions.excludedAuthors === undefined
         ? defaultOptions.excludedAuthors
         : this.props.initialOptions.excludedAuthors
+    const isTileBookmarkEnabled =
+      this.props.initialOptions.isTileBookmarkEnabled === undefined
+        ? defaultOptions.isTileBookmarkEnabled
+        : this.props.initialOptions.isTileBookmarkEnabled
+    const isBookmarkSearchEnabled =
+      this.props.initialOptions.isBookmarkSearchEnabled === undefined
+        ? defaultOptions.isBookmarkSearchEnabled
+        : this.props.initialOptions.isBookmarkSearchEnabled
 
     const version =
       chrome.runtime && chrome.runtime.getManifest
@@ -102,6 +113,15 @@ export default class SettingPanel extends Component<Props, State> {
         <div className="knp-card">
           <ViewModeSection initialValue={viewMode} update={setViewMode} />
           <SafeSection initial_is_safe={isSafe} update={setSafe} />
+        </div>
+
+        <div className="knp-card">
+          <BookmarkSection
+            initialTileBookmark={isTileBookmarkEnabled}
+            initialBookmarkSearch={isBookmarkSearchEnabled}
+            updateTileBookmark={setTileBookmark}
+            updateBookmarkSearch={setBookmarkSearch}
+          />
         </div>
 
         <div className="knp-card">

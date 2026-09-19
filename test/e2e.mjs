@@ -660,6 +660,121 @@ async function main() {
       searched,
     )
 
+    // 9b. Typing lists matching Chrome bookmarks under the risen capsule, and
+    //     ↓ + Enter opens the pick instead of running a web search. Done in a
+    //     fresh tab because the pick navigates the page away.
+    await newTab.eval(
+      `new Promise(r => chrome.bookmarks.create({ title: 'kunya suggestion target', url: 'https://example.com/kunya-bookmark-test' }, r))`,
+    )
+    const bmTarget = await cdp.send('Target.createTarget', { url: 'chrome://newtab' })
+    const bmTab = await cdp.attach(bmTarget.targetId)
+    await waitFor(
+      async () =>
+        (await bmTab.eval(
+          `Boolean(document.querySelector('.kunya-search__input'))`,
+        ))
+          ? true
+          : null,
+      20000,
+      'the search field on the bookmark-test tab',
+    )
+    await bmTab.eval(`document.querySelector('.kunya-search__input').focus()`)
+    await bmTab.send('Input.insertText', { text: 'kunya-bookmark-test' })
+    const listed = await waitFor(
+      async () => {
+        const n = await bmTab.eval(
+          `document.querySelectorAll('.kunya-bmarks__row').length`,
+        )
+        return n > 0 ? { rows: n } : null
+      },
+      15000,
+      'bookmark suggestions under the risen capsule',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'typing lists matching Chrome bookmarks',
+      !listed.error,
+      JSON.stringify(listed),
+    )
+    if (!listed.error) {
+      await bmTab.send('Input.dispatchKeyEvent', {
+        type: 'keyDown',
+        key: 'ArrowDown',
+        windowsVirtualKeyCode: 40,
+      })
+      await sleep(250)
+      await bmTab.send('Input.dispatchKeyEvent', {
+        type: 'keyDown',
+        key: 'Enter',
+        windowsVirtualKeyCode: 13,
+      })
+      const opened = await waitFor(
+        async () => {
+          const href = await bmTab.eval('location.href')
+          return href.indexOf('example.com/kunya-bookmark-test') !== -1
+            ? href
+            : null
+        },
+        15000,
+        'the picked bookmark to open',
+      ).catch(e => `error: ${e.message}`)
+      check(
+        'arrow-down + Enter opens the picked bookmark',
+        typeof opened === 'string' && opened.indexOf('example.com') !== -1,
+        String(opened),
+      )
+    }
+    await cdp.send('Target.closeTarget', { targetId: bmTarget.targetId })
+
+    // 9c. The tile star (交互 mode) files the artwork page into the Ku-nya
+    //     bookmark folder; a second click removes it again. Section 8 left
+    //     the wall in 纯看, so switch it back first.
+    await newTab.eval(`document.querySelector('.kunya-switch').click()`)
+    await sleep(400)
+    const markTrip = await waitFor(
+      async () => {
+        const r = await newTab.eval(`(async () => {
+          const link = document.querySelector('.kunya-tile__link')
+          const btn = document.querySelector('.kunya-tile__mark')
+          if (!link || !btn) return null
+          const search = q => new Promise(res => chrome.bookmarks.search(q, res))
+          const url = link.href
+          btn.click()
+          await new Promise(r => setTimeout(r, 700))
+          const added = await search({ url })
+          let folder = null
+          if (added.length) {
+            const parent = await new Promise(res => chrome.bookmarks.get(added[0].parentId, res))
+            folder = parent && parent[0] ? parent[0].title : null
+          }
+          const litAfterAdd = btn.classList.contains('is-on')
+          btn.click()
+          await new Promise(r => setTimeout(r, 700))
+          const removed = await search({ url })
+          const mark = document.querySelector('.kunya-tile__mark')
+          const litAfterRemove = mark ? mark.classList.contains('is-on') : null
+          return { url, added: added.length, folder, litAfterAdd, removed: removed.length, litAfterRemove }
+        })()`)
+        return r
+      },
+      20000,
+      'a tile bookmark star on the wall',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'tile star files the artwork into the Ku-nya bookmark folder',
+      !markTrip.error &&
+        markTrip.added === 1 &&
+        markTrip.folder === 'Ku-nya' &&
+        markTrip.litAfterAdd === true,
+      JSON.stringify(markTrip),
+    )
+    check(
+      'a second click on the star removes the bookmark',
+      !markTrip.error &&
+        markTrip.removed === 0 &&
+        markTrip.litAfterRemove === false,
+      JSON.stringify(markTrip),
+    )
+
     // 10. Popup: settings render, and a click has to land in
     //    chrome.storage.local through the worker.
     const popupTarget = await cdp.send('Target.createTarget', {
@@ -815,6 +930,42 @@ async function main() {
           aiRoundTrip.checkedInUi === !aiRoundTrip.before &&
           aiRoundTrip.stored === (aiRoundTrip.before ? '0' : '1'),
         JSON.stringify(aiRoundTrip),
+      )
+
+      // The tile bookmark toggle writes tile_bookmark as '1'/'0'.
+      const tileBookmarkRoundTrip = await popup.eval(`(async () => {
+        const box = document.querySelector('#checkbox_for_tile_bookmark')
+        if (!box) return { error: 'tile bookmark toggle not found' }
+        const before = box.checked
+        box.click()
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('tile_bookmark', r))
+        return { before, checkedInUi: box.checked, stored: stored.tile_bookmark }
+      })()`)
+      check(
+        'tile bookmark toggle persists to chrome.storage.local',
+        !tileBookmarkRoundTrip.error &&
+          tileBookmarkRoundTrip.checkedInUi === !tileBookmarkRoundTrip.before &&
+          tileBookmarkRoundTrip.stored === (tileBookmarkRoundTrip.before ? '0' : '1'),
+        JSON.stringify(tileBookmarkRoundTrip),
+      )
+
+      // The bookmark suggestion toggle writes bookmark_search as '1'/'0'.
+      const bookmarkSearchRoundTrip = await popup.eval(`(async () => {
+        const box = document.querySelector('#checkbox_for_bookmark_search')
+        if (!box) return { error: 'bookmark search toggle not found' }
+        const before = box.checked
+        box.click()
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('bookmark_search', r))
+        return { before, checkedInUi: box.checked, stored: stored.bookmark_search }
+      })()`)
+      check(
+        'bookmark suggestion toggle persists to chrome.storage.local',
+        !bookmarkSearchRoundTrip.error &&
+          bookmarkSearchRoundTrip.checkedInUi === !bookmarkSearchRoundTrip.before &&
+          bookmarkSearchRoundTrip.stored === (bookmarkSearchRoundTrip.before ? '0' : '1'),
+        JSON.stringify(bookmarkSearchRoundTrip),
       )
 
       // The bookmark floor writes min_bookmarks as a string.

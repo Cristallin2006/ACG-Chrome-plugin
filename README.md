@@ -50,6 +50,9 @@ wall** that reveals itself screen by screen as you scroll.
 >   屏蔽——四者与屏蔽标签、安全级、宽高比一样，对所有内容源生效
 > - **设置面板「暗房延伸」**：popup 与新标签页同一套暗房材质——底片片夹式分组卡片、
 >   琥珀只给开态开关与焦点、登录态琥珀呼吸点
+> - **Chrome 书签联动**：交互模式悬停拼块，一键把作品页收藏进 Chrome 书签的
+>   Ku-nya 文件夹（随浏览器同步，再点即移除）；搜索时输入即列出匹配的 Chrome
+>   书签，`↑↓` 选择、回车直达——两者都是普通 Chrome 书签，书签管理器里可见可整理
 > - 键盘流：`/`、`Ctrl/Cmd+K` 聚焦搜索，任意字符直接开搜，`⇧R` 换一批，`Esc` 收起
 > - 图源修复：统一归一化为等比 `master` 图（修复 `_custom` 方图缩略图导致的
 >   拉伸），分辨率提升至 `600x1200_90`
@@ -116,6 +119,11 @@ why.
   remembered, and the popup exposes it too
 - The settings popup wears the same darkroom as the wall: film-sleeve group
   cards, the amber reserved for the on-switch, focus rings and the login pulse
+- **Chrome bookmarks, wired in**: hovering a tile in interactive mode reveals a
+  star that files the artwork page into a `Ku-nya` folder in your Chrome
+  bookmarks (they sync like anything you saved by hand; click again to remove),
+  and typing in the search capsule lists matching bookmarks under it — `↑↓` to
+  pick, Enter opens the pick, while an unpicked Enter stays a plain web search
 - `/` or `Ctrl/Cmd+K` focuses the search field, any printable character starts a
   query, `Shift+R` deals a fresh wall, `Esc` clears and steps out; in watch mode
   the capsule steps back to a ghost while the pointer is still and returns the

@@ -98,6 +98,20 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           await storageUtil.setValue('view_mode', request.params.view_mode)
           sendResponse({ data: 'setViewMode' })
           break
+        case 'setTileBookmark':
+          await storageUtil.setBoolean(
+            'tile_bookmark',
+            request.params.tile_bookmark,
+          )
+          sendResponse({ data: 'setTileBookmark' })
+          break
+        case 'setBookmarkSearch':
+          await storageUtil.setBoolean(
+            'bookmark_search',
+            request.params.bookmark_search,
+          )
+          sendResponse({ data: 'setBookmarkSearch' })
+          break
         default:
           sendResponse({ data: null })
       }
