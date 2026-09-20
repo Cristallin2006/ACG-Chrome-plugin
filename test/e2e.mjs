@@ -833,6 +833,32 @@ async function main() {
       JSON.stringify(otherItem),
     )
 
+    // 9d3. Bookmarks nested inside folders are destinations too: the strip
+    //      flattens folders depth-first, so a link filed under a folder in
+    //      Other Bookmarks must still surface.
+    await newTab.eval(`(async () => {
+      const folder = await new Promise(r => chrome.bookmarks.create({ parentId: '2', title: 'kunya folder' }, r))
+      await new Promise(r => chrome.bookmarks.create({ parentId: folder.id, title: 'kunya nested target', url: 'https://example.com/kunya-nested-test' }, r))
+    })()`)
+    await newTab.eval(`window.dispatchEvent(new Event('focus'))`)
+    const nestedItem = await waitFor(
+      async () => {
+        const items = await newTab.eval(`Array.from(
+          document.querySelectorAll('.kunya-marks__item')
+        ).map(a => a.href)`)
+        return items.some(h => h.indexOf('kunya-nested-test') !== -1)
+          ? items
+          : null
+      },
+      15000,
+      'the bookmark strip to flatten foldered bookmarks',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'homepage strip surfaces bookmarks nested in folders',
+      !nestedItem.error,
+      JSON.stringify(nestedItem),
+    )
+
     const stripTarget = await cdp.send('Target.createTarget', {
       url: 'chrome://newtab',
     })

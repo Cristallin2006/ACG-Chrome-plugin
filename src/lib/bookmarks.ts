@@ -23,6 +23,7 @@ interface BookmarkNode {
   title: string
   url?: string
   parentId?: string
+  children?: BookmarkNode[]
 }
 
 const FOLDER_TITLE = 'Ku-nya'
@@ -67,6 +68,8 @@ const create = (node: { parentId?: string; title: string; url?: string }) =>
 const remove = (id: string) => call<void>('remove', id)
 
 const getChildren = (id: string) => call<BookmarkNode[]>('getChildren', id)
+
+const getSubTree = (id: string) => call<BookmarkNode[]>('getSubTree', id)
 
 /**
  * The folder is looked up, not remembered: the user is free to move or rename
@@ -155,24 +158,35 @@ export const hostOf = (url: string): string => {
 }
 
 /**
- * Quick-access links for the homepage strip: the bookmarks bar's direct links
- * first, then Other Bookmarks' — many users (and Chrome's own star button)
- * file into Other Bookmarks, so a bar-only read would leave the strip empty
- * for exactly the people who just started bookmarking. Folders are skipped:
- * the strip is one row of destinations, not a menu system.
+ * Quick-access links for the homepage strip: the bookmarks bar first, then
+ * Other Bookmarks — many users (and Chrome's own star button) file into Other
+ * Bookmarks, so a bar-only read would leave the strip empty for exactly the
+ * people who just started bookmarking. Folders are flattened depth-first in
+ * the user's own arrangement: a link inside a folder is still a destination,
+ * and hiding it would punish anyone who tidies.
  */
 export const listBarBookmarks = async (
   limit: number,
 ): Promise<BookmarkHit[]> => {
   const hits: BookmarkHit[] = []
+  const collect = (node: BookmarkNode) => {
+    if (hits.length >= limit) return
+    if (node.url) {
+      hits.push({ id: node.id, title: node.title || node.url, url: node.url })
+      return
+    }
+    // The tile star's own folder holds artwork pages, not web destinations —
+    // those belong to the wall, not the strip.
+    if (node.title === FOLDER_TITLE) return
+    const children = node.children || []
+    for (let i = 0; i < children.length && hits.length < limit; i++) {
+      collect(children[i])
+    }
+  }
   const roots = [BOOKMARKS_BAR, OTHER_BOOKMARKS]
   for (let r = 0; r < roots.length && hits.length < limit; r++) {
-    const children = await getChildren(roots[r])
-    for (let i = 0; i < children.length && hits.length < limit; i++) {
-      const node = children[i]
-      if (!node.url) continue
-      hits.push({ id: node.id, title: node.title || node.url, url: node.url })
-    }
+    const tree = await getSubTree(roots[r])
+    if (tree[0]) collect(tree[0])
   }
   return hits
 }
