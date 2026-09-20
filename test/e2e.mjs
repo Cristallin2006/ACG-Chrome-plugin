@@ -802,6 +802,37 @@ async function main() {
       JSON.stringify(stripItem),
     )
 
+    // 9d2. Chrome's own star button files into Other Bookmarks, so the strip
+    //      falls back to it: a bookmark there must surface too, after any
+    //      direct bookmarks-bar links.
+    await newTab.eval(
+      `new Promise(r => chrome.bookmarks.create({ parentId: '2', title: 'kunya other target', url: 'https://example.com/kunya-other-test' }, r))`,
+    )
+    await newTab.eval(`window.dispatchEvent(new Event('focus'))`)
+    const otherItem = await waitFor(
+      async () => {
+        const items = await newTab.eval(`Array.from(
+          document.querySelectorAll('.kunya-marks__item')
+        ).map(a => a.href)`)
+        const otherIndex = items.findIndex(
+          h => h.indexOf('kunya-other-test') !== -1,
+        )
+        const barIndex = items.findIndex(
+          h => h.indexOf('kunya-strip-test') !== -1,
+        )
+        return otherIndex !== -1 && barIndex !== -1 && barIndex < otherIndex
+          ? items
+          : null
+      },
+      15000,
+      'the bookmark strip to fall back to Other Bookmarks',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'homepage strip falls back to Other Bookmarks after bar links',
+      !otherItem.error,
+      JSON.stringify(otherItem),
+    )
+
     const stripTarget = await cdp.send('Target.createTarget', {
       url: 'chrome://newtab',
     })

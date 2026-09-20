@@ -22,11 +22,14 @@ interface State {
 const LIMIT = 20
 
 /**
- * The homepage bookmark strip: a single row of the Chrome bookmarks bar's own
- * links floating above the search capsule. It holds no state of its own —
- * the bar is re-read on mount, on chrome.bookmarks.onChanged (where the
- * platform delivers it), and every time the tab regains focus or visibility,
- * which is how edits made in Chrome's bookmark manager reach an open tab.
+ * The homepage bookmark strip: a single row of quick-access links floating
+ * above the search capsule — the bookmarks bar's direct links first, Other
+ * Bookmarks' after (Chrome's own star button files there, so a bar-only read
+ * would leave the strip empty for most casual users). It holds no state of
+ * its own — the bar is re-read on mount, on chrome.bookmarks.onChanged (where
+ * the platform delivers it), and every time the tab regains focus or
+ * visibility, which is how edits made in Chrome's bookmark manager reach an
+ * open tab.
  */
 export default class BookmarkStrip extends Component<Props, State> {
   constructor(props: Props) {

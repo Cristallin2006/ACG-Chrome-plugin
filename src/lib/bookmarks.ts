@@ -155,18 +155,24 @@ export const hostOf = (url: string): string => {
 }
 
 /**
- * The bookmarks bar's direct links, in the user's own arrangement. Folders are
- * skipped: the strip is one row of destinations, not a menu system.
+ * Quick-access links for the homepage strip: the bookmarks bar's direct links
+ * first, then Other Bookmarks' — many users (and Chrome's own star button)
+ * file into Other Bookmarks, so a bar-only read would leave the strip empty
+ * for exactly the people who just started bookmarking. Folders are skipped:
+ * the strip is one row of destinations, not a menu system.
  */
 export const listBarBookmarks = async (
   limit: number,
 ): Promise<BookmarkHit[]> => {
-  const children = await getChildren(BOOKMARKS_BAR)
   const hits: BookmarkHit[] = []
-  for (let i = 0; i < children.length && hits.length < limit; i++) {
-    const node = children[i]
-    if (!node.url) continue
-    hits.push({ id: node.id, title: node.title || node.url, url: node.url })
+  const roots = [BOOKMARKS_BAR, OTHER_BOOKMARKS]
+  for (let r = 0; r < roots.length && hits.length < limit; r++) {
+    const children = await getChildren(roots[r])
+    for (let i = 0; i < children.length && hits.length < limit; i++) {
+      const node = children[i]
+      if (!node.url) continue
+      hits.push({ id: node.id, title: node.title || node.url, url: node.url })
+    }
   }
   return hits
 }
