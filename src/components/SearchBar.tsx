@@ -1,6 +1,7 @@
 import { h, Component } from 'preact'
 import { ViewModes } from '../lib/options'
 import { submit } from '../lib/search'
+import BookmarkStrip from './BookmarkStrip'
 import {
   BookmarkHit,
   hostOf,
@@ -13,6 +14,8 @@ interface Props {
   onViewModeChange(mode: ViewModes): void
   /** While typing, the risen capsule lists matching Chrome bookmarks. */
   isBookmarkSearchEnabled: boolean
+  /** The homepage strip mirroring the Chrome bookmarks bar. */
+  isBookmarkBarEnabled: boolean
 }
 
 interface State {
@@ -274,6 +277,11 @@ export default class SearchBar extends Component<Props, State> {
 
     return (
       <div class="kunya-search-root">
+        <BookmarkStrip
+          isGhost={this.state.isGhost}
+          isRisen={this.state.isRisen}
+          isEnabled={this.props.isBookmarkBarEnabled}
+        />
         {/* Spotlight scrim: rises with the capsule, dims the wall, lets the
             field take the room. Never intercepts the pointer. */}
         <div

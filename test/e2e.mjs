@@ -775,6 +775,60 @@ async function main() {
       JSON.stringify(markTrip),
     )
 
+    // 9d. The homepage strip mirrors the Chrome bookmarks bar: seeding a
+    //     bookmark into the bar must surface it when the tab regains focus
+    //     (onChanged is not delivered everywhere; focus/visibility re-reads
+    //     the bar), and clicking the item navigates the tab.
+    await newTab.eval(
+      `new Promise(r => chrome.bookmarks.create({ parentId: '1', title: 'kunya strip target', url: 'https://example.com/kunya-strip-test' }, r))`,
+    )
+    await newTab.eval(`window.dispatchEvent(new Event('focus'))`)
+    const stripItem = await waitFor(
+      async () => {
+        const item = await newTab.eval(`(() => {
+          const a = document.querySelector('.kunya-marks__item')
+          return a ? { text: a.textContent, href: a.href } : null
+        })()`)
+        return item && item.href.indexOf('kunya-strip-test') !== -1
+          ? item
+          : null
+      },
+      15000,
+      'the bookmark strip to mirror a new bookmarks-bar entry',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'homepage strip mirrors the Chrome bookmarks bar on focus',
+      !stripItem.error,
+      JSON.stringify(stripItem),
+    )
+
+    const stripTarget = await cdp.send('Target.createTarget', {
+      url: 'chrome://newtab',
+    })
+    const stripTab = await cdp.attach(stripTarget.targetId)
+    const stripOpened = await waitFor(
+      async () => {
+        const clicked = await stripTab.eval(`(() => {
+          const a = document.querySelector('.kunya-marks__item[href*="kunya-strip-test"]')
+          if (!a) return null
+          a.click()
+          return true
+        })()`)
+        if (!clicked) return null
+        const href = await stripTab.eval('location.href')
+        return href.indexOf('kunya-strip-test') !== -1 ? href : null
+      },
+      20000,
+      'the strip link to open its bookmark',
+    ).catch(e => `error: ${e.message}`)
+    check(
+      'clicking a strip item opens the bookmark',
+      typeof stripOpened === 'string' &&
+        stripOpened.indexOf('example.com') !== -1,
+      String(stripOpened),
+    )
+    await cdp.send('Target.closeTarget', { targetId: stripTarget.targetId })
+
     // 10. Popup: settings render, and a click has to land in
     //    chrome.storage.local through the worker.
     const popupTarget = await cdp.send('Target.createTarget', {
@@ -966,6 +1020,24 @@ async function main() {
           bookmarkSearchRoundTrip.checkedInUi === !bookmarkSearchRoundTrip.before &&
           bookmarkSearchRoundTrip.stored === (bookmarkSearchRoundTrip.before ? '0' : '1'),
         JSON.stringify(bookmarkSearchRoundTrip),
+      )
+
+      // The homepage bookmark strip toggle writes bookmark_bar as '1'/'0'.
+      const bookmarkBarRoundTrip = await popup.eval(`(async () => {
+        const box = document.querySelector('#checkbox_for_bookmark_bar')
+        if (!box) return { error: 'bookmark bar toggle not found' }
+        const before = box.checked
+        box.click()
+        await new Promise(r => setTimeout(r, 800))
+        const stored = await new Promise(r => chrome.storage.local.get('bookmark_bar', r))
+        return { before, checkedInUi: box.checked, stored: stored.bookmark_bar }
+      })()`)
+      check(
+        'bookmark strip toggle persists to chrome.storage.local',
+        !bookmarkBarRoundTrip.error &&
+          bookmarkBarRoundTrip.checkedInUi === !bookmarkBarRoundTrip.before &&
+          bookmarkBarRoundTrip.stored === (bookmarkBarRoundTrip.before ? '0' : '1'),
+        JSON.stringify(bookmarkBarRoundTrip),
       )
 
       // The bookmark floor writes min_bookmarks as a string.

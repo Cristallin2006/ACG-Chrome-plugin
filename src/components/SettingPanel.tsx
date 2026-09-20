@@ -16,6 +16,7 @@ import {
   setExcludedAuthors,
   setTileBookmark,
   setBookmarkSearch,
+  setBookmarkBar,
 } from '../lib/options'
 import ModeSettingsSection from './ModeSettingSection'
 import AspectRatioSettingSection from './AspectRatioSettingSection'
@@ -97,6 +98,10 @@ export default class SettingPanel extends Component<Props, State> {
       this.props.initialOptions.isBookmarkSearchEnabled === undefined
         ? defaultOptions.isBookmarkSearchEnabled
         : this.props.initialOptions.isBookmarkSearchEnabled
+    const isBookmarkBarEnabled =
+      this.props.initialOptions.isBookmarkBarEnabled === undefined
+        ? defaultOptions.isBookmarkBarEnabled
+        : this.props.initialOptions.isBookmarkBarEnabled
 
     const version =
       chrome.runtime && chrome.runtime.getManifest
@@ -119,8 +124,10 @@ export default class SettingPanel extends Component<Props, State> {
           <BookmarkSection
             initialTileBookmark={isTileBookmarkEnabled}
             initialBookmarkSearch={isBookmarkSearchEnabled}
+            initialBookmarkBar={isBookmarkBarEnabled}
             updateTileBookmark={setTileBookmark}
             updateBookmarkSearch={setBookmarkSearch}
+            updateBookmarkBar={setBookmarkBar}
           />
         </div>
 

@@ -50,6 +50,8 @@ export interface Options {
   isTileBookmarkEnabled: boolean
   /** While typing, the risen capsule lists matching Chrome bookmarks. */
   isBookmarkSearchEnabled: boolean
+  /** A strip above the capsule mirrors the Chrome bookmarks bar for quick access. */
+  isBookmarkBarEnabled: boolean
 }
 
 /** What a fresh install runs with, and what a page falls back to. */
@@ -72,6 +74,7 @@ export const defaultOptions: Options = {
   viewMode: ViewModes.Watch,
   isTileBookmarkEnabled: true,
   isBookmarkSearchEnabled: true,
+  isBookmarkBarEnabled: true,
 }
 
 export const getOptions = async (): Promise<Options> => {
@@ -141,6 +144,10 @@ export const getOptions = async (): Promise<Options> => {
     isBookmarkSearchEnabled: await storageUtil.getBoolean(
       'bookmark_search',
       defaultOptions.isBookmarkSearchEnabled,
+    ),
+    isBookmarkBarEnabled: await storageUtil.getBoolean(
+      'bookmark_bar',
+      defaultOptions.isBookmarkBarEnabled,
     ),
   }
 }
@@ -303,6 +310,18 @@ export const setBookmarkSearch = (isEnabled: boolean) => {
       method: 'setBookmarkSearch',
       params: {
         bookmark_search: isEnabled,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setBookmarkBar = (isEnabled: boolean) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setBookmarkBar',
+      params: {
+        bookmark_bar: isEnabled,
       },
     },
     () => {},

@@ -1,6 +1,6 @@
 {
   "name": "Ku-nya",
-  "version": "2.15.0",
+  "version": "2.16.0",
   "manifest_version": 3,
   "description": "Ku-nya picks up illustrations on the pixiv ranking randomly and displays them on your new tab. Enjoy your pixiv life!",
   "content_security_policy": {
@@ -28,6 +28,7 @@
     "storage",
     "search",
     "bookmarks",
+    "favicon",
     "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [

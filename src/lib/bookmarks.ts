@@ -28,6 +28,8 @@ interface BookmarkNode {
 const FOLDER_TITLE = 'Ku-nya'
 /** The fixed id of Chrome's "Other Bookmarks" root. */
 const OTHER_BOOKMARKS = '2'
+/** The fixed id of Chrome's bookmarks bar — what the homepage strip mirrors. */
+const BOOKMARKS_BAR = '1'
 const ARTWORK_PATH = /^https:\/\/www\.pixiv\.net\/artworks\/(\d+)/
 
 export const artworkUrl = (id: number): string =>
@@ -151,3 +153,30 @@ export const hostOf = (url: string): string => {
   const match = /^[a-z][a-z0-9+.-]*:\/\/([^/?#]+)/i.exec(url)
   return match ? match[1] : url
 }
+
+/**
+ * The bookmarks bar's direct links, in the user's own arrangement. Folders are
+ * skipped: the strip is one row of destinations, not a menu system.
+ */
+export const listBarBookmarks = async (
+  limit: number,
+): Promise<BookmarkHit[]> => {
+  const children = await getChildren(BOOKMARKS_BAR)
+  const hits: BookmarkHit[] = []
+  for (let i = 0; i < children.length && hits.length < limit; i++) {
+    const node = children[i]
+    if (!node.url) continue
+    hits.push({ id: node.id, title: node.title || node.url, url: node.url })
+  }
+  return hits
+}
+
+/**
+ * MV3's favicon endpoint (needs the "favicon" permission): Chrome serves the
+ * icon it already shows for the page, so the strip never hot-links a site.
+ * Asked at 32px so a 14px slot stays sharp on hidpi screens.
+ */
+export const faviconUrl = (pageUrl: string): string =>
+  chrome.runtime.getURL(
+    `/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=32`,
+  )

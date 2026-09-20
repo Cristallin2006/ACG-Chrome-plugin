@@ -544,6 +544,7 @@ export default class App extends Component<Props, State> {
           viewMode={viewMode}
           onViewModeChange={this.handleViewModeChange}
           isBookmarkSearchEnabled={this.props.options.isBookmarkSearchEnabled}
+          isBookmarkBarEnabled={this.props.options.isBookmarkBarEnabled}
         />
       </div>
     )

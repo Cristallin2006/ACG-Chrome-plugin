@@ -112,6 +112,13 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
           )
           sendResponse({ data: 'setBookmarkSearch' })
           break
+        case 'setBookmarkBar':
+          await storageUtil.setBoolean(
+            'bookmark_bar',
+            request.params.bookmark_bar,
+          )
+          sendResponse({ data: 'setBookmarkBar' })
+          break
         default:
           sendResponse({ data: null })
       }

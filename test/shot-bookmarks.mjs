@@ -146,6 +146,25 @@ async function main() {
     await sleep(700)
     await tab.shot(path.join(OUT, 'bookmark-star.png'))
 
+    // Bookmark strip: seed a few bookmarks-bar entries, refocus, and shoot
+    // the bottom band where the strip floats above the capsule.
+    await tab.eval(`(async () => {
+      const seeds = [
+        ['Pixiv', 'https://www.pixiv.net/'],
+        ['GitHub', 'https://github.com/'],
+        ['YouTube', 'https://www.youtube.com/'],
+        ['Gmail', 'https://mail.google.com/'],
+        ['Tweetdeck', 'https://x.com/'],
+      ]
+      for (const [title, url] of seeds) {
+        await new Promise(r => chrome.bookmarks.create({ parentId: '1', title, url }, r))
+      }
+      window.dispatchEvent(new Event('focus'))
+      await new Promise(r => setTimeout(r, 900))
+    })()`)
+    await sleep(600)
+    await tab.shot(path.join(OUT, 'bookmark-strip.png'))
+
     // Bookmark suggestion panel: seed a bookmark, then type its name.
     await tab.eval(
       `new Promise(r => chrome.bookmarks.create({ title: 'Kunya 视觉验收书签', url: 'https://example.com/visual-check' }, r))`,
