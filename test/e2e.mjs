@@ -356,6 +356,46 @@ async function main() {
       JSON.stringify(pageLogs.slice(0, 3)),
     )
 
+    // 5c. Rainy-day pool: the successful load above persisted its pool to
+    //     chrome.storage.local. Block pixiv at the network layer and reload;
+    //     once the retry schedule (2.5s + 5s + 10s) gives up, the wall must
+    //     deal the cached pool instead of the empty state. The images
+    //     themselves stay broken (pximg is blocked too), so the assertion is
+    //     tiles present vs the empty message.
+    await newTab.send('Network.enable')
+    await newTab.send('Network.setBlockedURLs', {
+      urls: ['*pixiv.net*', '*pximg.net*'],
+    })
+    await newTab.send('Page.reload')
+    const rainy = await waitFor(
+      async () => {
+        const state = await newTab.eval(`(() => ({
+          imgs: document.querySelectorAll('.kunya-gallery img').length,
+          empty: !!document.querySelector('.kunya-empty'),
+        }))()`)
+        return state.imgs > 0 || state.empty ? state : null
+      },
+      45000,
+      'the cached pool to stand in while pixiv is blocked',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'pixiv unreachable: wall falls back to the last cached pool',
+      !rainy.error && rainy.imgs > 0 && !rainy.empty,
+      JSON.stringify(rainy),
+    )
+    await newTab.send('Network.setBlockedURLs', { urls: [] })
+    await newTab.send('Page.reload')
+    await waitFor(
+      async () => {
+        const n = await newTab.eval(
+          `document.querySelectorAll('.kunya-gallery img').length`,
+        )
+        return n > 0 ? n : null
+      },
+      60000,
+      'the wall to recover after pixiv is unblocked',
+    )
+
     // 6. Upgrading from the Manifest V2 build: its settings live in this
     //    page's localStorage, the migrated ones in chrome.storage.local. Seed
     //    the old shape, wipe the new one, and reload.

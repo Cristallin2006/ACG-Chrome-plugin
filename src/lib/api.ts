@@ -11,6 +11,14 @@ export const applyLoginPreference = (usePixivLogin: boolean) => {
   axios.defaults.withCredentials = usePixivLogin
 }
 
+/**
+ * axios has no default timeout, and a stalled proxy connection never rejects —
+ * the wall would wait forever instead of reaching its retry/fallback path.
+ * Twelve seconds is far past a healthy pixiv round-trip and short enough for
+ * the retry schedule to still matter.
+ */
+axios.defaults.timeout = 12000
+
 export interface IllustEntry {
   id: number
   imageUrl: string

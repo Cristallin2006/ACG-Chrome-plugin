@@ -15,6 +15,7 @@ import {
 import { Options, Modes, ViewModes, setViewMode } from '../lib/options'
 import { Tile, computeTiling, pickTileCount } from '../lib/tiling'
 import { shuffle } from '../lib/util'
+import { getJSON, setJSON } from '../lib/StorageUtil'
 import {
   isAvailable as bookmarksAvailable,
   listBookmarkedArtworkIds,
@@ -154,9 +155,22 @@ export default class App extends Component<Props, State> {
   /**
    * The first load can land in a dead window: right after a browser or
    * extension restart the proxy/VPN stack is still reconnecting, and every
-   * pixiv request times out at once — the wall showed the empty state for
-   * what a single F5 then fixes. Retry quietly (2.5s, 5s) before giving up.
+   * pixiv request times out at once. Retry quietly with backoff (2.5s, 5s,
+   * 10s) — a reconnecting tunnel often needs more than one fixed 2.5s beat —
+   * and when every attempt still fails, deal the last pool this mode fetched
+   * successfully instead of showing the empty state (see showCachedOrEmpty).
    */
+  private static RETRY_DELAYS = [2500, 5000, 10000]
+
+  /**
+   * Where the rainy-day pool lives, per content mode. pixiv image URLs do not
+   * expire, so yesterday's ranking still renders pixel-perfect today.
+   */
+  private poolCacheKey = () => `wall_pool_${this.props.options.mode}`
+
+  /** Keep the stored pool small: 240 entries already build dozens of screens. */
+  private static POOL_CACHE_LIMIT = 240
+
   private loadWall = async (attempt: number) => {
     const { options } = this.props
 
@@ -176,28 +190,61 @@ export default class App extends Component<Props, State> {
       } else {
         allIllusts = await this.loadContent(options)
       }
+      if (allIllusts.length > 0) {
+        // Stale-while-revalidate: today's success is tomorrow's fallback.
+        void setJSON(
+          this.poolCacheKey(),
+          allIllusts.slice(0, App.POOL_CACHE_LIMIT),
+        )
+      }
     } catch (error) {
       console.error('Ku-nya: could not load illustrations', error)
-      if (attempt < 2) {
-        this.retryTimer = window.setTimeout(() => this.loadWall(attempt + 1), 2500)
+      if (attempt < App.RETRY_DELAYS.length) {
+        this.retryTimer = window.setTimeout(
+          () => this.loadWall(attempt + 1),
+          App.RETRY_DELAYS[attempt],
+        )
         return
       }
-      // An empty dark page with no explanation reads as a broken extension.
-      this.setState({ isUnavailable: true })
+      await this.showCachedOrEmpty()
       return
     }
 
     const illusts = this.filterPool(await shuffle(allIllusts))
-    if (illusts.length === 0 && attempt < 2) {
-      this.retryTimer = window.setTimeout(() => this.loadWall(attempt + 1), 2500)
+    if (illusts.length === 0) {
+      if (attempt < App.RETRY_DELAYS.length) {
+        this.retryTimer = window.setTimeout(
+          () => this.loadWall(attempt + 1),
+          App.RETRY_DELAYS[attempt],
+        )
+        return
+      }
+      await this.showCachedOrEmpty()
       return
     }
 
     this.screenCount = 0
-    this.setState(
-      { illusts, isUnavailable: illusts.length === 0 },
-      this.appendScreen,
-    )
+    this.setState({ illusts, isUnavailable: false }, this.appendScreen)
+  }
+
+  /**
+   * Every live attempt failed (or filtered to nothing): fall back to the pool
+   * this mode last fetched successfully, run through the CURRENT filters so
+   * an option changed since then still applies. The empty state only appears
+   * when this mode has never succeeded in this browser.
+   */
+  private showCachedOrEmpty = async () => {
+    const cached = await getJSON<IllustEntry[]>(this.poolCacheKey(), [])
+    const illusts = Array.isArray(cached)
+      ? this.filterPool(await shuffle(cached))
+      : []
+    if (illusts.length === 0) {
+      // An empty dark page with no explanation reads as a broken extension.
+      this.setState({ isUnavailable: true })
+      return
+    }
+    this.screenCount = 0
+    this.setState({ illusts, isUnavailable: false }, this.appendScreen)
   }
 
   /**
