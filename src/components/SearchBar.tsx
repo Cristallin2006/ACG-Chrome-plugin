@@ -201,15 +201,13 @@ export default class SearchBar extends Component<Props, State> {
   /**
    * The clipboard button opens the clipboard, it does not paste on sight:
    * the first click lifts a quiet preview panel above the capsule (and
-   * focuses the field); the second click pours the previewed text into the
-   * field at the caret and shuts the panel. What you saw is what lands.
+   * focuses the field); the second click — on the button OR on the preview
+   * itself — pours the previewed text into the field at the caret and shuts
+   * the panel. What you saw is what lands.
    */
   private handleClipboard = async () => {
     if (this.state.clipOpen) {
-      const text = this.state.clipText
-      this.closeClipboard()
-      if (text) this.insertAtCaret(text)
-      this.focusInput()
+      this.pasteClipboardPreview()
       return
     }
     this.focusInput()
@@ -224,6 +222,14 @@ export default class SearchBar extends Component<Props, State> {
     // The user may have clicked away while the read was out — no orphan panel.
     if (document.activeElement !== this.input) return
     this.setState({ clipOpen: true, clipText: text || '', clipError: error })
+  }
+
+  /** The preview's promise: clicking it (or the button again) pastes it. */
+  private pasteClipboardPreview = () => {
+    const text = this.state.clipText
+    this.closeClipboard()
+    if (text) this.insertAtCaret(text)
+    this.focusInput()
   }
 
   private closeClipboard = () => {
@@ -366,10 +372,23 @@ export default class SearchBar extends Component<Props, State> {
           aria-hidden="true"
         />
         <div class={className} role="search">
-          {/* The clipboard, opened: a quiet preview of what a second click
-              will paste. Absolute inside the pill, so it rides the rise. */}
+          {/* The clipboard, opened: a quiet preview of what a click will
+              paste — the panel itself is the second click. Absolute inside
+              the pill, so it rides the rise. */}
           {this.state.clipOpen && (
-            <div class="kunya-clip" role="status">
+            <div
+              class={
+                this.state.clipText !== ''
+                  ? 'kunya-clip is-pasteable'
+                  : 'kunya-clip'
+              }
+              role={this.state.clipText !== '' ? 'button' : 'status'}
+              title={this.state.clipText !== '' ? '点击粘贴' : undefined}
+              onMouseDown={event => event.preventDefault()}
+              onClick={() => {
+                if (this.state.clipText !== '') this.pasteClipboardPreview()
+              }}
+            >
               <span class="kunya-clip__label" aria-hidden="true">
                 剪贴板
               </span>
@@ -382,7 +401,7 @@ export default class SearchBar extends Component<Props, State> {
               </span>
               {this.state.clipText !== '' && (
                 <span class="kunya-clip__hint" aria-hidden="true">
-                  再点一次粘贴
+                  点击粘贴
                 </span>
               )}
             </div>

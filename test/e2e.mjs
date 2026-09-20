@@ -1297,6 +1297,63 @@ async function main() {
       JSON.stringify(clipPaste),
     )
 
+    // 9d9b. The preview panel itself is the second click: clear the field,
+    //       reopen, then click the PANEL (mousedown included) — the paste
+    //       must land all the same.
+    if (!clipPaste.error) {
+      await rideTab.eval(`(() => {
+        const input = document.querySelector('.kunya-search__input')
+        input.value = ''
+        input.dispatchEvent(new Event('input', { bubbles: true }))
+        return true
+      })()`)
+    }
+    const clipPanelOpen = clipPaste.error
+      ? clipPaste
+      : await waitFor(
+          async () => {
+            return await rideTab.eval(`(() => {
+              const panel = document.querySelector('.kunya-clip')
+              if (!panel) {
+                document.querySelector('.kunya-search__clip').click()
+                return null
+              }
+              return {
+                preview: panel.textContent,
+                pasteable: panel.classList.contains('is-pasteable'),
+              }
+            })()`)
+          },
+          10000,
+          'the preview panel to reopen',
+        ).catch(e => ({ error: e.message }))
+    const clipPanelPaste = clipPanelOpen.error
+      ? clipPanelOpen
+      : await waitFor(
+          async () => {
+            return await rideTab.eval(`(() => {
+              const panel = document.querySelector('.kunya-clip')
+              if (panel) {
+                panel.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
+                panel.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
+                panel.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+                return null
+              }
+              const value = document.querySelector('.kunya-search__input').value
+              return value.indexOf('kunya clip probe') !== -1 ? { value } : null
+            })()`)
+          },
+          10000,
+          'a click on the preview panel to paste',
+        ).catch(e => ({ error: e.message }))
+    check(
+      'clicking the preview panel itself pastes',
+      !clipPanelPaste.error &&
+        clipPanelOpen.pasteable === true &&
+        clipPanelPaste.value.indexOf('kunya clip probe') !== -1,
+      JSON.stringify(clipPanelPaste),
+    )
+
     // 9d10. A right-click only wants the context menu: the field takes focus
     //       (so 粘贴 works) but the capsule stays parked; content arriving —
     //       the paste itself — is what finally raises it.

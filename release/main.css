@@ -797,6 +797,20 @@ body::after {
   animation: kunya-marks-menu-in 200ms var(--ease-out) both;
 }
 
+.kunya-clip.is-pasteable {
+  cursor: pointer;
+  transition: border-color 160ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kunya-clip.is-pasteable:hover {
+    border-color: rgba(255, 255, 255, 0.26);
+  }
+  .kunya-clip.is-pasteable:hover .kunya-clip__hint {
+    color: var(--accent);
+  }
+}
+
 .kunya-search-root:has(.kunya-clip) .kunya-marks {
   opacity: 0;
   pointer-events: none;
@@ -828,6 +842,7 @@ body::after {
   color: rgba(255, 255, 255, 0.38);
   font-size: 10.5px;
   letter-spacing: 0.5px;
+  transition: color 160ms var(--ease-out);
 }
 
 .kunya-search__go:hover {
