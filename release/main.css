@@ -332,9 +332,10 @@ body::after {
 /* ---------- bookmark strip ---------- */
 
 /* The bookmarks bar, mirrored: one quiet row floating above the capsule. It
-   belongs to the capsule's safety band, not to a third layer — and it sits
-   UNDER the search scrim (z 2 < 3), so when the capsule rises the strip bows
-   out with the wall. */
+   belongs to the capsule's safety band, not to a third layer. When the
+   capsule rises, the strip rises with it — same 340ms glide, parked 12px
+   above the capsule's top edge, lifted over the scrim (z 4) so quick access
+   stays alive mid-search. */
 .kunya-marks {
   position: fixed;
   left: 50%;
@@ -364,7 +365,8 @@ body::after {
     #000 calc(100% - 20px),
     transparent
   );
-  transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out);
+  transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out),
+    bottom 340ms var(--ease-out);
 }
 
 .kunya-marks::-webkit-scrollbar {
@@ -376,8 +378,12 @@ body::after {
   transform: translateX(-50%) translateY(6px);
 }
 
-.kunya-marks.is-dimmed {
-  pointer-events: none;
+/* Risen with the capsule: capsule bottom (62dvh - 28px) + height (56px) +
+   a 12px gap. Above the scrim, still clickable — bookmarks are answers to a
+   search too. */
+.kunya-marks.is-risen {
+  bottom: calc(62dvh + 40px);
+  z-index: 4;
 }
 
 .kunya-marks__item {
@@ -452,7 +458,9 @@ body::after {
    clips overflow — a menu inside it would be cut off. */
 .kunya-marks__menu {
   position: fixed;
-  z-index: 2;
+  /* Level with the capsule: when the strip rides the risen capsule, its menu
+     must clear the scrim (z 3) too. */
+  z-index: 4;
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -626,6 +634,15 @@ body::after {
   opacity: 1;
   transform: none;
   transition-delay: 60ms;
+}
+
+/* The risen strip parks exactly in the label's old slot above the capsule.
+   Function outranks decoration: when the strip rides up, the label yields. */
+.kunya-marks-root:has(.kunya-marks.is-risen)
+  ~ .kunya-search
+  .kunya-search__label {
+  opacity: 0;
+  transition-delay: 0ms;
 }
 
 .kunya-search.is-risen .kunya-search__hint {
@@ -839,6 +856,9 @@ body::after {
   .kunya-marks {
     bottom: 74px;
     max-width: 86vw;
+  }
+  .kunya-marks.is-risen {
+    bottom: calc(62dvh + 32px);
   }
   .kunya-caption {
     left: 9px;

@@ -21,6 +21,8 @@ interface State {
   /** Fixed-position anchor for the open menu, taken from the chip's rect. */
   menuLeft: number
   menuBottom: number
+  /** Clamped so the menu never runs off the top edge when the strip is risen. */
+  menuMaxHeight: number
 }
 
 /** One row is glanceable; twenty is already past that. */
@@ -41,7 +43,13 @@ const LIMIT = 20
 export default class BookmarkStrip extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { items: [], openId: null, menuLeft: 0, menuBottom: 0 }
+    this.state = {
+      items: [],
+      openId: null,
+      menuLeft: 0,
+      menuBottom: 0,
+      menuMaxHeight: 320,
+    }
   }
 
   componentDidMount() {
@@ -66,8 +74,8 @@ export default class BookmarkStrip extends Component<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props) {
-    // The risen capsule's scrim covers the strip; an open menu would float
-    // above it and steal the room the search just took.
+    // The strip rides the capsule up when it rises; an open menu is anchored
+    // to where the chip used to be, so it shuts rather than floats orphaned.
     if (this.props.isRisen && !prevProps.isRisen) this.closeMenu()
   }
 
@@ -124,6 +132,10 @@ export default class BookmarkStrip extends Component<Props, State> {
         Math.min(chip.left, window.innerWidth - 240 - 8),
       ),
       menuBottom: window.innerHeight - chip.top + 6,
+      /* The menu grows upward from its bottom anchor; when the strip rides
+         the risen capsule the chip sits high, so headroom — not 320px — is
+         the budget. */
+      menuMaxHeight: Math.max(120, Math.min(320, chip.top - 14)),
     })
   }
 
@@ -206,6 +218,7 @@ export default class BookmarkStrip extends Component<Props, State> {
         style={{
           left: `${this.state.menuLeft}px`,
           bottom: `${this.state.menuBottom}px`,
+          maxHeight: `${this.state.menuMaxHeight}px`,
         }}
       >
         {children.map((hit, index) => (
@@ -228,7 +241,7 @@ export default class BookmarkStrip extends Component<Props, State> {
   render() {
     if (!this.props.isEnabled || this.state.items.length === 0) return null
     const className = `kunya-marks${this.props.isGhost ? ' is-ghost' : ''}${
-      this.props.isRisen ? ' is-dimmed' : ''
+      this.props.isRisen ? ' is-risen' : ''
     }`
     return (
       <div class="kunya-marks-root">

@@ -928,6 +928,48 @@ async function main() {
     )
     await cdp.send('Target.closeTarget', { targetId: stripTarget.targetId })
 
+    // 9d4. The strip rides the capsule: focusing the search field rises the
+    //      capsule, and the strip must park right above it — still visible,
+    //      still clickable, not dimmed away with the wall.
+    const rideTarget = await cdp.send('Target.createTarget', {
+      url: 'chrome://newtab',
+    })
+    const rideTab = await cdp.attach(rideTarget.targetId)
+    const ride = await waitFor(
+      async () => {
+        const state = await rideTab.eval(`(() => {
+          const marks = document.querySelector('.kunya-marks')
+          const capsule = document.querySelector('.kunya-search')
+          if (!marks || !capsule) return null
+          const input = document.querySelector('.kunya-search__input')
+          if (!capsule.classList.contains('is-risen')) input.focus()
+          if (!capsule.classList.contains('is-risen')) return null
+          const m = marks.getBoundingClientRect()
+          const c = capsule.getBoundingClientRect()
+          return {
+            risen: marks.classList.contains('is-risen'),
+            gap: Math.round(c.top - m.bottom),
+            clickable: getComputedStyle(marks).pointerEvents !== 'none',
+          }
+        })()`)
+        return state &&
+          state.risen &&
+          state.clickable &&
+          state.gap >= 4 &&
+          state.gap <= 30
+          ? state
+          : null
+      },
+      15000,
+      'the strip to ride the risen capsule',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'bookmark strip rides above the risen capsule',
+      !ride.error,
+      JSON.stringify(ride),
+    )
+    await cdp.send('Target.closeTarget', { targetId: rideTarget.targetId })
+
     // 10. Popup: settings render, and a click has to land in
     //    chrome.storage.local through the worker.
     const popupTarget = await cdp.send('Target.createTarget', {
