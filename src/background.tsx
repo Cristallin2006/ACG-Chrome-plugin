@@ -1,5 +1,24 @@
 import * as storageUtil from './lib/StorageUtil'
 import { getOptions } from './lib/options'
+import { applyProxySetting } from './lib/proxy'
+
+/**
+ * Re-assert the pinned proxy on every worker wake. chrome.proxy settings
+ * survive restarts, but a profile sync or another extension can grab the
+ * slot in between; re-applying is cheap and idempotent. The read defaults
+ * to ON (see defaultOptions.useFixedProxy), so a fresh profile is covered
+ * before any setting exists.
+ */
+const reapplyProxy = async () => {
+  try {
+    await applyProxySetting(await storageUtil.getBoolean('fixed_proxy', true))
+  } catch (error) {
+    console.error('Ku-nya: could not apply the proxy setting', error)
+  }
+}
+void reapplyProxy()
+chrome.runtime.onStartup.addListener(() => void reapplyProxy())
+chrome.runtime.onInstalled.addListener(() => void reapplyProxy())
 
 /**
  * Settings are owned by this service worker, so the new tab page and the popup
@@ -118,6 +137,14 @@ chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
             request.params.bookmark_bar,
           )
           sendResponse({ data: 'setBookmarkBar' })
+          break
+        case 'setFixedProxy':
+          await storageUtil.setBoolean(
+            'fixed_proxy',
+            request.params.fixed_proxy,
+          )
+          await applyProxySetting(request.params.fixed_proxy !== false)
+          sendResponse({ data: 'setFixedProxy' })
           break
         default:
           sendResponse({ data: null })

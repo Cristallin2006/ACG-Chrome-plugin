@@ -396,6 +396,26 @@ async function main() {
       'the wall to recover after pixiv is unblocked',
     )
 
+    // 5d. The pinned proxy: the worker must hold the browser's proxy slot
+    //     with a PAC pointing at 127.0.0.1:7890 (default ON for a fresh
+    //     profile), so pixiv loading no longer tracks the system proxy.
+    const proxyState = await newTab.eval(`(async () => {
+      const state = await new Promise(r => chrome.proxy.settings.get({}, r))
+      return {
+        level: state.levelOfControl,
+        mode: state.value && state.value.mode,
+        has7890: !!(state.value && state.value.pacScript &&
+          (state.value.pacScript.data || '').indexOf('127.0.0.1:7890') !== -1),
+      }
+    })()`)
+    check(
+      'worker pins the browser proxy at 127.0.0.1:7890',
+      proxyState.level === 'controlled_by_this_extension' &&
+        proxyState.mode === 'pac_script' &&
+        proxyState.has7890,
+      JSON.stringify(proxyState),
+    )
+
     // 6. Upgrading from the Manifest V2 build: its settings live in this
     //    page's localStorage, the migrated ones in chrome.storage.local. Seed
     //    the old shape, wipe the new one, and reload.
@@ -1662,6 +1682,40 @@ async function main() {
           bookmarkBarRoundTrip.checkedInUi === !bookmarkBarRoundTrip.before &&
           bookmarkBarRoundTrip.stored === (bookmarkBarRoundTrip.before ? '0' : '1'),
         JSON.stringify(bookmarkBarRoundTrip),
+      )
+
+      // The fixed-proxy toggle both persists AND moves the browser's proxy
+      // slot: off releases it, on re-pins 7890. Restored ON at the end so the
+      // later network probes still run through the proxy.
+      const proxyRoundTrip = await popup.eval(`(async () => {
+        const box = document.querySelector('#checkbox_for_fixed_proxy')
+        if (!box) return { error: 'fixed proxy toggle not found' }
+        const get = () => new Promise(r => chrome.proxy.settings.get({}, r))
+        box.click()
+        await new Promise(r => setTimeout(r, 800))
+        const offStored = await new Promise(r => chrome.storage.local.get('fixed_proxy', r))
+        const offState = await get()
+        box.click()
+        await new Promise(r => setTimeout(r, 800))
+        const onStored = await new Promise(r => chrome.storage.local.get('fixed_proxy', r))
+        const onState = await get()
+        return {
+          offStored: offStored.fixed_proxy,
+          offLevel: offState.levelOfControl,
+          onStored: onStored.fixed_proxy,
+          onLevel: onState.levelOfControl,
+          onMode: onState.value && onState.value.mode,
+        }
+      })()`)
+      check(
+        'fixed proxy toggle persists and moves the proxy slot',
+        !proxyRoundTrip.error &&
+          proxyRoundTrip.offStored === '0' &&
+          proxyRoundTrip.offLevel !== 'controlled_by_this_extension' &&
+          proxyRoundTrip.onStored === '1' &&
+          proxyRoundTrip.onLevel === 'controlled_by_this_extension' &&
+          proxyRoundTrip.onMode === 'pac_script',
+        JSON.stringify(proxyRoundTrip),
       )
 
       // The bookmark floor writes min_bookmarks as a string.

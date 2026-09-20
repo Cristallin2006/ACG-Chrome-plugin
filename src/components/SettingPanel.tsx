@@ -17,6 +17,7 @@ import {
   setTileBookmark,
   setBookmarkSearch,
   setBookmarkBar,
+  setFixedProxy,
 } from '../lib/options'
 import ModeSettingsSection from './ModeSettingSection'
 import AspectRatioSettingSection from './AspectRatioSettingSection'
@@ -31,6 +32,7 @@ import AISection from './AISection'
 import BookmarkFloorSection from './BookmarkFloorSection'
 import BookmarkSection from './BookmarkSection'
 import ExcludedAuthorsSection from './ExcludedAuthorsSection'
+import ProxySection from './ProxySection'
 
 interface Props {
   initialOptions: Options
@@ -102,6 +104,10 @@ export default class SettingPanel extends Component<Props, State> {
       this.props.initialOptions.isBookmarkBarEnabled === undefined
         ? defaultOptions.isBookmarkBarEnabled
         : this.props.initialOptions.isBookmarkBarEnabled
+    const useFixedProxy =
+      this.props.initialOptions.useFixedProxy === undefined
+        ? defaultOptions.useFixedProxy
+        : this.props.initialOptions.useFixedProxy
 
     const version =
       chrome.runtime && chrome.runtime.getManifest
@@ -149,6 +155,7 @@ export default class SettingPanel extends Component<Props, State> {
 
         <div className="knp-card">
           <LoginSection initialValue={usePixivLogin} update={setUsePixivLogin} />
+          <ProxySection initialValue={useFixedProxy} update={setFixedProxy} />
         </div>
 
         <div className="knp-card">

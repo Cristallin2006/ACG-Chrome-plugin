@@ -52,6 +52,12 @@ export interface Options {
   isBookmarkSearchEnabled: boolean
   /** A strip above the capsule mirrors the Chrome bookmarks bar for quick access. */
   isBookmarkBarEnabled: boolean
+  /**
+   * Pin all browser traffic at 127.0.0.1:7890 (DIRECT fallback), so pixiv
+   * loading no longer depends on the system proxy switch. chrome.proxy is
+   * browser-wide — there is no narrower scope.
+   */
+  useFixedProxy: boolean
 }
 
 /** What a fresh install runs with, and what a page falls back to. */
@@ -75,6 +81,9 @@ export const defaultOptions: Options = {
   isTileBookmarkEnabled: true,
   isBookmarkSearchEnabled: true,
   isBookmarkBarEnabled: true,
+  // Pinning the port is what makes pixiv loading independent of the system
+  // proxy switch; users with another proxy manager can turn it off.
+  useFixedProxy: true,
 }
 
 export const getOptions = async (): Promise<Options> => {
@@ -148,6 +157,10 @@ export const getOptions = async (): Promise<Options> => {
     isBookmarkBarEnabled: await storageUtil.getBoolean(
       'bookmark_bar',
       defaultOptions.isBookmarkBarEnabled,
+    ),
+    useFixedProxy: await storageUtil.getBoolean(
+      'fixed_proxy',
+      defaultOptions.useFixedProxy,
     ),
   }
 }
@@ -322,6 +335,18 @@ export const setBookmarkBar = (isEnabled: boolean) => {
       method: 'setBookmarkBar',
       params: {
         bookmark_bar: isEnabled,
+      },
+    },
+    () => {},
+  )
+}
+
+export const setFixedProxy = (isEnabled: boolean) => {
+  chrome.runtime.sendMessage(
+    {
+      method: 'setFixedProxy',
+      params: {
+        fixed_proxy: isEnabled,
       },
     },
     () => {},
