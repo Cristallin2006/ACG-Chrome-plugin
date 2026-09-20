@@ -1,10 +1,12 @@
 // README screenshot generator: renders the real extension UI (tiling, capsule,
-// spotlight scrim, popup) but swaps every illustration for a generated gradient,
-// so the shots carry no copyrighted artwork and can be published safely.
+// spotlight scrim, bookmark strip, folder menus, popup) but swaps every
+// illustration for a generated gradient, so the shots carry no copyrighted
+// artwork and can be published safely.
 //
 //   node test/shot-readme.mjs
 //
-// Output: docs/screenshots/newtab-wall.png, newtab-spotlight.png, popup.png
+// Output: docs/screenshots/newtab-wall.png, newtab-spotlight.png,
+//         newtab-bookmarks.png, popup.png
 
 import { spawn, spawnSync } from 'child_process'
 import { mkdirSync, writeFileSync } from 'fs'
@@ -181,12 +183,42 @@ async function main() {
     )
     const swapped = await tab.evaluate(SWAP_IMAGES)
     console.log(`swapped ${swapped} illustrations for gradients`)
+
+    // Seed a believable bookmark set so the strip has something to mirror:
+    // two bar links, one folder with two links, one Other Bookmarks link.
+    await tab.evaluate(`(async () => {
+      const create = node => new Promise(r => chrome.bookmarks.create(node, r))
+      await create({ parentId: '1', title: 'pixiv', url: 'https://www.pixiv.net/' })
+      const dev = await create({ parentId: '1', title: '开发工具', })
+      await create({ parentId: dev.id, title: 'MDN Web Docs', url: 'https://developer.mozilla.org/' })
+      await create({ parentId: dev.id, title: 'Can I use', url: 'https://caniuse.com/' })
+      await create({ parentId: '1', title: 'GitHub', url: 'https://github.com/' })
+      await create({ parentId: '2', title: '半透明渲染参考', url: 'https://example.com/reference' })
+      window.dispatchEvent(new Event('focus'))
+    })()`)
+    await waitFor(
+      async () => {
+        const n = await tab.evaluate(
+          `document.querySelectorAll('.kunya-marks__item').length`,
+        )
+        return n >= 4 ? n : null
+      },
+      15000,
+      'the bookmark strip to mirror the seeded bookmarks',
+    )
     await sleep(800) // let the swapped images settle into their frames
 
     // Wake the capsule out of its watch-mode ghost for the portrait.
     await tab.evaluate(`document.dispatchEvent(new PointerEvent('pointermove'))`)
     await sleep(400)
     await shot(tab, 'newtab-wall.png')
+
+    // The folder menu, open: organisation on glass.
+    await tab.evaluate(`document.querySelector('.kunya-marks__folder').click()`)
+    await sleep(700) // menu pop + item stagger
+    await shot(tab, 'newtab-bookmarks.png')
+    await tab.evaluate(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`)
+    await sleep(300)
 
     await tab.evaluate(`(() => {
       const input = document.querySelector('.kunya-search__input')
@@ -195,7 +227,7 @@ async function main() {
       setter.call(input, 'pixiv 排行榜')
       input.dispatchEvent(new Event('input', { bubbles: true }))
     })()`)
-    await sleep(900) // rise + label/hint delays, then settle
+    await sleep(1100) // rise + strip riding up + hint delays, then settle
     await shot(tab, 'newtab-spotlight.png')
 
     const popupTarget = await cdp.send('Target.createTarget', {

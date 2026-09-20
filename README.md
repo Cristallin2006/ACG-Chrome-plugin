@@ -1,11 +1,24 @@
-# ACG-Chrome-plugin（Ku-nya 衍生版）
+# Ku-nya MV3 · pixiv 新标签页拼图墙（ACG-Chrome-plugin）
 
-A Chrome extension for pixiv lovers: it picks up illustrations from the pixiv
-ranking and displays them on your new tab — as a gapless, zero-crop **puzzle
-wall** that reveals itself screen by screen as you scroll.
+**把 Chrome 新标签页变成 pixiv 拼图墙 + 书签首页。** 每张插画按原图宽高比
+精确拼合（i3/bspwm 式二叉空间分割），零裁切、零拉伸；底部一枚磨砂搜索
+胶囊，上方一排 Chrome 书签镜像，收藏插画、标签筛选、榜单/推荐源一站齐全。
 
-![新标签页图墙（示意）](docs/screenshots/newtab-wall.png)
-![聚焦搜索时的 Spotlight 升起（示意）](docs/screenshots/newtab-spotlight.png)
+A Chrome extension (Manifest V3) that turns your **new tab page** into a
+gapless, zero-crop **puzzle wall** of pixiv illustrations — every tile keeps
+its source aspect ratio, BSP-tiled like i3/bspwm — plus a **bookmark strip**
+mirroring your Chrome bookmarks with folder menus, a Spotlight-style search
+capsule, custom pixiv tag sources with popularity tiers (`users入り`), the
+algorithmic discovery feed, pixiv login support, and one-click artwork
+bookmarking. Derivative of [Ku-nya](https://github.com/tamanobi/Ku-nya).
+
+**关键词 / Keywords**: pixiv new tab · pixiv 新标签页 · Chrome 扩展 ·
+chrome extension newtab · anime wallpaper new tab · pixiv ranking ·
+书签栏 new tab · bookmark bar homepage · 拼图墙 · puzzle wall · BSP tiling
+
+![新标签页图墙：零裁切拼图 + 书签条 + 搜索胶囊（示意）](docs/screenshots/newtab-wall.png)
+![书签文件夹菜单：整理成分组，点开是玻璃菜单（示意）](docs/screenshots/newtab-bookmarks.png)
+![聚焦搜索：胶囊 Spotlight 升起，书签条跟随上浮（示意）](docs/screenshots/newtab-spotlight.png)
 ![扩展设置弹窗](docs/screenshots/popup.png)
 
 > 截图说明 / About these screenshots: 为保护画师版权，截图中的插画均以程序
@@ -55,8 +68,8 @@ wall** that reveals itself screen by screen as you scroll.
 >   书签，`↑↓` 选择、回车直达——两者都是普通 Chrome 书签，书签管理器里可见可整理
 > - **首页书签栏**：搜索胶囊上方一排 Chrome 书签镜像（favicon + 标题，书签栏
 >   优先、「其他书签」在后；文件夹保持分组，点开是玻璃菜单），点击直达常去的
->   网页；不持自有数据，新开标签页或回到标签页时自动重读，在 Chrome 里整理书签
->   即时跟随，可在 popup 整体关闭
+>   网页；搜索升起时书签条跟随胶囊一起上浮、保持可点；不持自有数据，新开标签页
+>   或回到标签页时自动重读，在 Chrome 里整理书签即时跟随，可在 popup 整体关闭
 > - 键盘流：`/`、`Ctrl/Cmd+K` 聚焦搜索，任意字符直接开搜，`⇧R` 换一批，`Esc` 收起
 > - 图源修复：统一归一化为等比 `master` 图（修复 `_custom` 方图缩略图导致的
 >   拉伸），分辨率提升至 `600x1200_90`
@@ -134,11 +147,12 @@ why.
   capsule, one click away from your usual sites. Folders stay folders: a
   folder chip opens a small glass menu of its links (nested folders flatten
   into the parent menu), so tidying is rewarded with organisation instead of
-  a longer row. The strip holds no data of its own — the bar is re-read
-  whenever a tab opens or regains focus (and on `chrome.bookmarks.onChanged`
-  where the platform delivers it), so reorganising bookmarks in Chrome is
-  reflected the moment you come back, and the popup can hide the strip
-  entirely
+  a longer row. When the capsule rises for a search the strip rides up with
+  it and stays clickable — bookmarks are answers to a search too. It holds no
+  data of its own — the bar is re-read whenever a tab opens or regains focus
+  (and on `chrome.bookmarks.onChanged` where the platform delivers it), so
+  reorganising bookmarks in Chrome is reflected the moment you come back, and
+  the popup can hide the strip entirely
 - `/` or `Ctrl/Cmd+K` focuses the search field, any printable character starts a
   query, `Shift+R` deals a fresh wall, `Esc` clears and steps out; in watch mode
   the capsule steps back to a ghost while the pointer is still and returns the
