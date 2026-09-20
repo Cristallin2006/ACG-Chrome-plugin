@@ -833,30 +833,72 @@ async function main() {
       JSON.stringify(otherItem),
     )
 
-    // 9d3. Bookmarks nested inside folders are destinations too: the strip
-    //      flattens folders depth-first, so a link filed under a folder in
-    //      Other Bookmarks must still surface.
+    // 9d3. Folders stay folders: a bookmark filed inside one must NOT spill
+    //      into the row as a loose chip — it appears as a folder chip whose
+    //      menu holds the link, opened on click and shut again by Escape.
     await newTab.eval(`(async () => {
       const folder = await new Promise(r => chrome.bookmarks.create({ parentId: '2', title: 'kunya folder' }, r))
       await new Promise(r => chrome.bookmarks.create({ parentId: folder.id, title: 'kunya nested target', url: 'https://example.com/kunya-nested-test' }, r))
     })()`)
     await newTab.eval(`window.dispatchEvent(new Event('focus'))`)
-    const nestedItem = await waitFor(
+    const folderChip = await waitFor(
       async () => {
-        const items = await newTab.eval(`Array.from(
-          document.querySelectorAll('.kunya-marks__item')
-        ).map(a => a.href)`)
-        return items.some(h => h.indexOf('kunya-nested-test') !== -1)
-          ? items
-          : null
+        return await newTab.eval(`(() => {
+          const chip = document.querySelector('.kunya-marks__folder')
+          const spilled = document.querySelector('.kunya-marks a[href*="kunya-nested-test"]')
+          if (!chip || spilled) return null
+          return { text: chip.textContent.trim(), expanded: chip.getAttribute('aria-expanded') }
+        })()`)
       },
       15000,
-      'the bookmark strip to flatten foldered bookmarks',
+      'the bookmark strip to group foldered bookmarks under a folder chip',
     ).catch(e => ({ error: e.message }))
     check(
-      'homepage strip surfaces bookmarks nested in folders',
-      !nestedItem.error,
-      JSON.stringify(nestedItem),
+      'homepage strip keeps foldered bookmarks inside a folder chip',
+      !folderChip.error &&
+        folderChip.text.indexOf('kunya folder') !== -1 &&
+        folderChip.expanded === 'false',
+      JSON.stringify(folderChip),
+    )
+
+    const folderMenu = await waitFor(
+      async () => {
+        const opened = await newTab.eval(`(() => {
+          const chip = document.querySelector('.kunya-marks__folder')
+          if (!chip) return null
+          if (chip.getAttribute('aria-expanded') !== 'true') chip.click()
+          const link = document.querySelector('.kunya-marks__menu a[href*="kunya-nested-test"]')
+          return link ? { text: link.textContent.trim() } : null
+        })()`)
+        return opened
+      },
+      15000,
+      'the folder chip to open a menu holding the nested bookmark',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'clicking a folder chip opens its menu with the nested bookmark',
+      !folderMenu.error && folderMenu.text.indexOf('kunya nested target') !== -1,
+      JSON.stringify(folderMenu),
+    )
+
+    const menuShut = await waitFor(
+      async () => {
+        const shut = await newTab.eval(`(() => {
+          document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+          return new Promise(r => setTimeout(() => r({
+            menu: !!document.querySelector('.kunya-marks__menu'),
+            expanded: document.querySelector('.kunya-marks__folder').getAttribute('aria-expanded'),
+          }), 300))
+        })()`)
+        return shut && !shut.menu && shut.expanded === 'false' ? shut : null
+      },
+      10000,
+      'Escape to shut the folder menu',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'Escape shuts the folder menu',
+      !menuShut.error,
+      JSON.stringify(menuShut),
     )
 
     const stripTarget = await cdp.send('Target.createTarget', {

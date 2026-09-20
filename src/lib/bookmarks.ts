@@ -157,38 +157,74 @@ export const hostOf = (url: string): string => {
   return match ? match[1] : url
 }
 
+/** A folder chip on the strip: its descendants, flattened depth-first. */
+export interface BarFolder {
+  id: string
+  title: string
+  children: BookmarkHit[]
+}
+
+/** One slot on the homepage strip: either a direct link or a folder menu. */
+export type BarItem =
+  | { kind: 'link'; hit: BookmarkHit }
+  | { kind: 'folder'; folder: BarFolder }
+
+/** A folder menu is glanceable; past fifty entries it is a manager's job. */
+const FOLDER_CAP = 50
+
+const hitOf = (node: BookmarkNode): BookmarkHit => ({
+  id: node.id,
+  title: node.title || node.url || '',
+  url: node.url || '',
+})
+
+const flattenInto = (node: BookmarkNode, out: BookmarkHit[]) => {
+  if (out.length >= FOLDER_CAP) return
+  if (node.url) {
+    out.push(hitOf(node))
+    return
+  }
+  // The tile star's own folder holds artwork pages, not web destinations —
+  // those belong to the wall, not the strip.
+  if (node.title === FOLDER_TITLE) return
+  const children = node.children || []
+  for (let i = 0; i < children.length && out.length < FOLDER_CAP; i++) {
+    flattenInto(children[i], out)
+  }
+}
+
 /**
- * Quick-access links for the homepage strip: the bookmarks bar first, then
+ * Quick-access entries for the homepage strip: the bookmarks bar first, then
  * Other Bookmarks — many users (and Chrome's own star button) file into Other
  * Bookmarks, so a bar-only read would leave the strip empty for exactly the
- * people who just started bookmarking. Folders are flattened depth-first in
- * the user's own arrangement: a link inside a folder is still a destination,
- * and hiding it would punish anyone who tidies.
+ * people who just started bookmarking. Top-level links become chips; folders
+ * become menus that keep the user's own grouping (nested folders flatten
+ * depth-first into the parent menu). Empty folders and the Ku-nya artwork
+ * folder stay out.
  */
-export const listBarBookmarks = async (
-  limit: number,
-): Promise<BookmarkHit[]> => {
-  const hits: BookmarkHit[] = []
-  const collect = (node: BookmarkNode) => {
-    if (hits.length >= limit) return
-    if (node.url) {
-      hits.push({ id: node.id, title: node.title || node.url, url: node.url })
-      return
-    }
-    // The tile star's own folder holds artwork pages, not web destinations —
-    // those belong to the wall, not the strip.
-    if (node.title === FOLDER_TITLE) return
-    const children = node.children || []
-    for (let i = 0; i < children.length && hits.length < limit; i++) {
-      collect(children[i])
-    }
-  }
+export const listBarItems = async (limit: number): Promise<BarItem[]> => {
+  const items: BarItem[] = []
   const roots = [BOOKMARKS_BAR, OTHER_BOOKMARKS]
-  for (let r = 0; r < roots.length && hits.length < limit; r++) {
+  for (let r = 0; r < roots.length && items.length < limit; r++) {
     const tree = await getSubTree(roots[r])
-    if (tree[0]) collect(tree[0])
+    const top = tree[0] && tree[0].children ? tree[0].children : []
+    for (let i = 0; i < top.length && items.length < limit; i++) {
+      const node = top[i]
+      if (node.url) {
+        items.push({ kind: 'link', hit: hitOf(node) })
+        continue
+      }
+      if (node.title === FOLDER_TITLE) continue
+      const children: BookmarkHit[] = []
+      flattenInto(node, children)
+      if (children.length === 0) continue
+      items.push({
+        kind: 'folder',
+        folder: { id: node.id, title: node.title || '未命名文件夹', children },
+      })
+    }
   }
-  return hits
+  return items
 }
 
 /**

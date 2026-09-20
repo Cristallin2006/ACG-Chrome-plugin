@@ -54,9 +54,9 @@ wall** that reveals itself screen by screen as you scroll.
 >   Ku-nya 文件夹（随浏览器同步，再点即移除）；搜索时输入即列出匹配的 Chrome
 >   书签，`↑↓` 选择、回车直达——两者都是普通 Chrome 书签，书签管理器里可见可整理
 > - **首页书签栏**：搜索胶囊上方一排 Chrome 书签镜像（favicon + 标题，书签栏
->   优先、「其他书签」在后，文件夹自动展开），点击直达常去的网页；不持自有数据，
->   新开标签页或回到标签页时自动重读，在 Chrome 里整理书签即时跟随，可在 popup
->   整体关闭
+>   优先、「其他书签」在后；文件夹保持分组，点开是玻璃菜单），点击直达常去的
+>   网页；不持自有数据，新开标签页或回到标签页时自动重读，在 Chrome 里整理书签
+>   即时跟随，可在 popup 整体关闭
 > - 键盘流：`/`、`Ctrl/Cmd+K` 聚焦搜索，任意字符直接开搜，`⇧R` 换一批，`Esc` 收起
 > - 图源修复：统一归一化为等比 `master` 图（修复 `_custom` 方图缩略图导致的
 >   拉伸），分辨率提升至 `600x1200_90`
@@ -130,9 +130,11 @@ why.
   pick, Enter opens the pick, while an unpicked Enter stays a plain web search
 - **A bookmark strip on the homepage**: your Chrome bookmarks — the bookmarks
   bar first, Other Bookmarks after, since Chrome's own star button files
-  there, with folders flattened so a link inside a folder still shows — are
-  mirrored as a quiet row of favicon chips above the search capsule, one click
-  away from your usual sites. It holds no data of its own — the bar is re-read
+  there — are mirrored as a quiet row of favicon chips above the search
+  capsule, one click away from your usual sites. Folders stay folders: a
+  folder chip opens a small glass menu of its links (nested folders flatten
+  into the parent menu), so tidying is rewarded with organisation instead of
+  a longer row. The strip holds no data of its own — the bar is re-read
   whenever a tab opens or regains focus (and on `chrome.bookmarks.onChanged`
   where the platform delivers it), so reorganising bookmarks in Chrome is
   reflected the moment you come back, and the popup can hide the strip

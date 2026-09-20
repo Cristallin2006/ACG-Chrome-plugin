@@ -1,9 +1,9 @@
 import { h, Component } from 'preact'
 import {
-  BookmarkHit,
+  BarItem,
   faviconUrl,
   isAvailable,
-  listBarBookmarks,
+  listBarItems,
 } from '../lib/bookmarks'
 
 interface Props {
@@ -15,26 +15,33 @@ interface Props {
 }
 
 interface State {
-  items: BookmarkHit[]
+  items: BarItem[]
+  /** The folder whose menu is currently open; null when every menu is shut. */
+  openId: string | null
+  /** Fixed-position anchor for the open menu, taken from the chip's rect. */
+  menuLeft: number
+  menuBottom: number
 }
 
 /** One row is glanceable; twenty is already past that. */
 const LIMIT = 20
 
 /**
- * The homepage bookmark strip: a single row of quick-access links floating
+ * The homepage bookmark strip: a single row of quick-access chips floating
  * above the search capsule — the bookmarks bar first, Other Bookmarks after
  * (Chrome's own star button files there, so a bar-only read would leave the
- * strip empty for most casual users), folders flattened depth-first so a
- * link inside a folder still shows. It holds no state of its own — the bar
- * is re-read on mount, on chrome.bookmarks.onChanged (where the platform
- * delivers it), and every time the tab regains focus or visibility, which is
- * how edits made in Chrome's bookmark manager reach an open tab.
+ * strip empty for most casual users). Folders keep the user's own grouping:
+ * a folder chip opens a small glass menu of its links, so tidying into
+ * folders is rewarded with organisation instead of punished with a longer
+ * row. The strip holds no state of its own — the bar is re-read on mount, on
+ * chrome.bookmarks.onChanged (where the platform delivers it), and every
+ * time the tab regains focus or visibility, which is how edits made in
+ * Chrome's bookmark manager reach an open tab.
  */
 export default class BookmarkStrip extends Component<Props, State> {
   constructor(props: Props) {
     super(props)
-    this.state = { items: [] }
+    this.state = { items: [], openId: null, menuLeft: 0, menuBottom: 0 }
   }
 
   componentDidMount() {
@@ -43,6 +50,8 @@ export default class BookmarkStrip extends Component<Props, State> {
     const api = (chrome as any).bookmarks
     if (api && api.onChanged) api.onChanged.addListener(this.reload)
     document.addEventListener('visibilitychange', this.handleVisible)
+    document.addEventListener('pointerdown', this.handleOutside, true)
+    document.addEventListener('keydown', this.handleKey)
     window.addEventListener('focus', this.reload)
   }
 
@@ -51,20 +60,169 @@ export default class BookmarkStrip extends Component<Props, State> {
     const api = (chrome as any).bookmarks
     if (api && api.onChanged) api.onChanged.removeListener(this.reload)
     document.removeEventListener('visibilitychange', this.handleVisible)
+    document.removeEventListener('pointerdown', this.handleOutside, true)
+    document.removeEventListener('keydown', this.handleKey)
     window.removeEventListener('focus', this.reload)
+  }
+
+  componentDidUpdate(prevProps: Props) {
+    // The risen capsule's scrim covers the strip; an open menu would float
+    // above it and steal the room the search just took.
+    if (this.props.isRisen && !prevProps.isRisen) this.closeMenu()
   }
 
   private handleVisible = () => {
     if (!document.hidden) void this.reload()
   }
 
+  private handleKey = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') this.closeMenu()
+  }
+
+  private handleOutside = (event: Event) => {
+    if (!this.state.openId) return
+    const target = event.target as HTMLElement | null
+    // The menu lives outside the nav (the strip clips overflow), so the
+    // whole root is "inside" — closing on menu pointerdown would unmount the
+    // link before its click ever fires.
+    if (target && target.closest('.kunya-marks-root')) return
+    this.closeMenu()
+  }
+
+  private closeMenu = () => {
+    if (this.state.openId) this.setState({ openId: null })
+  }
+
   private reload = async () => {
     if (!this.props.isEnabled) return
     try {
-      this.setState({ items: await listBarBookmarks(LIMIT) })
+      const items = await listBarItems(LIMIT)
+      this.setState(prev => {
+        // A folder deleted in the bookmark manager takes its open menu down.
+        const stillThere = items.some(
+          item => item.kind === 'folder' && item.folder.id === prev.openId,
+        )
+        return { items, openId: stillThere ? prev.openId : null }
+      })
     } catch (error) {
       console.error('Ku-nya: could not read the bookmarks bar', error)
     }
+  }
+
+  private toggleFolder = (id: string, event: MouseEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (this.state.openId === id) {
+      this.closeMenu()
+      return
+    }
+    const chip = (event.currentTarget as HTMLElement).getBoundingClientRect()
+    this.setState({
+      openId: id,
+      menuLeft: Math.max(
+        8,
+        Math.min(chip.left, window.innerWidth - 240 - 8),
+      ),
+      menuBottom: window.innerHeight - chip.top + 6,
+    })
+  }
+
+  private renderChip(item: BarItem) {
+    if (item.kind === 'link') {
+      const hit = item.hit
+      return (
+        <a
+          key={hit.id}
+          class="kunya-marks__item"
+          href={hit.url}
+          title={hit.title}
+        >
+          <img src={faviconUrl(hit.url)} alt="" width="14" height="14" />
+          <span class="kunya-marks__title">{hit.title}</span>
+        </a>
+      )
+    }
+    const folder = item.folder
+    const isOpen = this.state.openId === folder.id
+    return (
+      <button
+        key={folder.id}
+        type="button"
+        class={`kunya-marks__item kunya-marks__folder${
+          isOpen ? ' is-open' : ''
+        }`}
+        title={`${folder.title}（${folder.children.length} 个书签）`}
+        aria-haspopup="true"
+        aria-expanded={isOpen ? 'true' : 'false'}
+        onClick={event => this.toggleFolder(folder.id, event)}
+      >
+        <svg
+          class="kunya-marks__folder-icon"
+          viewBox="0 0 16 16"
+          width="14"
+          height="14"
+          aria-hidden="true"
+        >
+          <path
+            d="M1.8 4.2c0-.7.5-1.2 1.2-1.2h3l1.4 1.6h5.8c.7 0 1.2.5 1.2 1.2v5.9c0 .7-.5 1.2-1.2 1.2H3c-.7 0-1.2-.5-1.2-1.2V4.2z"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.3"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span class="kunya-marks__title">{folder.title}</span>
+        <svg
+          class="kunya-marks__chevron"
+          viewBox="0 0 10 6"
+          width="8"
+          height="5"
+          aria-hidden="true"
+        >
+          <path
+            d="M1 5l4-4 4 4"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    )
+  }
+
+  private renderMenu() {
+    const openItem = this.state.items.filter(
+      item => item.kind === 'folder' && item.folder.id === this.state.openId,
+    )[0]
+    if (!openItem || openItem.kind !== 'folder') return null
+    const children = openItem.folder.children
+    return (
+      <div
+        class="kunya-marks__menu"
+        role="menu"
+        aria-label={openItem.folder.title}
+        style={{
+          left: `${this.state.menuLeft}px`,
+          bottom: `${this.state.menuBottom}px`,
+        }}
+      >
+        {children.map((hit, index) => (
+          <a
+            key={hit.id}
+            class="kunya-marks__menu-item"
+            role="menuitem"
+            href={hit.url}
+            title={hit.title}
+            style={{ animationDelay: `${index * 24}ms` }}
+          >
+            <img src={faviconUrl(hit.url)} alt="" width="14" height="14" />
+            <span class="kunya-marks__menu-title">{hit.title}</span>
+          </a>
+        ))}
+      </div>
+    )
   }
 
   render() {
@@ -73,19 +231,12 @@ export default class BookmarkStrip extends Component<Props, State> {
       this.props.isRisen ? ' is-dimmed' : ''
     }`
     return (
-      <nav class={className} aria-label="书签栏">
-        {this.state.items.map(hit => (
-          <a
-            key={hit.id}
-            class="kunya-marks__item"
-            href={hit.url}
-            title={hit.title}
-          >
-            <img src={faviconUrl(hit.url)} alt="" width="14" height="14" />
-            <span class="kunya-marks__title">{hit.title}</span>
-          </a>
-        ))}
-      </nav>
+      <div class="kunya-marks-root">
+        <nav class={className} aria-label="书签栏">
+          {this.state.items.map(item => this.renderChip(item))}
+        </nav>
+        {this.renderMenu()}
+      </div>
     )
   }
 }
