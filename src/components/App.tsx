@@ -301,6 +301,17 @@ export default class App extends Component<Props, State> {
    */
   private handleWheel = (e: WheelEvent) => {
     if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return
+    // A wheel landing inside a scrollable overlay (the bookmark menus, the
+    // suggestion list) belongs to it — turning a wall page underneath would
+    // make the menu's scroll feel like it leaks into the background.
+    let node = e.target as HTMLElement | null
+    while (node && node !== document.body) {
+      if (node.scrollHeight > node.clientHeight + 1) {
+        const overflowY = getComputedStyle(node).overflowY
+        if (overflowY === 'auto' || overflowY === 'scroll') return
+      }
+      node = node.parentElement
+    }
     e.preventDefault()
     if (this.pageLockTimer) {
       this.wheelRemainder = 0

@@ -811,9 +811,15 @@ async function main() {
     await newTab.eval(`window.dispatchEvent(new Event('focus'))`)
     const otherItem = await waitFor(
       async () => {
-        const items = await newTab.eval(`Array.from(
-          document.querySelectorAll('.kunya-marks__item')
-        ).map(a => a.href)`)
+        // Fold-aware: entries may sit behind the 更多 chip, whose menu keeps
+        // the same order as the row — chips first, folded tail after.
+        const items = await newTab.eval(`(() => {
+          const more = document.querySelector('.kunya-marks__more')
+          if (more && more.getAttribute('aria-expanded') !== 'true') more.click()
+          return Array.from(document.querySelectorAll(
+            '.kunya-marks-root a.kunya-marks__item, .kunya-marks-root a.kunya-marks__menu-item'
+          )).map(a => a.href)
+        })()`)
         const otherIndex = items.findIndex(
           h => h.indexOf('kunya-other-test') !== -1,
         )
@@ -839,13 +845,18 @@ async function main() {
     await newTab.eval(`(async () => {
       const folder = await new Promise(r => chrome.bookmarks.create({ parentId: '2', title: 'kunya folder' }, r))
       await new Promise(r => chrome.bookmarks.create({ parentId: folder.id, title: 'kunya nested target', url: 'https://example.com/kunya-nested-test' }, r))
+      const sub = await new Promise(r => chrome.bookmarks.create({ parentId: folder.id, title: 'kunya subfolder' }, r))
+      await new Promise(r => chrome.bookmarks.create({ parentId: sub.id, title: 'kunya deep target', url: 'https://example.com/kunya-deep-test' }, r))
     })()`)
     await newTab.eval(`window.dispatchEvent(new Event('focus'))`)
     const folderChip = await waitFor(
       async () => {
         return await newTab.eval(`(() => {
-          const chip = document.querySelector('.kunya-marks__folder')
-          const spilled = document.querySelector('.kunya-marks a[href*="kunya-nested-test"]')
+          const more = document.querySelector('.kunya-marks__more')
+          if (more && more.getAttribute('aria-expanded') !== 'true') more.click()
+          const chip = document.querySelector('.kunya-marks__folder:not(.kunya-marks__more)')
+            || document.querySelector('.kunya-marks__menu-folder')
+          const spilled = document.querySelector('.kunya-marks-root a[href*="kunya-nested-test"]')
           if (!chip || spilled) return null
           return { text: chip.textContent.trim(), expanded: chip.getAttribute('aria-expanded') }
         })()`)
@@ -861,24 +872,72 @@ async function main() {
       JSON.stringify(folderChip),
     )
 
-    const folderMenu = await waitFor(
+    // Click the folder's entry once — a chip on the row, or its row inside
+    // the overflow menu when the strip has folded it away — then wait for
+    // the folder's own menu to appear with the nested bookmark inside.
+    const folderEntry = await waitFor(
       async () => {
-        const opened = await newTab.eval(`(() => {
-          const chip = document.querySelector('.kunya-marks__folder')
+        return await newTab.eval(`(() => {
+          const chip = document.querySelector('.kunya-marks__folder:not(.kunya-marks__more)')
+            || document.querySelector('.kunya-marks__menu-folder')
           if (!chip) return null
-          if (chip.getAttribute('aria-expanded') !== 'true') chip.click()
-          const link = document.querySelector('.kunya-marks__menu a[href*="kunya-nested-test"]')
-          return link ? { text: link.textContent.trim() } : null
+          chip.click()
+          return true
         })()`)
-        return opened
       },
       15000,
-      'the folder chip to open a menu holding the nested bookmark',
+      'the folder entry to appear on the strip or in the overflow menu',
     ).catch(e => ({ error: e.message }))
+    const folderMenu = folderEntry.error
+      ? folderEntry
+      : await waitFor(
+          async () => {
+            return await newTab.eval(`(() => {
+              const link = document.querySelector('.kunya-marks__menu a[href*="kunya-nested-test"]')
+              return link ? { text: link.textContent.trim() } : null
+            })()`)
+          },
+          15000,
+          'the folder chip to open a menu holding the nested bookmark',
+        ).catch(e => ({ error: e.message }))
     check(
       'clicking a folder chip opens its menu with the nested bookmark',
       !folderMenu.error && folderMenu.text.indexOf('kunya nested target') !== -1,
       JSON.stringify(folderMenu),
+    )
+
+    // 9d3b. A folder inside a folder is not flattened away: it appears as a
+    //       folder row inside the parent menu and opens its own menu, one
+    //       click deeper.
+    const subRow = await waitFor(
+      async () => {
+        return await newTab.eval(`(() => {
+          const row = Array.from(document.querySelectorAll('.kunya-marks__menu-folder'))
+            .filter(b => b.textContent.indexOf('kunya subfolder') !== -1)[0]
+          if (!row) return null
+          row.click()
+          return true
+        })()`)
+      },
+      15000,
+      'the subfolder row to appear in the parent menu',
+    ).catch(e => ({ error: e.message }))
+    const deepMenu = subRow.error
+      ? subRow
+      : await waitFor(
+          async () => {
+            return await newTab.eval(`(() => {
+              const link = document.querySelector('.kunya-marks__menu a[href*="kunya-deep-test"]')
+              return link ? { text: link.textContent.trim() } : null
+            })()`)
+          },
+          15000,
+          'the subfolder to open a menu holding the deep bookmark',
+        ).catch(e => ({ error: e.message }))
+    check(
+      'a folder inside a folder opens as its own menu',
+      !deepMenu.error && deepMenu.text.indexOf('kunya deep target') !== -1,
+      JSON.stringify(deepMenu),
     )
 
     const menuShut = await waitFor(
@@ -887,10 +946,9 @@ async function main() {
           document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
           return new Promise(r => setTimeout(() => r({
             menu: !!document.querySelector('.kunya-marks__menu'),
-            expanded: document.querySelector('.kunya-marks__folder').getAttribute('aria-expanded'),
           }), 300))
         })()`)
-        return shut && !shut.menu && shut.expanded === 'false' ? shut : null
+        return shut && !shut.menu ? shut : null
       },
       10000,
       'Escape to shut the folder menu',
@@ -901,6 +959,85 @@ async function main() {
       JSON.stringify(menuShut),
     )
 
+    // 9d5. Overflow folds instead of clipping: more entries than the strip
+    //      can hold collapse behind a "更多 · N" chip whose menu lists the
+    //      folded tail — nothing is dropped, nothing is cropped.
+    await newTab.eval(`(async () => {
+      for (let i = 1; i <= 30; i++) {
+        await new Promise(r => chrome.bookmarks.create({ parentId: '1', title: 'kunya overflow ' + i, url: 'https://example.com/kunya-overflow-' + i }, r))
+      }
+    })()`)
+    await newTab.eval(`window.dispatchEvent(new Event('focus'))`)
+    const folded = await waitFor(
+      async () => {
+        return await newTab.eval(`(() => {
+          const more = document.querySelector('.kunya-marks__more')
+          if (!more) return null
+          if (more.getAttribute('aria-expanded') !== 'true') more.click()
+          const links = document.querySelectorAll('.kunya-marks__menu a.kunya-marks__menu-item')
+          if (!links.length) return null
+          const texts = Array.from(links).map(a => a.textContent.trim())
+          return {
+            chip: more.textContent.trim(),
+            menuLinks: links.length,
+            holdsLastSeed: texts.some(t => t.indexOf('kunya overflow 30') !== -1),
+          }
+        })()`)
+      },
+      15000,
+      'the overflow to fold behind a 更多 chip',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'overflowing bookmarks fold into a 更多 menu',
+      !folded.error &&
+        folded.chip.indexOf('更多') !== -1 &&
+        folded.holdsLastSeed === true,
+      JSON.stringify(folded),
+    )
+
+    // 9d6. The menu's wheel budget is its own: a wheel gesture inside it must
+    //      scroll the menu without the wall's pager consuming the event
+    //      (defaultPrevented stays false) — scrolling never leaks outward.
+    const menuWheel = await waitFor(
+      async () => {
+        return await newTab.eval(`(() => {
+          const menu = document.querySelector('.kunya-marks__menu')
+          if (!menu) return null
+          const item = menu.querySelector('.kunya-marks__menu-item')
+          // An untrusted wheel performs no native default scroll, so the two
+          // halves are asserted separately: the pager must not consume the
+          // event (defaultPrevented false), and the menu must actually have
+          // overflow to scroll (taller than its frame).
+          const event = new WheelEvent('wheel', { deltaY: 240, cancelable: true, bubbles: true })
+          item.dispatchEvent(event)
+          return new Promise(r => setTimeout(() => r({
+            defaultPrevented: event.defaultPrevented,
+            scrollable: menu.scrollHeight > menu.clientHeight + 1,
+          }), 300))
+        })()`)
+      },
+      10000,
+      'a wheel inside the menu to stay inside the menu',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'wheel inside a bookmark menu scrolls it independently',
+      !menuWheel.error &&
+        menuWheel.defaultPrevented === false &&
+        menuWheel.scrollable === true,
+      JSON.stringify(menuWheel),
+    )
+    await newTab.eval(`(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    })()`)
+    await newTab.eval(`(async () => {
+      const kids = await new Promise(r => chrome.bookmarks.getChildren('1', r))
+      for (const k of kids) {
+        if (k.title.indexOf('kunya overflow ') === 0) {
+          await new Promise(r => chrome.bookmarks.remove(k.id, r))
+        }
+      }
+    })()`)
+
     const stripTarget = await cdp.send('Target.createTarget', {
       url: 'chrome://newtab',
     })
@@ -908,7 +1045,12 @@ async function main() {
     const stripOpened = await waitFor(
       async () => {
         const clicked = await stripTab.eval(`(() => {
-          const a = document.querySelector('.kunya-marks__item[href*="kunya-strip-test"]')
+          let a = document.querySelector('a.kunya-marks__item[href*="kunya-strip-test"]')
+          if (!a) {
+            const more = document.querySelector('.kunya-marks__more')
+            if (more && more.getAttribute('aria-expanded') !== 'true') more.click()
+            a = document.querySelector('.kunya-marks__menu a[href*="kunya-strip-test"]')
+          }
           if (!a) return null
           a.click()
           return true

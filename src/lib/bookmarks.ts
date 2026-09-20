@@ -157,11 +157,11 @@ export const hostOf = (url: string): string => {
   return match ? match[1] : url
 }
 
-/** A folder chip on the strip: its descendants, flattened depth-first. */
+/** A folder chip on the strip: its entries, keeping the user's own nesting. */
 export interface BarFolder {
   id: string
   title: string
-  children: BookmarkHit[]
+  children: BarItem[]
 }
 
 /** One slot on the homepage strip: either a direct link or a folder menu. */
@@ -178,19 +178,37 @@ const hitOf = (node: BookmarkNode): BookmarkHit => ({
   url: node.url || '',
 })
 
-const flattenInto = (node: BookmarkNode, out: BookmarkHit[]) => {
-  if (out.length >= FOLDER_CAP) return
-  if (node.url) {
-    out.push(hitOf(node))
-    return
-  }
-  // The tile star's own folder holds artwork pages, not web destinations —
-  // those belong to the wall, not the strip.
-  if (node.title === FOLDER_TITLE) return
+/**
+ * A folder's entries in the user's own order: links stay links, subfolders
+ * stay folders (their own menu, one click deeper) instead of being flattened
+ * into an anonymous pile. Empty subfolders and the Ku-nya artwork folder
+ * stay out; FOLDER_CAP counts entries across the whole tree.
+ */
+const treeItems = (node: BookmarkNode, budget: { left: number }): BarItem[] => {
+  const out: BarItem[] = []
   const children = node.children || []
-  for (let i = 0; i < children.length && out.length < FOLDER_CAP; i++) {
-    flattenInto(children[i], out)
+  for (let i = 0; i < children.length && budget.left > 0; i++) {
+    const child = children[i]
+    if (child.url) {
+      out.push({ kind: 'link', hit: hitOf(child) })
+      budget.left--
+      continue
+    }
+    // The tile star's own folder holds artwork pages, not web destinations —
+    // those belong to the wall, not the strip.
+    if (child.title === FOLDER_TITLE) continue
+    const grandchildren = treeItems(child, budget)
+    if (grandchildren.length === 0) continue
+    out.push({
+      kind: 'folder',
+      folder: {
+        id: child.id,
+        title: child.title || '未命名文件夹',
+        children: grandchildren,
+      },
+    })
   }
+  return out
 }
 
 /**
@@ -198,9 +216,9 @@ const flattenInto = (node: BookmarkNode, out: BookmarkHit[]) => {
  * Other Bookmarks — many users (and Chrome's own star button) file into Other
  * Bookmarks, so a bar-only read would leave the strip empty for exactly the
  * people who just started bookmarking. Top-level links become chips; folders
- * become menus that keep the user's own grouping (nested folders flatten
- * depth-first into the parent menu). Empty folders and the Ku-nya artwork
- * folder stay out.
+ * become menus that keep the user's own grouping, subfolders included — a
+ * folder inside a folder opens as its own menu, one click deeper. Empty
+ * folders and the Ku-nya artwork folder stay out.
  */
 export const listBarItems = async (limit: number): Promise<BarItem[]> => {
   const items: BarItem[] = []
@@ -215,8 +233,7 @@ export const listBarItems = async (limit: number): Promise<BarItem[]> => {
         continue
       }
       if (node.title === FOLDER_TITLE) continue
-      const children: BookmarkHit[] = []
-      flattenInto(node, children)
+      const children = treeItems(node, { left: FOLDER_CAP })
       if (children.length === 0) continue
       items.push({
         kind: 'folder',

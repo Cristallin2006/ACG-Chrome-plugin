@@ -348,8 +348,8 @@ body::after {
   box-sizing: border-box;
   max-width: min(640px, 68vw);
   padding: 3px;
-  overflow-x: auto;
-  scrollbar-width: none;
+  /* Nothing scrolls: what doesn't fit folds into the "更多" chip's menu. */
+  overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 999px;
   /* One shared smoked-glass shelf, quieter than the capsule (0.45 vs 0.86):
@@ -357,20 +357,14 @@ body::after {
   background: rgba(19, 17, 16, 0.45);
   backdrop-filter: blur(14px) saturate(130%);
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  /* Overflowing items fade at the edges instead of wrapping a second row. */
-  mask-image: linear-gradient(
-    90deg,
-    transparent,
-    #000 20px,
-    #000 calc(100% - 20px),
-    transparent
-  );
   transition: opacity 180ms var(--ease-out), transform 180ms var(--ease-out),
     bottom 340ms var(--ease-out);
 }
 
-.kunya-marks::-webkit-scrollbar {
-  display: none;
+/* While the fold point is being measured every chip renders to size itself;
+   hiding the strip keeps that pass from flashing on screen. */
+.kunya-marks.is-measuring {
+  visibility: hidden;
 }
 
 .kunya-marks.is-ghost {
@@ -469,6 +463,8 @@ body::after {
   max-height: 320px;
   padding: 4px;
   overflow-y: auto;
+  /* Its wheel budget is its own: at the boundary nothing chains outward. */
+  overscroll-behavior: contain;
   scrollbar-width: none;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 14px;
@@ -536,6 +532,27 @@ body::after {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* A folder row inside the overflow menu: a button dressed as a menu item. */
+.kunya-marks__menu-folder {
+  width: 100%;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.kunya-marks__menu-folder .kunya-marks__folder-icon {
+  opacity: 0.85;
+}
+
+/* The up-chevron rotated to point deeper: this row opens another menu. */
+.kunya-marks__chevron--right {
+  margin-left: auto;
+  transform: rotate(90deg);
 }
 
 /* ---------- search capsule ---------- */
