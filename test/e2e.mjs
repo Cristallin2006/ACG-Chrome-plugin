@@ -494,6 +494,48 @@ async function main() {
     ).catch(e => ({ error: e.message }))
     check('view mode survives a reload', !persisted.error, JSON.stringify(persisted))
 
+    // 7a2. Muted authors must never kill the wall: the daily-ranking detail
+    //      endpoint names authors in camelCase (userName), and an entry with
+    //      no usable name is kept — one odd entry must not crash the pool.
+    //      The wall is in manga mode here, which walks exactly that detail
+    //      endpoint.
+    await newTab.eval(`(async () => {
+      await new Promise(r => chrome.storage.local.set({ excluding_authors: '["__e2e_no_such_artist__"]' }, r))
+      return true
+    })()`)
+    await newTab.send('Page.reload')
+    const mutedWall = await waitFor(
+      async () => {
+        const state = await newTab.eval(`(() => ({
+          imgs: document.querySelectorAll('.kunya-gallery img').length,
+          empty: !!document.querySelector('.kunya-empty'),
+        }))()`)
+        return state.imgs > 0 || state.empty ? state : null
+      },
+      60000,
+      'the wall to render with a muted author set',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'a muted author never kills the ranking wall',
+      !mutedWall.error && mutedWall.imgs > 0 && !mutedWall.empty,
+      JSON.stringify(mutedWall),
+    )
+    await newTab.eval(`(async () => {
+      await new Promise(r => chrome.storage.local.set({ excluding_authors: '[]' }, r))
+      return true
+    })()`)
+    await newTab.send('Page.reload')
+    await waitFor(
+      async () => {
+        const n = await newTab.eval(
+          `document.querySelectorAll('.kunya-gallery img').length`,
+        )
+        return n > 0 ? n : null
+      },
+      60000,
+      'the wall to come back after un-muting',
+    )
+
     // 7b. Progressive disclosure: the wall starts as one screen of pieces and
     // deals another screen as the user scrolls towards the end; pieces reveal
     // themselves (is-inview) as they enter the viewport.

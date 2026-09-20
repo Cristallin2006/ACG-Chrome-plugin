@@ -443,7 +443,11 @@ const getIllustsDetail = async (ids: Array<number>): Promise<IllustEntry[]> => {
           tags: content.tags,
           width: content.width,
           height: content.height,
-          authorName: content.user_name,
+          // The ajax detail endpoint answers camelCase (userName), unlike
+          // ranking.php's snake_case — reading user_name here left every
+          // daily-ranking entry authorless, and the first muted author then
+          // crashed the wall's filter on a TypeError.
+          authorName: content.userName,
           sl: content.sl,
           pageCount: toPageCount(content.pageCount),
           aiType: toAiType(content.aiType),

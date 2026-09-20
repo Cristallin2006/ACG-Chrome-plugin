@@ -291,7 +291,11 @@ export default class App extends Component<Props, State> {
       })
       .filter(illust => {
         if (options.excludedAuthors.length === 0) return true
+        // Sources that don't name the author are kept — never filter on
+        // missing data, and never let one odd entry crash the whole pool.
+        if (!illust.authorName) return true
         const author = illust.authorName.toLowerCase().trim()
+        if (author === '') return true
         return !options.excludedAuthors.some(
           name => name.toLowerCase().trim() === author,
         )
