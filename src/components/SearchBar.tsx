@@ -31,6 +31,10 @@ interface State {
   suggestions: BookmarkHit[]
   /** -1 = nothing picked, so Enter stays a web search; ↑↓ move the pick. */
   activeIndex: number
+  /** The clipboard panel: open while the user previews what will be pasted. */
+  clipOpen: boolean
+  clipText: string
+  clipError: boolean
 }
 
 const GHOST_AFTER_MS = 2000
@@ -54,6 +58,9 @@ export default class SearchBar extends Component<Props, State> {
       isRisen: false,
       suggestions: [],
       activeIndex: -1,
+      clipOpen: false,
+      clipText: '',
+      clipError: false,
     }
   }
 
@@ -173,6 +180,7 @@ export default class SearchBar extends Component<Props, State> {
 
   private handleBlur = () => {
     this.suppressRiseForContextMenu = false
+    this.closeClipboard()
     if (this.state.isRisen) this.setState({ isRisen: false })
     this.armGhost()
   }
@@ -191,29 +199,41 @@ export default class SearchBar extends Component<Props, State> {
   }
 
   /**
-   * The clipboard button is the paste gesture with training wheels: closed
-   * capsule → one click opens and focuses it; open capsule → the next click
-   * pours the clipboard straight into the field, caret preserved.
+   * The clipboard button opens the clipboard, it does not paste on sight:
+   * the first click lifts a quiet preview panel above the capsule (and
+   * focuses the field); the second click pours the previewed text into the
+   * field at the caret and shuts the panel. What you saw is what lands.
    */
   private handleClipboard = async () => {
-    if (!this.state.isRisen) {
+    if (this.state.clipOpen) {
+      const text = this.state.clipText
+      this.closeClipboard()
+      if (text) this.insertAtCaret(text)
       this.focusInput()
       return
     }
+    this.focusInput()
     let text = ''
+    let error = false
     try {
       // TS 3.1's lib predates the async clipboard API; the runtime has it.
       text = await (navigator as any).clipboard.readText()
-    } catch (error) {
-      // Denied or empty permission: leave the field focused for a manual
-      // Ctrl+V rather than failing loudly.
-      this.focusInput()
-      return
+    } catch (readError) {
+      error = true
     }
-    if (!text) {
-      this.focusInput()
-      return
+    // The user may have clicked away while the read was out — no orphan panel.
+    if (document.activeElement !== this.input) return
+    this.setState({ clipOpen: true, clipText: text || '', clipError: error })
+  }
+
+  private closeClipboard = () => {
+    if (this.state.clipOpen) {
+      this.setState({ clipOpen: false, clipText: '', clipError: false })
     }
+  }
+
+  /** Paste at the caret like the real thing, selection replaced, caret kept. */
+  private insertAtCaret(text: string) {
     const input = this.input
     const current = this.state.value
     const start =
@@ -229,7 +249,6 @@ export default class SearchBar extends Component<Props, State> {
       if (this.input) this.input.setSelectionRange(caret, caret)
     }, 0)
     this.scheduleSuggest()
-    this.focusInput()
   }
 
   /**
@@ -347,6 +366,27 @@ export default class SearchBar extends Component<Props, State> {
           aria-hidden="true"
         />
         <div class={className} role="search">
+          {/* The clipboard, opened: a quiet preview of what a second click
+              will paste. Absolute inside the pill, so it rides the rise. */}
+          {this.state.clipOpen && (
+            <div class="kunya-clip" role="status">
+              <span class="kunya-clip__label" aria-hidden="true">
+                剪贴板
+              </span>
+              <span class="kunya-clip__text">
+                {this.state.clipError
+                  ? '读不到剪贴板，直接 Ctrl+V 粘贴'
+                  : this.state.clipText
+                    ? this.state.clipText
+                    : '剪贴板里没有文本'}
+              </span>
+              {this.state.clipText !== '' && (
+                <span class="kunya-clip__hint" aria-hidden="true">
+                  再点一次粘贴
+                </span>
+              )}
+            </div>
+          )}
           <span class="kunya-search__label" aria-hidden="true">
             WEB SEARCH
           </span>
@@ -395,8 +435,8 @@ export default class SearchBar extends Component<Props, State> {
           <button
             type="button"
             class="kunya-search__clip"
-            aria-label={this.state.isRisen ? '粘贴剪贴板' : '打开搜索'}
-            title={this.state.isRisen ? '粘贴剪贴板' : '打开搜索'}
+            aria-label={this.state.clipOpen ? '粘贴剪贴板内容' : '打开剪贴板'}
+            title={this.state.clipOpen ? '粘贴剪贴板内容' : '打开剪贴板'}
             onMouseDown={event => event.preventDefault()}
             onClick={() => void this.handleClipboard()}
           >

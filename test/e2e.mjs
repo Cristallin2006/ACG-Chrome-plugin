@@ -1175,9 +1175,9 @@ async function main() {
       JSON.stringify(risenFolder),
     )
 
-    // 9d9. The clipboard button is a two-step paste: closed capsule → one
-    //      click opens and focuses it; open capsule → the next click pours
-    //      the clipboard into the field.
+    // 9d9. The clipboard button opens the clipboard, it does not paste on
+    //      sight: the first click lifts a preview panel (and focuses the
+    //      field), the second pours the previewed text in and shuts it.
     await cdp
       .send('Browser.setPermission', {
         permission: { name: 'clipboardReadWrite' },
@@ -1186,42 +1186,51 @@ async function main() {
       .catch(() => {})
     const clipSettle = await waitFor(
       async () => {
-        return await rideTab.eval(`(() => {
+        return await rideTab.eval(`(async () => {
           const capsule = document.querySelector('.kunya-search')
           const input = document.querySelector('.kunya-search__input')
           if (capsule.classList.contains('is-risen')) {
             input.blur()
             return null
           }
-          return true
+          try {
+            await navigator.clipboard.writeText('kunya clip probe')
+            return true
+          } catch (e) { return { clipboardError: String(e) } }
         })()`)
       },
       10000,
-      'the capsule to settle before the clipboard test',
+      'the capsule to settle with the probe text on the clipboard',
     ).catch(e => ({ error: e.message }))
     const clipOpen = clipSettle.error
       ? clipSettle
       : await waitFor(
           async () => {
             return await rideTab.eval(`(() => {
-              document.querySelector('.kunya-search__clip').click()
-              return new Promise(r => setTimeout(() => {
-                const active = document.activeElement
-                r({
-                  risen: document.querySelector('.kunya-search').classList.contains('is-risen'),
-                  focused: !!(active && active.classList.contains('kunya-search__input')),
-                })
-              }, 500))
+              const panel = document.querySelector('.kunya-clip')
+              if (!panel) {
+                document.querySelector('.kunya-search__clip').click()
+                return null
+              }
+              const active = document.activeElement
+              return {
+                risen: document.querySelector('.kunya-search').classList.contains('is-risen'),
+                focused: !!(active && active.classList.contains('kunya-search__input')),
+                preview: panel.textContent,
+                value: document.querySelector('.kunya-search__input').value,
+              }
             })()`)
           },
           10000,
-          'the clipboard button to open the capsule',
+          'the clipboard button to open the preview panel',
         ).catch(e => ({ error: e.message }))
     check(
-      'clipboard button opens and focuses the closed capsule',
+      'clipboard button opens a preview panel, no paste yet',
       !clipOpen.error &&
         clipOpen.risen === true &&
-        clipOpen.focused === true,
+        clipOpen.focused === true &&
+        clipOpen.preview.indexOf('kunya clip probe') !== -1 &&
+        clipOpen.value.indexOf('kunya clip probe') === -1,
       JSON.stringify(clipOpen),
     )
 
@@ -1229,24 +1238,22 @@ async function main() {
       ? clipOpen
       : await waitFor(
           async () => {
-            return await rideTab.eval(`(async () => {
-              try {
-                await navigator.clipboard.writeText('kunya clip probe')
-              } catch (e) { return { clipboardError: String(e) } }
-              document.querySelector('.kunya-search__clip').click()
-              return new Promise(r => setTimeout(() => r({
-                value: document.querySelector('.kunya-search__input').value,
-              }), 600))
+            return await rideTab.eval(`(() => {
+              const panel = document.querySelector('.kunya-clip')
+              if (panel) {
+                document.querySelector('.kunya-search__clip').click()
+                return null
+              }
+              const value = document.querySelector('.kunya-search__input').value
+              return value.indexOf('kunya clip probe') !== -1 ? { value } : null
             })()`)
           },
           10000,
-          'the clipboard button to paste into the open capsule',
+          'the second click to paste the previewed text',
         ).catch(e => ({ error: e.message }))
     check(
-      'a second clipboard-button click pastes into the field',
-      !clipPaste.error &&
-        !clipPaste.clipboardError &&
-        clipPaste.value.indexOf('kunya clip probe') !== -1,
+      'a second clipboard-button click pastes the preview',
+      !clipPaste.error && clipPaste.value.indexOf('kunya clip probe') !== -1,
       JSON.stringify(clipPaste),
     )
 

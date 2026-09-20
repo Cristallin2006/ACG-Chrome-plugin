@@ -774,6 +774,62 @@ body::after {
   transform: scale(0.94);
 }
 
+/* The clipboard preview: the same smoked glass as the bookmark menus, hung
+   above the capsule so it rides the rise. While it is open the bookmark
+   strip bows out — the slot above the capsule belongs to one guest at a
+   time, and function outranks decoration. */
+.kunya-clip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: rgba(19, 17, 16, 0.72);
+  backdrop-filter: blur(18px) saturate(130%);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.44), 0 1px 4px rgba(0, 0, 0, 0.3);
+  transform-origin: bottom center;
+  animation: kunya-marks-menu-in 200ms var(--ease-out) both;
+}
+
+.kunya-search-root:has(.kunya-clip) .kunya-marks {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kunya-clip__label {
+  flex: none;
+  color: var(--accent);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.kunya-clip__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.kunya-clip__hint {
+  flex: none;
+  color: rgba(255, 255, 255, 0.38);
+  font-size: 10.5px;
+  letter-spacing: 0.5px;
+}
+
 .kunya-search__go:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--ink);
@@ -962,7 +1018,8 @@ body::after {
   }
   /* Menus appear instantly; stagger and pop are motion, not information. */
   .kunya-marks__menu,
-  .kunya-marks__menu-item {
+  .kunya-marks__menu-item,
+  .kunya-clip {
     animation: none;
     opacity: 1;
     transform: none;
