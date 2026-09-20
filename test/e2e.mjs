@@ -1110,6 +1110,201 @@ async function main() {
       !ride.error,
       JSON.stringify(ride),
     )
+
+    // 9d8. Clicking a folder chip mid-search must not read as "clicked
+    //      outside the capsule": the capsule stays risen and the folder's
+    //      menu opens, instead of everything settling back down.
+    const risenReady = await waitFor(
+      async () => {
+        return await rideTab.eval(`(() => {
+          const capsule = document.querySelector('.kunya-search')
+          if (!capsule.classList.contains('is-risen')) {
+            document.querySelector('.kunya-search__input').focus()
+            return null
+          }
+          // The strip may have folded every folder behind 更多 — open it so
+          // a folder entry exists either on the row or in the overflow menu.
+          const more = document.querySelector('.kunya-marks__more')
+          if (more && more.getAttribute('aria-expanded') !== 'true') more.click()
+          const chip = document.querySelector('.kunya-marks__folder:not(.kunya-marks__more)')
+            || document.querySelector('.kunya-marks__menu-folder')
+          return chip ? true : null
+        })()`)
+      },
+      15000,
+      'the capsule to rise with a folder chip on the strip',
+    ).catch(e => ({ error: e.message }))
+    const risenFolder = risenReady.error
+      ? risenReady
+      : await (async () => {
+          // A faithful click: synthetic .click() never moves focus, but a
+          // dispatched mousedown performs the default focus grab — exactly
+          // what used to blur the field and drop the capsule.
+          await rideTab.eval(`(() => {
+            const chip = document.querySelector('.kunya-marks__folder:not(.kunya-marks__more)')
+              || document.querySelector('.kunya-marks__menu-folder')
+            chip.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }))
+            chip.dispatchEvent(new MouseEvent('mouseup', { bubbles: true, cancelable: true }))
+            chip.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+          })()`)
+          return await waitFor(
+            async () => {
+              return await rideTab.eval(`(() => {
+                const menus = document.querySelectorAll('.kunya-marks__menu')
+                // The folder's own menu, not the 更多 menu it may replace.
+                const own = Array.from(menus).filter(
+                  m => m.getAttribute('aria-label') !== '更多书签',
+                )[0]
+                if (!own) return null
+                const active = document.activeElement
+                return {
+                  risen: document.querySelector('.kunya-search').classList.contains('is-risen'),
+                  focused: !!(active && active.classList.contains('kunya-search__input')),
+                }
+              })()`)
+            },
+            10000,
+            'the folder menu to open while the capsule stays risen',
+          ).catch(e => ({ error: e.message }))
+        })()
+    check(
+      'folder chip opens its menu while the capsule stays risen',
+      !risenFolder.error &&
+        risenFolder.risen === true &&
+        risenFolder.focused === true,
+      JSON.stringify(risenFolder),
+    )
+
+    // 9d9. The clipboard button is a two-step paste: closed capsule → one
+    //      click opens and focuses it; open capsule → the next click pours
+    //      the clipboard into the field.
+    await cdp
+      .send('Browser.setPermission', {
+        permission: { name: 'clipboardReadWrite' },
+        setting: 'granted',
+      })
+      .catch(() => {})
+    const clipSettle = await waitFor(
+      async () => {
+        return await rideTab.eval(`(() => {
+          const capsule = document.querySelector('.kunya-search')
+          const input = document.querySelector('.kunya-search__input')
+          if (capsule.classList.contains('is-risen')) {
+            input.blur()
+            return null
+          }
+          return true
+        })()`)
+      },
+      10000,
+      'the capsule to settle before the clipboard test',
+    ).catch(e => ({ error: e.message }))
+    const clipOpen = clipSettle.error
+      ? clipSettle
+      : await waitFor(
+          async () => {
+            return await rideTab.eval(`(() => {
+              document.querySelector('.kunya-search__clip').click()
+              return new Promise(r => setTimeout(() => {
+                const active = document.activeElement
+                r({
+                  risen: document.querySelector('.kunya-search').classList.contains('is-risen'),
+                  focused: !!(active && active.classList.contains('kunya-search__input')),
+                })
+              }, 500))
+            })()`)
+          },
+          10000,
+          'the clipboard button to open the capsule',
+        ).catch(e => ({ error: e.message }))
+    check(
+      'clipboard button opens and focuses the closed capsule',
+      !clipOpen.error &&
+        clipOpen.risen === true &&
+        clipOpen.focused === true,
+      JSON.stringify(clipOpen),
+    )
+
+    const clipPaste = clipOpen.error
+      ? clipOpen
+      : await waitFor(
+          async () => {
+            return await rideTab.eval(`(async () => {
+              try {
+                await navigator.clipboard.writeText('kunya clip probe')
+              } catch (e) { return { clipboardError: String(e) } }
+              document.querySelector('.kunya-search__clip').click()
+              return new Promise(r => setTimeout(() => r({
+                value: document.querySelector('.kunya-search__input').value,
+              }), 600))
+            })()`)
+          },
+          10000,
+          'the clipboard button to paste into the open capsule',
+        ).catch(e => ({ error: e.message }))
+    check(
+      'a second clipboard-button click pastes into the field',
+      !clipPaste.error &&
+        !clipPaste.clipboardError &&
+        clipPaste.value.indexOf('kunya clip probe') !== -1,
+      JSON.stringify(clipPaste),
+    )
+
+    // 9d10. A right-click only wants the context menu: the field takes focus
+    //       (so 粘贴 works) but the capsule stays parked; content arriving —
+    //       the paste itself — is what finally raises it.
+    const rightClick = await waitFor(
+      async () => {
+        return await rideTab.eval(`(() => {
+          const capsule = document.querySelector('.kunya-search')
+          const input = document.querySelector('.kunya-search__input')
+          if (capsule.classList.contains('is-risen')) {
+            input.blur()
+            return null
+          }
+          input.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, button: 2 }))
+          input.focus()
+          return new Promise(r => setTimeout(() => r({
+            focused: document.activeElement === input,
+            risen: capsule.classList.contains('is-risen'),
+          }), 400))
+        })()`)
+      },
+      10000,
+      'a right-click to focus the field without rising the capsule',
+    ).catch(e => ({ error: e.message }))
+    check(
+      'right-click focuses the field but keeps the capsule parked',
+      !rightClick.error &&
+        rightClick.focused === true &&
+        rightClick.risen === false,
+      JSON.stringify(rightClick),
+    )
+
+    const pasteRise = rightClick.error
+      ? rightClick
+      : await waitFor(
+          async () => {
+            return await rideTab.eval(`(() => {
+              const capsule = document.querySelector('.kunya-search')
+              if (capsule.classList.contains('is-risen')) return true
+              const input = document.querySelector('.kunya-search__input')
+              input.value = 'kunya pasted text'
+              input.dispatchEvent(new Event('input', { bubbles: true }))
+              return new Promise(r => setTimeout(() => r(
+                capsule.classList.contains('is-risen') ? true : null
+              ), 400))
+            })()`)
+          },
+          10000,
+          'pasted content to raise the parked capsule',
+        ).catch(e => ({ error: e.message }))
+    check(
+      'content pasted after a right-click raises the capsule',
+      !pasteRise.error && pasteRise === true,
+      JSON.stringify(pasteRise),
+    )
+
     await cdp.send('Target.closeTarget', { targetId: rideTarget.targetId })
 
     // 10. Popup: settings render, and a click has to land in

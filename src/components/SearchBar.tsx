@@ -42,6 +42,9 @@ export default class SearchBar extends Component<Props, State> {
   private input: HTMLInputElement | null = null
   private ghostTimer: number | null = null
   private suggestTimer: number | null = null
+  /** Set by a right-click on the field: that gesture wants the context menu
+      (paste), not the spotlight — the next focus must not rise the capsule. */
+  private suppressRiseForContextMenu = false
 
   constructor(props: Props) {
     super(props)
@@ -161,17 +164,72 @@ export default class SearchBar extends Component<Props, State> {
 
   private handleFocus = () => {
     this.handleActivity()
+    if (this.suppressRiseForContextMenu) {
+      this.suppressRiseForContextMenu = false
+      return
+    }
     if (!this.state.isRisen) this.setState({ isRisen: true })
   }
 
   private handleBlur = () => {
+    this.suppressRiseForContextMenu = false
     if (this.state.isRisen) this.setState({ isRisen: false })
     this.armGhost()
   }
 
+  /** A right-click only asks for the context menu — remember not to rise. */
+  private handleInputMouseDown = (event: MouseEvent) => {
+    if (event.button === 2) this.suppressRiseForContextMenu = true
+  }
+
   private handleInput = (event: Event) => {
+    // Content arriving — typed, or pasted through the context menu a
+    // right-click kept calm — is the user's answer: the capsule rises now.
+    if (!this.state.isRisen) this.setState({ isRisen: true })
     this.setState({ value: (event.target as HTMLInputElement).value })
     this.scheduleSuggest()
+  }
+
+  /**
+   * The clipboard button is the paste gesture with training wheels: closed
+   * capsule → one click opens and focuses it; open capsule → the next click
+   * pours the clipboard straight into the field, caret preserved.
+   */
+  private handleClipboard = async () => {
+    if (!this.state.isRisen) {
+      this.focusInput()
+      return
+    }
+    let text = ''
+    try {
+      // TS 3.1's lib predates the async clipboard API; the runtime has it.
+      text = await (navigator as any).clipboard.readText()
+    } catch (error) {
+      // Denied or empty permission: leave the field focused for a manual
+      // Ctrl+V rather than failing loudly.
+      this.focusInput()
+      return
+    }
+    if (!text) {
+      this.focusInput()
+      return
+    }
+    const input = this.input
+    const current = this.state.value
+    const start =
+      input && input.selectionStart !== null
+        ? input.selectionStart
+        : current.length
+    const end =
+      input && input.selectionEnd !== null ? input.selectionEnd : start
+    const next = current.slice(0, start) + text + current.slice(end)
+    this.setState({ value: next })
+    const caret = start + text.length
+    window.setTimeout(() => {
+      if (this.input) this.input.setSelectionRange(caret, caret)
+    }, 0)
+    this.scheduleSuggest()
+    this.focusInput()
   }
 
   /**
@@ -331,7 +389,27 @@ export default class SearchBar extends Component<Props, State> {
             onKeyDown={this.handleKeyDown}
             onFocus={this.handleFocus}
             onBlur={this.handleBlur}
+            onMouseDown={this.handleInputMouseDown}
           />
+
+          <button
+            type="button"
+            class="kunya-search__clip"
+            aria-label={this.state.isRisen ? '粘贴剪贴板' : '打开搜索'}
+            title={this.state.isRisen ? '粘贴剪贴板' : '打开搜索'}
+            onMouseDown={event => event.preventDefault()}
+            onClick={() => void this.handleClipboard()}
+          >
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+              <path
+                d="M5.5 2.5h5 M4.5 1.8c-.8 0-1.4.6-1.4 1.4v9.6c0 .8.6 1.4 1.4 1.4h7c.8 0 1.4-.6 1.4-1.4V3.2c0-.8-.6-1.4-1.4-1.4h-.6l-.4 1.4H6l-.4-1.4h-1.1z"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
 
           <button
             type="button"

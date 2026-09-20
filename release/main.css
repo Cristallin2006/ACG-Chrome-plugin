@@ -745,6 +745,35 @@ body::after {
     transform 100ms var(--ease-out);
 }
 
+/* The clipboard button wears the same quiet circle as the go button; it
+   never takes the accent — pasting is a means, not the destination. */
+.kunya-search__clip {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background 160ms var(--ease-out), color 160ms var(--ease-out),
+    transform 100ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kunya-search__clip:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--ink);
+  }
+}
+
+.kunya-search__clip:active {
+  transform: scale(0.94);
+}
+
 .kunya-search__go:hover {
   background: rgba(255, 255, 255, 0.08);
   color: var(--ink);
@@ -893,6 +922,7 @@ body::after {
   .kunya-search__label,
   .kunya-search__hint,
   .kunya-search__go,
+  .kunya-search__clip,
   .kunya-scrim,
   .kunya-tile,
   .kunya-tile img,

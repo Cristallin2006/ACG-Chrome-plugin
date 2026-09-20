@@ -438,7 +438,14 @@ export default class BookmarkStrip extends Component<Props, State> {
       this.props.isRisen ? ' is-risen' : ''
     }${this.state.measured ? '' : ' is-measuring'}`
     return (
-      <div class="kunya-marks-root">
+      <div
+        class="kunya-marks-root"
+        /* Mousedown is swallowed so a click never blurs the search field:
+           while the capsule is risen, losing focus would drop it — and the
+           strip with it — before the folder's own click could open its menu
+           (the same trick the suggestion rows use). */
+        onMouseDown={event => event.preventDefault()}
+      >
         <nav
           class={className}
           aria-label="书签栏"
